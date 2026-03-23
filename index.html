@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POD TCG Pack Opening</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>POD TCG Simulator</h1>
+            <nav>
+                <button onclick="showSection('opening')">เปิดซอง</button>
+                <button onclick="showSection('collection')">สมุดการ์ด</button>
+            </nav>
+        </header>
+
+        <main>
+            <section id="opening-section" class="active">
+                <div class="pack-container">
+                    <div id="pack-visual" class="pack-visual" onclick="startOpening()">
+                    <div class="pack-shaker">
+                        <div class="pack-half top">
+                            <img src="./assets/pack_tcg_op_1.png" alt="TCG Pack">
+                        </div>
+                        <div class="pack-half bottom">
+                            <img src="./assets/pack_tcg_op_1.png" alt="TCG Pack">
+                        </div>
+                    </div>
+                    <div class="pack-glow"></div>
+                </div>
+                <button id="open-btn" class="btn-primary" style="display: none;">เปิดซอง (5 ใบ)</button>
+                </div>
+                <div id="cards-display" class="cards-grid"></div>
+            </section>
+
+            <section id="collection-section">
+                <div class="collection-header">
+                    <h2>Collection (<span id="collected-count">0</span>/<span id="total-count">0</span>)</h2>
+                    <div class="filters">
+                        <button onclick="filterCollection('ALL')">ทั้งหมด</button>
+                        <button onclick="filterCollection('SSSSR')">SSSSR</button>
+                        <button onclick="filterCollection('SSSR')">SSSR</button>
+                        <button onclick="filterCollection('SSR')">SSR</button>
+                        <button onclick="filterCollection('SR')">SR</button>
+                        <button onclick="filterCollection('R')">R</button>
+                        <button onclick="filterCollection('C')">C</button>
+                    </div>
+                </div>
+                <div id="collection-grid" class="cards-grid"></div>
+            </section>
+        </main>
+
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="modal-card-detail"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data and Scripts -->
+    <script src="data/cards.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

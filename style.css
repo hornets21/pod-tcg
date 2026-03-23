@@ -1,0 +1,436 @@
+:root {
+    --bg-dark: #0f0c29;
+    --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    --accent: #00d2ff;
+    --accent-glow: rgba(0, 210, 255, 0.5);
+    --glass: rgba(255, 255, 255, 0.1);
+    --rarity-c: #9e9e9e;
+    --rarity-r: #4caf50;
+    --rarity-sr: #2196f3;
+    --rarity-ssr: #ffeb3b;
+    --rarity-sssr: #ff5722;
+    --rarity-ssssr: #e91e63;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg-gradient);
+    color: #fff;
+    font-family: 'Kanit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+header {
+    padding: 2rem;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px var(--accent-glow);
+}
+
+nav button {
+    background: var(--glass);
+    border: 1px solid var(--glass);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    margin: 0 0.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+nav button:hover {
+    background: var(--accent);
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+section {
+    display: none;
+}
+
+section.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pack-container {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.pack-visual {
+    width: 200px;
+    height: 300px;
+    margin: 0 auto 2rem;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+.pack-visual:hover {
+    transform: scale(1.05) rotate(2deg);
+}
+
+.pack-shaker {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    pointer-events: none;
+}
+
+.pack-half {
+    position: absolute;
+    width: 100%;
+    height: 50.5%;
+    /* Slight overlap to prevent seam */
+    overflow: hidden;
+    transition: all 0.5s ease-in;
+}
+
+.pack-half.top {
+    top: 0;
+    /* clip-path: polygon(0 0, 100% 0, 100% 100%, 85% 95%, 70% 100%, 50% 95%, 30% 100%, 15% 95%, 0 100%); */
+}
+
+.pack-half.bottom {
+    bottom: 0;
+    /* clip-path: polygon(0 0, 15% 5%, 30% 0, 50% 5%, 70% 0, 85% 5%, 100% 0, 100% 100%, 0 100%); */
+}
+
+.pack-half img {
+    width: 100%;
+    height: 300px;
+    /* Original height */
+    object-fit: cover;
+    border-radius: 15px;
+    display: block;
+}
+
+.pack-half.bottom img {
+    margin-top: -150px;
+    /* Offset for bottom half */
+}
+
+/* Tearing Animation States */
+.tearing .pack-shaker {
+    animation: shake 0.5s infinite;
+}
+
+.tearing.torn .pack-half.top {
+    transform: translateY(-150px) rotate(-15deg);
+    opacity: 0;
+}
+
+.tearing.torn .pack-half.bottom {
+    transform: translateY(150px) rotate(15deg);
+    opacity: 0;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px) rotate(-1deg);
+    }
+
+    75% {
+        transform: translateX(5px) rotate(1deg);
+    }
+}
+
+.pack-glow {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    right: -10%;
+    bottom: -10%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    z-index: -1;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #00d2ff, #3a7bd5);
+    border: none;
+    color: white;
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 8px 25px rgba(0, 210, 255, 0.6);
+    filter: brightness(1.1);
+}
+
+/* Card Styles */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+    justify-items: center;
+}
+
+.card {
+    width: 180px;
+    height: 270px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.card.revealed .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--glass);
+}
+
+.card-back {
+    background: url('assets/back-card.png') no-repeat center center;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 2rem;
+    border: 3px solid #666;
+}
+
+/* Card Back Design */
+.card-back::after {
+    content: 'POD';
+    font-weight: bold;
+    transform: rotate(-45deg);
+}
+
+.card-front {
+    background: #222;
+    transform: rotateY(180deg);
+}
+
+.card-front img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.7);
+    font-size: 0.8rem;
+}
+
+.rarity-tag {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.rarity-C {
+    background: var(--rarity-c);
+}
+
+.rarity-R {
+    background: var(--rarity-r);
+}
+
+.rarity-SR {
+    background: var(--rarity-sr);
+}
+
+.rarity-SSR {
+    background: var(--rarity-ssr);
+    color: #000;
+}
+
+.rarity-SSSR {
+    background: var(--rarity-sssr);
+    box-shadow: 0 0 10px var(--rarity-sssr);
+}
+
+.rarity-SSSSR {
+    background: var(--rarity-ssssr);
+    box-shadow: 0 0 15px var(--rarity-ssssr);
+    animation: super-glow 1s infinite alternate;
+}
+
+@keyframes super-glow {
+    from {
+        filter: brightness(1) drop-shadow(0 0 5px var(--rarity-ssssr));
+    }
+
+    to {
+        filter: brightness(1.5) drop-shadow(0 0 15px var(--rarity-ssssr));
+    }
+}
+
+/* Collection Grid Items */
+.card.locked {
+    filter: grayscale(1) brightness(0.5);
+    pointer-events: none;
+}
+
+/* Modal Detail */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--bg-gradient);
+    margin: 10% auto;
+    padding: 2rem;
+    border: 1px solid var(--glass);
+    width: 80%;
+    max-width: 600px;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+.detail-container {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.detail-info h2 {
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.detail-info p {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+/* God Pack Effect */
+.god-pack-effect {
+    animation: god-bg 1s infinite alternate;
+}
+
+@keyframes god-bg {
+    from {
+        box-shadow: inset 0 0 100px rgba(255, 235, 59, 0.2);
+    }
+
+    to {
+        box-shadow: inset 0 0 200px rgba(255, 235, 59, 0.5);
+    }
+}
+
+@media (max-width: 600px) {
+    .detail-container {
+        flex-direction: column;
+        text-align: center;
+    }
+}
