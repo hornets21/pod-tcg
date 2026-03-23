@@ -119,17 +119,43 @@ async function startOpening() {
     saveCollection();
 }
 
+function getRarityStars(rarity) {
+    const stars = {
+        'C': '★',
+        'R': '★★',
+        'SR': '★★★',
+        'SSR': '★★★★',
+        'SSSR': '★★★★★',
+        'SSSSR': '★★★★★★'
+    };
+    return stars[rarity] || '★';
+}
+
 function createCardElement(card, index) {
     const cardEl = document.createElement('div');
-    cardEl.className = 'card';
+    cardEl.className = `card ${card.rarity.toLowerCase()}`;
     cardEl.innerHTML = `
+        <div class="card-gloss"></div>
         <div class="card-inner">
             <div class="card-back"></div>
             <div class="card-front">
-                <img src="${card.image}" alt="${card.name}" onerror="this.src='https://via.placeholder.com/180x270?text=Image+Not+Found'">
-                <div class="rarity-tag rarity-${card.rarity}">${card.rarity}</div>
-                <div class="card-info">
-                    <strong>${card.name}</strong>
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="name">${card.name}</span>
+                    </div>
+                    <div class="image-box">
+                        <img src="${card.image}" alt="${card.name}" onerror="this.src='https://via.placeholder.com/180x270?text=Image+Not+Found'">
+                    </div>
+                    <div class="card-body">
+                        <div class="ability">
+                            <strong>ความสามารถ</strong>
+                            <p>${card.ability}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="rarity-symbol">${getRarityStars(card.rarity)}</span>
+                        <span class="rarity-text">${card.rarity}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -191,14 +217,28 @@ function updateCollectionUI(filter = 'ALL') {
         
         const isCollected = collection.some(c => c.name === card.name);
         const cardEl = document.createElement('div');
-        cardEl.className = `card revealed ${isCollected ? '' : 'locked'}`;
+        cardEl.className = `card revealed ${card.rarity.toLowerCase()} ${isCollected ? '' : 'locked'}`;
         cardEl.innerHTML = `
+            <div class="card-gloss"></div>
             <div class="card-inner">
                 <div class="card-front">
-                    <img src="${card.image}" alt="${card.name}">
-                    <div class="rarity-tag rarity-${card.rarity}">${card.rarity}</div>
-                    <div class="card-info">
-                        <strong>${card.name}</strong>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <span class="name">${card.name}</span>
+                        </div>
+                        <div class="image-box">
+                            <img src="${card.image}" alt="${card.name}">
+                        </div>
+                        <div class="card-body">
+                            <div class="ability">
+                                <strong>ความสามารถ</strong>
+                                <p>${card.ability}</p>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="rarity-symbol">${getRarityStars(card.rarity)}</span>
+                            <span class="rarity-text">${card.rarity}</span>
+                        </div>
                     </div>
                 </div>
             </div>
