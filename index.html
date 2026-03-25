@@ -14,9 +14,25 @@
     <div id="app">
         <header>
             <h1>POD TCG Simulator</h1>
-            <nav>
-                <button onclick="showSection('opening')">เปิดซอง</button>
-                <button onclick="showSection('collection')">สมุดการ์ด</button>
+            <nav
+                style="display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto;">
+                <div class="nav-links" style="display: flex;">
+                    <button onclick="showSection('opening')">เปิดซอง</button>
+                    <button onclick="showSection('collection')">สมุดการ์ด</button>
+                </div>
+                <div class="auth-section" style="display: flex; align-items: center;">
+                    <button id="login-btn"
+                        onclick="window.location.href='https://discord.com/oauth2/authorize?client_id=1485982724463525951&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fdiscord%2Fcallback&scope=identify%20guilds.members.read'">เข้าสู่ระบบ</button>
+                    <!-- Profile Display After Login -->
+                    <div id="user-profile" style="display: none; align-items: center; gap: 10px;">
+                        <img id="user-avatar" src="" alt="Avatar" width="32" height="32"
+                            style="border-radius: 50%; border: 2px solid white;">
+                        <span id="user-name"
+                            style="color: white; font-weight: bold; font-family: 'Kanit', sans-serif;"></span>
+                        <button class="btn-primary" style="padding: 5px 10px; font-size: 0.9em;"
+                            onclick="logout()">ออกจากระบบ</button>
+                    </div>
+                </div>
             </nav>
         </header>
 
@@ -24,17 +40,17 @@
             <section id="opening-section" class="active">
                 <div class="pack-container">
                     <div id="pack-visual" class="pack-visual" onclick="startOpening()">
-                    <div class="pack-shaker">
-                        <div class="pack-half top">
-                            <img src="./assets/pack_tcg_op_1.png" alt="TCG Pack">
+                        <div class="pack-shaker">
+                            <div class="pack-half top">
+                                <img src="./assets/pack_tcg_op_1.png" alt="TCG Pack">
+                            </div>
+                            <div class="pack-half bottom">
+                                <img src="./assets/pack_tcg_op_1.png" alt="TCG Pack">
+                            </div>
                         </div>
-                        <div class="pack-half bottom">
-                            <img src="./assets/pack_tcg_op_1.png" alt="TCG Pack">
-                        </div>
+                        <div class="pack-glow"></div>
                     </div>
-                    <div class="pack-glow"></div>
-                </div>
-                <button id="open-btn" class="btn-primary" style="display: none;">เปิดซอง (5 ใบ)</button>
+                    <button id="open-btn" class="btn-primary" style="display: none;">เปิดซอง (5 ใบ)</button>
                 </div>
                 <div id="cards-display" class="cards-grid"></div>
             </section>
@@ -55,6 +71,30 @@
                 <div id="collection-grid" class="cards-grid"></div>
             </section>
         </main>
+
+        <!-- Logout Confirmation Dialog -->
+        <div id="logout-dialog" class="logout-dialog-overlay">
+            <div class="logout-dialog-box">
+                <div class="logout-dialog-icon"></div>
+                <h3>ออกจากระบบ</h3>
+                <p>คุณต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="logout-dialog-actions">
+                    <button class="logout-btn-cancel" onclick="closeLogoutDialog()">ยกเลิก</button>
+                    <button class="logout-btn-confirm" onclick="confirmLogout()">ออกจากระบบ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GOD PACK Dialog -->
+        <div id="godpack-dialog" class="godpack-dialog-overlay">
+            <div class="godpack-dialog-box">
+                <div class="godpack-stars">✦ ✦ ✦</div>
+                <div class="godpack-title">GOD PACK</div>
+                <div class="godpack-subtitle">DETECTED!</div>
+                <p class="godpack-desc">คุณได้รับ God Pack!<br>การ์ดทุกใบในซองนี้คือ SR ขึ้นไปทั้งหมด!</p>
+                <button class="godpack-btn" onclick="closeGodpackDialog()">รับการ์ด!</button>
+            </div>
+        </div>
 
         <div id="modal" class="modal">
             <div class="modal-content">
