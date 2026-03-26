@@ -323,9 +323,72 @@ section.active {
     background: var(--r-color);
 }
 
+/* LEG - Legendary: full rainbow, fast shimmer, glitter border */
+.card.leg .card-front {
+    background: linear-gradient(135deg, #ff0000, #ff8800, #ffee00, #00ff88, #00ccff, #aa00ff, #ff0000);
+    background-size: 400% 400%;
+    animation: moveGradient 2s linear infinite;
+    box-shadow:
+        0 0 0 3px rgba(255, 215, 0, 0.9),
+        0 0 20px rgba(255, 215, 0, 0.7),
+        0 0 40px rgba(255, 100, 0, 0.4);
+}
+
+.card.leg .card-content {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.card.leg .card-gloss {
+    background: linear-gradient(110deg,
+        rgba(255,255,255,0) 30%,
+        rgba(255,255,255,0.45) 45%,
+        rgba(255,255,255,0) 50%);
+    background-size: 200% 200%;
+    animation: shine 1s infinite;
+}
+
+/* SEC - Secret: deep purple → hot pink → cyan */
+.card.sec .card-front {
+    background: linear-gradient(135deg, #7b00d4, #e91e8c, #00e5ff, #7b00d4);
+    background-size: 300% 300%;
+    animation: moveGradient 3.5s ease infinite alternate;
+    box-shadow:
+        0 0 0 2px rgba(233, 30, 140, 0.8),
+        0 0 20px rgba(233, 30, 140, 0.5),
+        0 0 40px rgba(123, 0, 212, 0.3);
+}
+
+.card.sec .card-content {
+    background: rgba(255, 255, 255, 0.93);
+}
+
+.card.sec .card-gloss {
+    background: linear-gradient(110deg,
+        rgba(255,255,255,0) 30%,
+        rgba(255,255,255,0.35) 45%,
+        rgba(255,255,255,0) 50%);
+    background-size: 200% 200%;
+    animation: shine 1.8s infinite;
+}
+
+/* UR - Ultra Rare: violet → indigo */
+.card.ur .card-front {
+    background: linear-gradient(135deg, #6a11cb, #a855f7, #ec4899, #6a11cb);
+    background-size: 300% 300%;
+    animation: moveGradient 5s ease infinite alternate;
+    box-shadow:
+        0 0 0 2px rgba(168, 85, 247, 0.7),
+        0 0 15px rgba(168, 85, 247, 0.4);
+}
+
+.card.ur .card-content {
+    background: rgba(255, 255, 255, 0.93);
+}
+
 .card.c .card-front {
     background: var(--c-color);
 }
+
 
 @keyframes moveGradient {
     0% {
@@ -525,11 +588,35 @@ section.active {
     font-weight: 600;
 }
 
-/* Collection Grid Items */
-.card.locked {
-    filter: grayscale(1) brightness(0.5);
-    pointer-events: none;
+/* Collection Grid Items - Not yet owned */
+.card.not-owned {
+    opacity: 0.55;
+    filter: grayscale(0.4) brightness(0.85);
+    transition: opacity 0.3s ease, filter 0.3s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+.card.not-owned:hover {
+    opacity: 0.8;
+    filter: grayscale(0.1) brightness(0.95);
+}
+
+.not-owned-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.65);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.7rem;
+    font-family: 'Kanit', sans-serif;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    letter-spacing: 0.05em;
+}
+
 
 /* Modal Detail */
 .modal {
@@ -709,6 +796,11 @@ section.active {
     filter: brightness(1.15);
     box-shadow: 0 6px 20px rgba(255, 65, 108, 0.6);
     transform: translateY(-1px);
+}
+
+#info-btn:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
 }
 
 .logout-btn-cancel:active,

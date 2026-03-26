@@ -23,6 +23,7 @@
                 <div class="auth-section" style="display: flex; align-items: center;">
                     <button id="login-btn"
                         onclick="window.location.href='https://discord.com/oauth2/authorize?client_id=1485982724463525951&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fdiscord%2Fcallback&scope=identify%20guilds.members.read'">เข้าสู่ระบบ</button>
+                    <button id="info-btn" onclick="showPolicyModal()" style="background: transparent; border: none; font-size: 1.4rem; cursor: pointer; margin-left: 5px; transition: transform 0.2s;" title="นโยบายความเป็นส่วนตัว">ℹ️</button>
                     <!-- Profile Display After Login -->
                     <div id="user-profile" style="display: none; align-items: center; gap: 10px;">
                         <img id="user-avatar" src="" alt="Avatar" width="32" height="32"
@@ -59,9 +60,11 @@
                 <div class="collection-header">
                     <h2>Collection (<span id="collected-count">0</span>/<span id="total-count">0</span>)</h2>
                     <div class="filters">
+                        <button onclick="filterCollection('OWNED')">⭐ OWNED</button>
                         <button onclick="filterCollection('ALL')">ทั้งหมด</button>
-                        <button onclick="filterCollection('SSSSR')">SSSSR</button>
-                        <button onclick="filterCollection('SSSR')">SSSR</button>
+                        <button onclick="filterCollection('LEG')">LEG</button>
+                        <button onclick="filterCollection('SEC')">SEC</button>
+                        <button onclick="filterCollection('UR')">UR</button>
                         <button onclick="filterCollection('SSR')">SSR</button>
                         <button onclick="filterCollection('SR')">SR</button>
                         <button onclick="filterCollection('R')">R</button>
@@ -100,6 +103,19 @@
             <div class="modal-content">
                 <span class="close" onclick="closeModal()">&times;</span>
                 <div id="modal-card-detail"></div>
+            </div>
+        </div>
+
+        <!-- Policy Dialog -->
+        <div id="policy-modal" class="modal">
+            <div class="modal-content" style="max-width: 450px; text-align: center;">
+                <span class="close" onclick="closePolicyModal()">&times;</span>
+                <h3 style="margin-bottom: 15px; color: var(--accent); font-size: 1.5rem;">นโยบายความเป็นส่วนตัว</h3>
+                <p style="font-size: 1em; color: rgba(255,255,255,0.85); line-height: 1.6; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    การเข้าสู่ระบบด้วย Discord เป็นเพียงการแสดงผล <b>ชื่อ</b>, <b>ภาพอวตาร</b> และ <b>ยศ</b> ของผู้ใช้จากเซิร์ฟเวอร์ <span style="color: #00d2ff; font-weight: bold;">"กองบัญชาการชาวปด"</span> เท่านั้น<br><br>
+                    ระบบ<u>ไม่มี</u>การจัดเก็บข้อมูลใดๆ ของท่านลงในฐานข้อมูล
+                </p>
+                <button class="btn-primary" style="margin-top: 20px; padding: 10px 25px; font-size: 1em; border-radius: 30px;" onclick="closePolicyModal()">เข้าใจแล้ว</button>
             </div>
         </div>
     </div>

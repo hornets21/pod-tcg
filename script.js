@@ -1,11 +1,13 @@
-// Rarity Rates (Total 100%)
+// Rarity Rates (Total 100%) — isGacha='Y' cards only
+// Tier order: LEG > SEC > UR > SSR > SR > R > C
 const RATE = {
-    SSSSR: 0.1,
-    SSSR: 0.4,
-    SSR: 2.0,
-    SR: 7.5,
-    R: 20.0,
-    C: 70.0
+    LEG:  0.1,
+    SEC:  0.4,
+    UR:   2.0,
+    SSR:  7.5,
+    SR:  20.0,
+    R:   35.0,
+    C:   35.0
 };
 
 const GOD_PACK_CHANCE = 1; // 1%
@@ -73,8 +75,10 @@ async function checkAuth() {
 function showUserProfile(user) {
     const loginBtn = document.getElementById('login-btn');
     const profileDiv = document.getElementById('user-profile');
+    const infoBtn = document.getElementById('info-btn');
     if (loginBtn) loginBtn.style.display = 'none';
     if (profileDiv) profileDiv.style.display = 'flex';
+    if (infoBtn) infoBtn.style.display = 'none';
 
     const userNameEl = document.getElementById('user-name');
     const userAvatarEl = document.getElementById('user-avatar');
@@ -108,12 +112,25 @@ function closeLogoutDialog() {
 
 function confirmLogout() {
     closeLogoutDialog();
+
+    // Clear all stored data
     localStorage.removeItem('pod_user');
     localStorage.removeItem('pod_token');
+    localStorage.removeItem('pod_collection');
+
+    // Reset in-memory collection
+    collection = [];
+
+    // Reset UI
     const loginBtn = document.getElementById('login-btn');
     const profileDiv = document.getElementById('user-profile');
+    const infoBtn = document.getElementById('info-btn');
     if (loginBtn) loginBtn.style.display = 'inline-block';
     if (profileDiv) profileDiv.style.display = 'none';
+    if (infoBtn) infoBtn.style.display = 'inline-block';
+
+    // Refresh collection grid and counters
+    updateCollectionUI();
 }
 
 // Close dialog when clicking outside
@@ -126,7 +143,22 @@ document.addEventListener('click', (e) => {
     if (gpDialog && e.target === gpDialog) {
         closeGodpackDialog();
     }
+    const policyModal = document.getElementById('policy-modal');
+    if (policyModal && e.target === policyModal) {
+        closePolicyModal();
+    }
 });
+
+// Policy Modal
+function showPolicyModal() {
+    const m = document.getElementById('policy-modal');
+    if (m) m.style.display = 'block';
+}
+
+function closePolicyModal() {
+    const m = document.getElementById('policy-modal');
+    if (m) m.style.display = 'none';
+}
 
 // GOD PACK Dialog
 function showGodpackDialog() {
@@ -149,25 +181,23 @@ function showSection(sectionId) {
     }
 }
 
-// Roll Rarity Logic
+// Roll Rarity Logic — only isGacha='Y' cards enter the pool
 function rollRarity() {
     const rand = Math.random() * 100;
-
-    if (rand < RATE.SSSSR) return "SSSSR";
-    if (rand < (RATE.SSSSR + RATE.SSSR)) return "SSSR";
-    if (rand < (RATE.SSSSR + RATE.SSSR + RATE.SSR)) return "SSR";
-    if (rand < (RATE.SSSSR + RATE.SSSR + RATE.SSR + RATE.SR)) return "SR";
-    if (rand < (RATE.SSSSR + RATE.SSSR + RATE.SSR + RATE.SR + RATE.R)) return "R";
+    let cum = 0;
+    for (const [tier, rate] of Object.entries(RATE)) {
+        cum += rate;
+        if (rand < cum) return tier;
+    }
     return "C";
 }
 
 function getHighRarity() {
     const rand = Math.random() * 100;
-
-    if (rand < 5) return "SSSSR";
-    if (rand < 15) return "SSSR";
-    if (rand < 45) return "SSR";
-    return "SR";
+    if (rand < 5)  return "LEG";
+    if (rand < 15) return "SEC";
+    if (rand < 45) return "UR";
+    return "SSR";
 }
 
 function isGodPack() {
@@ -175,10 +205,12 @@ function isGodPack() {
 }
 
 function getRandomCardByRarity(rarity) {
-    const filtered = CARDS.filter(c => c.rarity === rarity);
+    // Only allow cards with isGacha = 'Y' into the gacha pool
+    const filtered = CARDS.filter(c => c.rarity === rarity && c.isGacha === 'Y');
     if (filtered.length === 0) {
-        // Fallback if no cards in that rarity
-        return CARDS[Math.floor(Math.random() * CARDS.length)];
+        // Fallback: any gacha-eligible card
+        const gachaPool = CARDS.filter(c => c.isGacha === 'Y');
+        return gachaPool[Math.floor(Math.random() * gachaPool.length)];
     }
     return filtered[Math.floor(Math.random() * filtered.length)];
 }
@@ -240,12 +272,13 @@ async function startOpening() {
 
 function getRarityStars(rarity) {
     const stars = {
-        'C': '★',
-        'R': '★★',
-        'SR': '★★★',
+        'C':   '★',
+        'R':   '★★',
+        'SR':  '★★★',
         'SSR': '★★★★',
-        'SSSR': '★★★★★',
-        'SSSSR': '★★★★★★'
+        'UR':  '★★★★★',
+        'SEC': '★★★★★★',
+        'LEG': '★★★★★★★'
     };
     return stars[rarity] || '★';
 }
@@ -331,14 +364,25 @@ function updateCollectionUI(filter = 'ALL') {
     const grid = document.getElementById('collection-grid');
     grid.innerHTML = '';
 
-    CARDS.forEach(card => {
-        if (filter !== 'ALL' && card.rarity !== filter) return;
+    // Check Discord role_ids from logged-in user
+    const userData = JSON.parse(localStorage.getItem('pod_user') || '{}');
+    const userRoleIds = new Set(Array.isArray(userData.roles) ? userData.roles : []);
 
-        const isCollected = collection.some(c => c.name === card.name);
+    let ownedCount = 0;
+
+    CARDS.forEach(card => {
+        const isOwned = userRoleIds.size > 0 && userRoleIds.has(card.role_id);
+        if (isOwned) ownedCount++;
+
+        // OWNED: show only cards user has. Other filters: rarity match.
+        if (filter === 'OWNED' && !isOwned) return;
+        if (filter !== 'ALL' && filter !== 'OWNED' && card.rarity !== filter) return;
+
         const cardEl = document.createElement('div');
-        cardEl.className = `card revealed ${card.rarity.toLowerCase()} ${isCollected ? '' : 'locked'}`;
+        cardEl.className = `card revealed ${card.rarity.toLowerCase()}${isOwned ? '' : ' not-owned'}`;
         cardEl.innerHTML = `
             <div class="card-gloss"></div>
+            ${!isOwned ? '<div class="not-owned-badge">ยังไม่มี</div>' : ''}
             <div class="card-inner">
                 <div class="card-front">
                     <div class="card-content">
@@ -346,12 +390,12 @@ function updateCollectionUI(filter = 'ALL') {
                             <span class="name">${card.name}</span>
                         </div>
                         <div class="image-box">
-                            <img src="${card.image}" alt="${card.name}">
+                            <img src="${card.image}" alt="${card.name}" onerror="this.style.display='none'">
                         </div>
                         <div class="card-body">
                             <div class="ability">
                                 <strong>ความสามารถ</strong>
-                                <p>${card.ability}</p>
+                                <p>${card.ability || '—'}</p>
                             </div>
                         </div>
                         <div class="card-footer">
@@ -363,20 +407,25 @@ function updateCollectionUI(filter = 'ALL') {
             </div>
         `;
 
-        if (isCollected) {
-            cardEl.onclick = () => showCardDetail(card);
-        }
+        cardEl.onclick = () => showCardDetail(card);
 
         grid.appendChild(cardEl);
     });
 
-    updateCollectedCount();
+    // collected-count = cards owned via Discord roles, total-count = all cards
+    document.getElementById('collected-count').textContent = ownedCount;
+    document.getElementById('total-count').textContent = CARDS.length;
 }
 
 function filterCollection(rarity) {
     updateCollectionUI(rarity);
     document.querySelectorAll('.filters button').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.trim() === (rarity === 'ALL' ? 'ทั้งหมด' : rarity));
+        const label = btn.textContent.trim();
+        const isActive =
+            (rarity === 'ALL'   && label === 'ทั้งหมด') ||
+            (rarity === 'OWNED' && label === '⭐ ของฉัน') ||
+            (rarity !== 'ALL' && rarity !== 'OWNED' && label === rarity);
+        btn.classList.toggle('active', isActive);
     });
 }
 
