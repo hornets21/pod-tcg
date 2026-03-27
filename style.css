@@ -340,9 +340,9 @@ section.active {
 
 .card.leg .card-gloss {
     background: linear-gradient(110deg,
-        rgba(255,255,255,0) 30%,
-        rgba(255,255,255,0.45) 45%,
-        rgba(255,255,255,0) 50%);
+            rgba(255, 255, 255, 0) 30%,
+            rgba(255, 255, 255, 0.45) 45%,
+            rgba(255, 255, 255, 0) 50%);
     background-size: 200% 200%;
     animation: shine 1s infinite;
 }
@@ -364,9 +364,9 @@ section.active {
 
 .card.sec .card-gloss {
     background: linear-gradient(110deg,
-        rgba(255,255,255,0) 30%,
-        rgba(255,255,255,0.35) 45%,
-        rgba(255,255,255,0) 50%);
+            rgba(255, 255, 255, 0) 30%,
+            rgba(255, 255, 255, 0.35) 45%,
+            rgba(255, 255, 255, 0) 50%);
     background-size: 200% 200%;
     animation: shine 1.8s infinite;
 }
@@ -396,8 +396,63 @@ section.active {
     }
 
     100% {
-        background-position: 100% 50%;
+        background-position: 200% 50%;
     }
+}
+
+/* Search Container Stylings */
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    margin: 0.75rem 0 1.25rem;
+}
+
+.search-container::before {
+    content: "🔍";
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    color: var(--accent);
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 2;
+}
+
+#card-search {
+    width: 100%;
+    padding: 0.85rem 1.5rem 0.85rem 3rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 210, 255, 0.25);
+    border-radius: 50px;
+    color: #fff;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.05);
+}
+
+#card-search:hover {
+    border-color: rgba(0, 210, 255, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#card-search:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 
+        0 0 20px var(--accent-glow),
+        inset 0 0 10px rgba(0, 210, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+#card-search::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
 }
 
 /* Glossy Effect */
@@ -476,9 +531,9 @@ section.active {
 }
 
 .image-box img {
-    /* width: 100%;
-    height: 100%; */
-    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.3));
 }
 
@@ -729,6 +784,7 @@ section.active {
         opacity: 0;
         transform: scale(0.85);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -844,8 +900,15 @@ section.active {
 }
 
 @keyframes godpackPop {
-    from { opacity: 0; transform: scale(0.7) rotate(-3deg); }
-    to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    from {
+        opacity: 0;
+        transform: scale(0.7) rotate(-3deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
 }
 
 .godpack-stars {
@@ -858,8 +921,15 @@ section.active {
 }
 
 @keyframes starPulse {
-    from { opacity: 0.6; transform: scale(0.95); }
-    to   { opacity: 1;   transform: scale(1.05); }
+    from {
+        opacity: 0.6;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.05);
+    }
 }
 
 .godpack-title {
@@ -889,13 +959,23 @@ section.active {
 }
 
 @keyframes rainbowShift {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 300% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 300% 50%;
+    }
 }
 
 @keyframes glowPulse {
-    from { text-shadow: 0 0 10px rgba(255, 220, 0, 0.6); }
-    to   { text-shadow: 0 0 25px rgba(255, 220, 0, 1), 0 0 50px rgba(255, 150, 0, 0.6); }
+    from {
+        text-shadow: 0 0 10px rgba(255, 220, 0, 0.6);
+    }
+
+    to {
+        text-shadow: 0 0 25px rgba(255, 220, 0, 1), 0 0 50px rgba(255, 150, 0, 0.6);
+    }
 }
 
 .godpack-desc {
@@ -932,6 +1012,11 @@ section.active {
 }
 
 @keyframes goldShimmer {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 200% 50%;
+    }
 }

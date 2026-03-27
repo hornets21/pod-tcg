@@ -1,13 +1,13 @@
 // Rarity Rates (Total 100%) — isGacha='Y' cards only
 // Tier order: LEG > SEC > UR > SSR > SR > R > C
 const RATE = {
-    LEG:  0.1,
-    SEC:  0.4,
-    UR:   2.0,
-    SSR:  7.5,
-    SR:  20.0,
-    R:   35.0,
-    C:   35.0
+    LEG: 0.1,
+    SEC: 0.4,
+    UR: 1.0,
+    SSR: 6.5,
+    SR: 12.0,
+    R: 30.0,
+    C: 50.0
 };
 
 const GOD_PACK_CHANCE = 1; // 1%
@@ -24,9 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Auth Logic
 async function checkAuth() {
-    console.log("[Auth] Current URL:", window.location.href);
-    console.log("[Auth] Current Location Search:", window.location.search);
-
     // In case Live Server or hashes mess up the query string
     let searchString = window.location.search;
     if (!searchString && window.location.href.includes('?')) {
@@ -41,7 +38,7 @@ async function checkAuth() {
     if (token && token !== 'null' && token !== 'undefined') {
         try {
             console.log(`[Auth] Fetching user profile using token...`);
-            const res = await fetch('http://localhost:3000/auth/me', {
+            const res = await fetch('https://pod-tcg-backend-production.up.railway.app/auth/me', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -177,7 +174,7 @@ function showSection(sectionId) {
     document.getElementById(`${sectionId}-section`).classList.add('active');
 
     if (sectionId === 'collection') {
-        updateCollectionUI();
+        filterCollection();
     }
 }
 
@@ -194,7 +191,7 @@ function rollRarity() {
 
 function getHighRarity() {
     const rand = Math.random() * 100;
-    if (rand < 5)  return "LEG";
+    if (rand < 5) return "LEG";
     if (rand < 15) return "SEC";
     if (rand < 45) return "UR";
     return "SSR";
@@ -217,8 +214,8 @@ function getRandomCardByRarity(rarity) {
 
 function openPack() {
     const isGod = isGodPack();
-
     const pack = [];
+    const selectedIds = new Set();
 
     for (let i = 0; i < 5; i++) {
         let rarity;
@@ -227,7 +224,26 @@ function openPack() {
         } else {
             rarity = rollRarity();
         }
-        pack.push(getRandomCardByRarity(rarity));
+
+        let card = getRandomCardByRarity(rarity);
+
+        // Ensure uniqueness
+        let attempts = 0;
+        while (selectedIds.has(card.role_id) && attempts < 10) {
+            card = getRandomCardByRarity(rarity);
+            attempts++;
+        }
+
+        // If still duplicate after 10 attempts (pool too small), pick ANY unique card from gacha pool
+        if (selectedIds.has(card.role_id)) {
+            const fallbackPool = CARDS.filter(c => c.isGacha === 'Y' && !selectedIds.has(c.role_id));
+            if (fallbackPool.length > 0) {
+                card = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+            }
+        }
+
+        pack.push(card);
+        selectedIds.add(card.role_id);
     }
 
     return { pack, isGod };
@@ -272,11 +288,11 @@ async function startOpening() {
 
 function getRarityStars(rarity) {
     const stars = {
-        'C':   '★',
-        'R':   '★★',
-        'SR':  '★★★',
+        'C': '★',
+        'R': '★★',
+        'SR': '★★★',
         'SSR': '★★★★',
-        'UR':  '★★★★★',
+        'UR': '★★★★★',
         'SEC': '★★★★★★',
         'LEG': '★★★★★★★'
     };
@@ -296,7 +312,7 @@ function createCardElement(card, index) {
                         <span class="name">${card.name}</span>
                     </div>
                     <div class="image-box">
-                        <img src="${card.image}" alt="${card.name}" onerror="this.src='https://via.placeholder.com/180x270?text=Image+Not+Found'">
+                        <img src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/180x270?text=Image+Not+Found'">
                     </div>
                     <div class="card-body">
                         <div class="ability">
@@ -356,12 +372,33 @@ function saveCollection() {
     localStorage.setItem('pod_collection', JSON.stringify(collection));
 }
 
+let currentRarity = 'ALL';
+
+function filterCollection(rarity) {
+    if (rarity !== undefined) currentRarity = rarity;
+
+    const searchInput = document.getElementById('card-search');
+    const search = searchInput ? searchInput.value.toLowerCase() : '';
+
+    updateCollectionUI(currentRarity, search);
+
+    document.querySelectorAll('.filters button').forEach(btn => {
+        const label = btn.textContent.trim();
+        const isActive =
+            (currentRarity === 'ALL' && label === 'ทั้งหมด') ||
+            (currentRarity === 'OWNED' && label === '⭐ OWNED') ||
+            (currentRarity !== 'ALL' && currentRarity !== 'OWNED' && label === currentRarity);
+        btn.classList.toggle('active', isActive);
+    });
+}
+
 function updateCollectedCount() {
     document.getElementById('collected-count').textContent = collection.length;
 }
 
-function updateCollectionUI(filter = 'ALL') {
+function updateCollectionUI(filter = 'ALL', search = '') {
     const grid = document.getElementById('collection-grid');
+    if (!grid) return;
     grid.innerHTML = '';
 
     // Check Discord role_ids from logged-in user
@@ -374,7 +411,10 @@ function updateCollectionUI(filter = 'ALL') {
         const isOwned = userRoleIds.size > 0 && userRoleIds.has(card.role_id);
         if (isOwned) ownedCount++;
 
-        // OWNED: show only cards user has. Other filters: rarity match.
+        // Filter by Search
+        if (search && !card.name.toLowerCase().includes(search)) return;
+
+        // Filter by Rarity/Owned
         if (filter === 'OWNED' && !isOwned) return;
         if (filter !== 'ALL' && filter !== 'OWNED' && card.rarity !== filter) return;
 
@@ -390,7 +430,7 @@ function updateCollectionUI(filter = 'ALL') {
                             <span class="name">${card.name}</span>
                         </div>
                         <div class="image-box">
-                            <img src="${card.image}" alt="${card.name}" onerror="this.style.display='none'">
+                            <img src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.style.display='none'">
                         </div>
                         <div class="card-body">
                             <div class="ability">
@@ -417,18 +457,6 @@ function updateCollectionUI(filter = 'ALL') {
     document.getElementById('total-count').textContent = CARDS.length;
 }
 
-function filterCollection(rarity) {
-    updateCollectionUI(rarity);
-    document.querySelectorAll('.filters button').forEach(btn => {
-        const label = btn.textContent.trim();
-        const isActive =
-            (rarity === 'ALL'   && label === 'ทั้งหมด') ||
-            (rarity === 'OWNED' && label === '⭐ ของฉัน') ||
-            (rarity !== 'ALL' && rarity !== 'OWNED' && label === rarity);
-        btn.classList.toggle('active', isActive);
-    });
-}
-
 // Modal Detail
 function showCardDetail(card) {
     const modal = document.getElementById('modal');
@@ -436,7 +464,7 @@ function showCardDetail(card) {
 
     detail.innerHTML = `
         <div class="detail-container">
-            <img src="${card.image}" alt="${card.name}" style="width: 250px; border-radius: 15px;">
+            <img src="${card.image}" alt="${card.name}" loading="lazy" style="width: 250px; border-radius: 15px;">
             <div class="detail-info">
                 <h2 class="rarity-${card.rarity}">${card.name}</h2>
                 <p><strong>ระดับ:</strong> ${card.rarity}</p>
