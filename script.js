@@ -17,6 +17,7 @@ let currentPack = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    showSection('opening'); // Set initial active section
     updateCollectionUI();
     document.getElementById('total-count').textContent = CARDS.length;
     checkAuth();
@@ -206,6 +207,12 @@ function closeGodpackDialog() {
 function showSection(sectionId) {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.getElementById(`${sectionId}-section`).classList.add('active');
+
+    // Update active state for nav buttons
+    document.querySelectorAll('.nav-links button').forEach(btn => {
+        const isCurrent = btn.getAttribute('onclick').includes(`'${sectionId}'`);
+        btn.classList.toggle('active', isCurrent);
+    });
 
     if (sectionId === 'collection') {
         filterCollection();

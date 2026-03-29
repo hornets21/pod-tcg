@@ -102,29 +102,100 @@ body {
 .nav-links button,
 .auth-section button:not(.btn-primary) {
     background: var(--glass);
-    border: 1px solid var(--glass);
-    color: white;
-    padding: 0.5rem 1.5rem;
-    margin: 0 0.5rem;
-    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.6rem 1.4rem;
+    margin: 0 0.25rem;
+    border-radius: 30px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(5px);
 }
 
 .nav-links button:hover,
 .auth-section button:not(.btn-primary):hover {
-    background: var(--accent);
-    box-shadow: 0 0 15px var(--accent-glow);
+    background: rgba(0, 210, 255, 0.15);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+    transform: translateY(-2px);
+}
+
+.nav-links button.active {
+    background: linear-gradient(to right, #00d2ff, #3a7bd5);
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+}
+
+#login-btn {
+    background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(58, 123, 213, 0.2));
+    border: 1px solid var(--accent) !important;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+#login-btn:hover {
+    background: linear-gradient(135deg, var(--accent), #3a7bd5) !important;
+    box-shadow: 0 0 25px var(--accent-glow) !important;
 }
 
 .auth-section .icon-btn {
-    padding: 0.5rem;
+    padding: 0;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* User Profile Styles */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    backdrop-filter: blur(10px);
+}
+
+.avatar-img {
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+    object-fit: cover;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #fff;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logout-btn-small {
+    padding: 0.35rem 0.9rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+.logout-btn-small:hover {
+    background: #ff4757 !important;
+    border-color: #ff4757 !important;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.4) !important;
 }
 
 main {
