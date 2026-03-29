@@ -28,24 +28,79 @@ body {
     overflow-x: hidden;
 }
 
-header {
-    padding: 2rem;
-    text-align: center;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--glass);
+/* --- Modern Top Navigation Bar --- */
+#main-header {
+    background: rgba(15, 12, 41, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+    will-change: background, box-shadow, padding;
+    /* Optimization for transition */
 }
 
-h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    text-shadow: 0 0 10px var(--accent-glow);
+.header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    transition: padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-nav button {
+#main-title {
+    font-size: 2.2rem;
+    margin: 0;
+    font-weight: 600;
+    text-align: center;
+    justify-self: center;
+    background: linear-gradient(to right, #ffffff, #00d2ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+    transition: font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1), text-shadow 0.4s ease;
+    white-space: nowrap;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+}
+
+.auth-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Collapsed (Scrolled) State */
+#main-header.collapsed {
+    background: rgba(15, 12, 41, 0.95);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border-bottom-color: rgba(0, 210, 255, 0.15);
+}
+
+#main-header.collapsed .header-inner {
+    padding: 0.6rem 2rem;
+}
+
+#main-header.collapsed #main-title {
+    font-size: 1.4rem;
+    text-shadow: 0 2px 8px rgba(0, 210, 255, 0.5);
+}
+
+/* --- Navigation Buttons --- */
+
+.nav-links button,
+.auth-section button:not(.btn-primary) {
     background: var(--glass);
     border: 1px solid var(--glass);
     color: white;
@@ -56,9 +111,20 @@ nav button {
     transition: all 0.3s ease;
 }
 
-nav button:hover {
+.nav-links button:hover,
+.auth-section button:not(.btn-primary):hover {
     background: var(--accent);
     box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.auth-section .icon-btn {
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 main {
@@ -241,11 +307,24 @@ section.active {
     perspective: 1000px;
     cursor: pointer;
     position: relative;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.1s ease-out, opacity 0.4s ease;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    contain: layout;
+
+    /* Performance Optimizations for rapid scrolling */
+    content-visibility: auto;
+    /* Browser only renders when near viewport */
+    contain-intrinsic-size: 230px 330px;
+    /* Placeholder size for layout stability */
+    transform: translateZ(0);
+    /* Force GPU Layer promotion */
+    backface-visibility: hidden;
 }
 
 .card:hover {
-    transform: translateY(-10px);
+    /* Base hover removed as we use JS for Tilt */
+    z-index: 100;
 }
 
 .card-inner {
@@ -253,13 +332,14 @@ section.active {
     width: 100%;
     height: 100%;
     text-align: left;
-    /* Header is left-aligned */
     transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
+    transform: rotateX(calc((var(--my, 0.5) - 0.5) * -25deg)) rotateY(calc((var(--mx, 0.5) - 0.5) * 25deg));
+    will-change: transform;
 }
 
 .card.revealed .card-inner {
-    transform: rotateY(180deg);
+    transform: rotateY(180deg) rotateX(calc((var(--my, 0.5) - 0.5) * -25deg)) rotateZ(calc((var(--mx, 0.5) - 0.5) * -5deg));
 }
 
 .card-front,
@@ -400,6 +480,56 @@ section.active {
     }
 }
 
+/* Back to Top Button */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #3a7bd5);
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+}
+
+.back-to-top:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 210, 255, 0.6);
+    filter: brightness(1.1);
+}
+
+.back-to-top:active {
+    transform: scale(0.95);
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+}
+
 /* Search Container Stylings */
 .search-container {
     position: relative;
@@ -443,7 +573,7 @@ section.active {
 #card-search:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 
+    box-shadow:
         0 0 20px var(--accent-glow),
         inset 0 0 10px rgba(0, 210, 255, 0.1);
     background: rgba(255, 255, 255, 0.12);
@@ -455,22 +585,75 @@ section.active {
     font-weight: 300;
 }
 
-/* Glossy Effect */
-.card-gloss {
+/* Glossy & Holo Effects */
+.card-gloss,
+.card-holo {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(110deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.2) 45%, rgba(255, 255, 255, 0) 50%);
-    background-size: 200% 200%;
     z-index: 5;
     pointer-events: none;
     border-radius: 18px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover .card-gloss,
+.card:hover .card-holo {
+    opacity: 1;
+}
+
+.card-gloss {
+    background: linear-gradient(110deg,
+            rgba(255, 255, 255, 0) 30%,
+            rgba(255, 255, 255, 0.2) 45%,
+            rgba(255, 255, 255, 0) 50%);
+    background-size: 200% 200%;
 }
 
 .card:hover .card-gloss {
     animation: shine 1.5s infinite;
+}
+
+/* Holo Overlay */
+.card-holo {
+    mix-blend-mode: overlay;
+}
+
+.revealed .card-holo {
+    opacity: 0.15;
+    /* Suble shine when revealed and not hovered */
+}
+
+/* Rarity Specific Holo Effects */
+.leg .card-holo {
+    background:
+        radial-gradient(circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(255, 0, 255, 0.2) 20%,
+            rgba(0, 255, 255, 0.2) 40%,
+            transparent 60%),
+        repeating-linear-gradient(calc(var(--mx, 0.5) * 360deg),
+            rgba(255, 0, 0, 0.1) 0%, rgba(255, 255, 0, 0.1) 10%, rgba(0, 255, 0, 0.1) 20%,
+            rgba(0, 255, 255, 0.1) 30%, rgba(0, 0, 255, 0.1) 40%, rgba(255, 0, 255, 0.1) 50%);
+    opacity: 0.5 !important;
+}
+
+.sec .card-holo {
+    background: radial-gradient(circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+            rgba(255, 255, 255, 0.6) 0%,
+            rgba(123, 0, 212, 0.3) 30%,
+            transparent 70%);
+}
+
+.ur .card-holo {
+    background: linear-gradient(calc(var(--mx, 0.5) * 360deg),
+            rgba(255, 255, 255, 0) 30%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0) 70%);
 }
 
 @keyframes shine {

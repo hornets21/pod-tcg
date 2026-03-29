@@ -20,6 +20,40 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCollectionUI();
     document.getElementById('total-count').textContent = CARDS.length;
     checkAuth();
+
+    // Back to Top and Header Collapse Logic
+    const backToTopBtn = document.getElementById('back-to-top-btn');
+    const header = document.querySelector('header');
+    let isScrolling = false;
+    window.addEventListener('scroll', () => {
+        if (!isScrolling) {
+            window.requestAnimationFrame(() => {
+                // Back to Top button
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+
+                // Header Collapse
+                if (window.scrollY > 50) {
+                    header.classList.add('collapsed');
+                } else {
+                    header.classList.remove('collapsed');
+                }
+
+                isScrolling = false;
+            });
+            isScrolling = true;
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 });
 
 // Auth Logic
@@ -304,6 +338,7 @@ function createCardElement(card, index) {
     cardEl.className = `card ${card.rarity.toLowerCase()}`;
     cardEl.innerHTML = `
         <div class="card-gloss"></div>
+        <div class="card-holo"></div>
         <div class="card-inner">
             <div class="card-back"></div>
             <div class="card-front">
@@ -328,6 +363,8 @@ function createCardElement(card, index) {
             </div>
         </div>
     `;
+
+    setupCardInteractions(cardEl);
 
     cardEl.onclick = () => {
         if (!cardEl.classList.contains('revealed')) {
@@ -373,6 +410,7 @@ function saveCollection() {
 }
 
 let currentRarity = 'ALL';
+let searchTimeout;
 
 function filterCollection(rarity) {
     if (rarity !== undefined) currentRarity = rarity;
@@ -380,7 +418,11 @@ function filterCollection(rarity) {
     const searchInput = document.getElementById('card-search');
     const search = searchInput ? searchInput.value.toLowerCase() : '';
 
-    updateCollectionUI(currentRarity, search);
+    // Debounce the UI update for search to prevent lag
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        updateCollectionUI(currentRarity, search);
+    }, search ? 250 : 0); // No debounce for rarity filters, only for search
 
     document.querySelectorAll('.filters button').forEach(btn => {
         const label = btn.textContent.trim();
@@ -400,6 +442,8 @@ function updateCollectionUI(filter = 'ALL', search = '') {
     const grid = document.getElementById('collection-grid');
     if (!grid) return;
     grid.innerHTML = '';
+
+    const fragment = document.createDocumentFragment();
 
     // Check Discord role_ids from logged-in user
     const userData = JSON.parse(localStorage.getItem('pod_user') || '{}');
@@ -422,6 +466,7 @@ function updateCollectionUI(filter = 'ALL', search = '') {
         cardEl.className = `card revealed ${card.rarity.toLowerCase()}${isOwned ? '' : ' not-owned'}`;
         cardEl.innerHTML = `
             <div class="card-gloss"></div>
+            <div class="card-holo"></div>
             ${!isOwned ? '<div class="not-owned-badge">ยังไม่มี</div>' : ''}
             <div class="card-inner">
                 <div class="card-front">
@@ -447,10 +492,14 @@ function updateCollectionUI(filter = 'ALL', search = '') {
             </div>
         `;
 
+        setupCardInteractions(cardEl);
+
         cardEl.onclick = () => showCardDetail(card);
 
-        grid.appendChild(cardEl);
+        fragment.appendChild(cardEl);
     });
+
+    grid.appendChild(fragment);
 
     // collected-count = cards owned via Discord roles, total-count = all cards
     document.getElementById('collected-count').textContent = ownedCount;
@@ -478,6 +527,22 @@ function showCardDetail(card) {
 
 function closeModal() {
     document.getElementById('modal').style.display = "none";
+}
+
+function setupCardInteractions(cardEl) {
+    cardEl.addEventListener('mousemove', (e) => {
+        const rect = cardEl.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+
+        cardEl.style.setProperty('--mx', x);
+        cardEl.style.setProperty('--my', y);
+    });
+
+    cardEl.addEventListener('mouseleave', () => {
+        cardEl.style.setProperty('--mx', 0.5);
+        cardEl.style.setProperty('--my', 0.5);
+    });
 }
 
 window.onclick = function (event) {
