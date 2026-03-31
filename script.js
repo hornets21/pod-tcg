@@ -301,7 +301,7 @@ async function startOpening() {
     packVisual.classList.add('tearing');
 
     // Play tearing sound
-    const tearSound = new Audio('assets/tear.mp3');
+    const tearSound = new Audio('https://img.lucky-pod.fun/tear.mp3');
     tearSound.play().catch(e => console.log("Sound play error:", e));
 
     // Wait for shake, then tear
