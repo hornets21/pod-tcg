@@ -84,6 +84,11 @@ async function checkAuth() {
                 console.log("[Auth] Successfully fetched user data:", userData);
                 localStorage.setItem('pod_user', JSON.stringify(userData));
                 localStorage.setItem('pod_token', token);
+                
+                // Clear guest collection when logging in
+                localStorage.removeItem('pod_collection');
+                collection = [];
+                
                 window.history.replaceState({}, document.title, window.location.pathname);
                 showUserProfile(userData);
             } else {
@@ -159,7 +164,7 @@ function confirmLogout() {
     const infoBtn = document.getElementById('info-btn');
     if (loginBtn) loginBtn.style.display = 'inline-block';
     if (profileDiv) profileDiv.style.display = 'none';
-    if (infoBtn) infoBtn.style.display = 'inline-block';
+    if (infoBtn) infoBtn.style.display = 'flex';
 
     // Refresh collection grid and counters
     updateCollectionUI();
@@ -406,7 +411,9 @@ async function revealCard(card, index) {
 
 // Collection Logic
 function addToCollection(card) {
-    if (!collection.some(c => c.name === card.name)) {
+    const isLoggedIn = !!localStorage.getItem('pod_token');
+    // Only track local collection if guest
+    if (!isLoggedIn && !collection.some(c => c.role_id === card.role_id)) {
         collection.push(card);
         updateCollectedCount();
     }
@@ -452,14 +459,23 @@ function updateCollectionUI(filter = 'ALL', search = '') {
 
     const fragment = document.createDocumentFragment();
 
-    // Check Discord role_ids from logged-in user
+    const isLoggedIn = !!localStorage.getItem('pod_token');
     const userData = JSON.parse(localStorage.getItem('pod_user') || '{}');
     const userRoleIds = new Set(Array.isArray(userData.roles) ? userData.roles : []);
+    const localCollectionIds = new Set(collection.map(c => c.role_id));
 
     let ownedCount = 0;
 
     CARDS.forEach(card => {
-        const isOwned = userRoleIds.size > 0 && userRoleIds.has(card.role_id);
+        let isOwned = false;
+        if (isLoggedIn) {
+            // If logged in, only roles count
+            isOwned = userRoleIds.has(card.role_id);
+        } else {
+            // If guest, use local gacha history
+            isOwned = localCollectionIds.has(card.role_id);
+        }
+        
         if (isOwned) ownedCount++;
 
         // Filter by Search
