@@ -57,7 +57,6 @@ body {
     margin: 0;
     font-weight: 600;
     text-align: center;
-    justify-self: center;
     background: linear-gradient(to right, #ffffff, #00d2ff);
     -webkit-background-clip: text;
     background-clip: text;
@@ -587,13 +586,99 @@ section.active {
     transform: translateY(0);
 }
 
+@media (max-width: 992px) {
+    .header-inner {
+        padding: 1rem 1.5rem;
+    }
+
+    #main-title {
+        font-size: 1.8rem;
+    }
+}
+
 @media (max-width: 768px) {
+    .header-inner {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 0.75rem;
+        padding: 0.8rem 1rem;
+    }
+    
+    .nav-links, .auth-section {
+        justify-content: center;
+        width: 100%;
+    }
+
+    #main-title {
+        order: -1;
+        font-size: 1.6rem;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .card {
+        width: 160px;
+        height: 230px;
+        contain-intrinsic-size: 160px 230px;
+    }
+    
+    .image-box {
+        height: 100px;
+    }
+    
+    .card-header .name {
+        font-size: 0.9rem;
+    }
+
     .back-to-top {
         bottom: 20px;
         right: 20px;
         width: 45px;
         height: 45px;
         font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #main-title {
+        font-size: 1.4rem;
+    }
+
+    .nav-links button,
+    .auth-section button:not(.btn-primary) {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .card {
+        width: 140px;
+        height: 200px;
+        contain-intrinsic-size: 140px 200px;
+    }
+    
+    .image-box {
+        height: 80px;
+    }
+
+    .card-body {
+        padding: 6px;
+    }
+    
+    .ability p {
+        font-size: 0.65rem;
+    }
+
+    .card-footer {
+        padding: 5px 8px;
+        font-size: 0.7rem;
     }
 }
 
@@ -665,7 +750,8 @@ section.active {
     border-radius: 18px;
     overflow: hidden;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease, filter 0.4s ease;
+    will-change: opacity, background-position, filter;
 }
 
 .card:hover .card-gloss,
@@ -674,63 +760,99 @@ section.active {
 }
 
 .card-gloss {
-    background: linear-gradient(110deg,
-            rgba(255, 255, 255, 0) 30%,
-            rgba(255, 255, 255, 0.2) 45%,
-            rgba(255, 255, 255, 0) 50%);
+    background: linear-gradient(
+        110deg,
+        rgba(255, 255, 255, 0) 30%,
+        rgba(255, 255, 255, 0.25) 45%,
+        rgba(255, 255, 255, 0.5) 48%,
+        rgba(255, 255, 255, 0.25) 51%,
+        rgba(255, 255, 255, 0) 70%
+    );
     background-size: 200% 200%;
-}
-
-.card:hover .card-gloss {
-    animation: shine 1.5s infinite;
-}
-
-/* Holo Overlay */
-.card-holo {
     mix-blend-mode: overlay;
 }
 
+.card:hover .card-gloss {
+    animation: shine 1.2s infinite linear;
+}
+
+/* Base Holo Overlay */
+.card-holo {
+    mix-blend-mode: color-dodge;
+    background-size: 150% 150%;
+    background-position: center;
+    filter: brightness(0.8) contrast(1.2);
+}
+
 .revealed .card-holo {
-    opacity: 0.15;
-    /* Suble shine when revealed and not hovered */
+    opacity: 0.12; /* Subtle idle shine */
 }
 
-/* Rarity Specific Holo Effects */
+.card:hover .card-holo {
+    opacity: 0.8;
+    filter: brightness(1.1) contrast(1.3);
+}
+
+/* Rarity Specific Holo Profiles */
+
+/* LEG - Premium Golden Rainbow Sweep */
 .leg .card-holo {
-    background:
-        radial-gradient(circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
-            rgba(255, 255, 255, 0.8) 0%,
-            rgba(255, 0, 255, 0.2) 20%,
-            rgba(0, 255, 255, 0.2) 40%,
-            transparent 60%),
-        repeating-linear-gradient(calc(var(--mx, 0.5) * 360deg),
-            rgba(255, 0, 0, 0.1) 0%, rgba(255, 255, 0, 0.1) 10%, rgba(0, 255, 0, 0.1) 20%,
-            rgba(0, 255, 255, 0.1) 30%, rgba(0, 0, 255, 0.1) 40%, rgba(255, 0, 255, 0.1) 50%);
-    opacity: 0.5 !important;
+    background: linear-gradient(
+        calc(var(--mx, 0.5) * 360deg),
+        rgba(255, 255, 255, 0) 15%,
+        rgba(255, 200, 0, 0.3) 35%,
+        rgba(255, 255, 255, 0.7) 50%,
+        rgba(0, 255, 255, 0.3) 65%,
+        rgba(255, 255, 255, 0) 85%
+    );
+    mix-blend-mode: color-dodge;
 }
 
+/* SEC - Cosmic Purple/Cyan Sweep */
 .sec .card-holo {
-    background: radial-gradient(circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
-            rgba(255, 255, 255, 0.6) 0%,
-            rgba(123, 0, 212, 0.3) 30%,
-            transparent 70%);
+    background: linear-gradient(
+        calc(var(--mx, 0.5) * 360deg),
+        rgba(255, 255, 255, 0) 20%,
+        rgba(123, 0, 212, 0.3) 40%,
+        rgba(255, 255, 255, 0.6) 50%,
+        rgba(0, 229, 255, 0.3) 60%,
+        rgba(255, 255, 255, 0) 80%
+    );
+    mix-blend-mode: color-dodge;
 }
 
+/* UR - Sleek Silver-Rainbow Sweep */
 .ur .card-holo {
-    background: linear-gradient(calc(var(--mx, 0.5) * 360deg),
-            rgba(255, 255, 255, 0) 30%,
-            rgba(255, 255, 255, 0.3) 50%,
-            rgba(255, 255, 255, 0) 70%);
+    background: linear-gradient(
+        calc(var(--mx, 0.5) * 360deg),
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.4) 45%,
+        rgba(255, 255, 255, 0.6) 50%,
+        rgba(255, 255, 255, 0.4) 55%,
+        rgba(255, 255, 255, 0) 80%
+    );
+}
+
+/* SSR & Variants - Classic Holo Diagonal */
+.ssr .card-holo,
+.sssr .card-holo,
+.ssssr .card-holo {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0) calc(var(--mx, 0.5) * 100% - 20%),
+        rgba(255, 255, 255, 0.3) calc(var(--mx, 0.5) * 100%),
+        rgba(255, 255, 255, 0) calc(var(--mx, 0.5) * 100% + 20%)
+    );
 }
 
 @keyframes shine {
-    0% {
-        background-position: 200% 0%;
-    }
+    0% { background-position: 200% 0%; }
+    100% { background-position: -200% 0%; }
+}
 
-    100% {
-        background-position: -200% 0%;
-    }
+@keyframes sparkleMove {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
 }
 
 /* Card Content Container */
@@ -937,15 +1059,37 @@ section.active {
 }
 
 .modal-content {
-    background: var(--bg-gradient);
-    margin: 10% auto;
-    padding: 2rem;
-    border: 1px solid var(--glass);
-    width: 80%;
-    max-width: 600px;
-    border-radius: 20px;
+    background: rgba(15, 12, 41, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    margin: 5% auto;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 95%;
+    max-width: 800px;
+    max-height: 90vh; /* Scalable for small heights */
+    overflow-y: auto;
+    border-radius: 24px;
     position: relative;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 210, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+    .detail-container {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    .modal-card-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .detail-info h2 {
+        font-size: 1.6rem;
+    }
 }
 
 .close {
@@ -964,18 +1108,70 @@ section.active {
 
 .detail-container {
     display: flex;
-    gap: 2rem;
+    gap: 2.5rem;
     align-items: center;
+    padding: 1rem 0;
+}
+
+.modal-card-wrapper {
+    perspective: 1200px;
+    flex-shrink: 0;
+}
+
+#modal-card {
+    cursor: default;
+    /* Prevent recursive modal opens if clicked again */
+    /* Larger size for detail view */
+    transform-origin: center center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+}
+
+.detail-info {
+    flex-grow: 1;
 }
 
 .detail-info h2 {
-    margin-bottom: 1rem;
-    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-.detail-info p {
-    margin-bottom: 0.5rem;
+.detail-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.rarity-tag {
+    display: inline-block;
+    padding: 4px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    margin-left: 8px;
+}
+
+.rarity-tag.c { background: var(--c-color); }
+.rarity-tag.r { background: var(--r-color); }
+.rarity-tag.sr { background: var(--sr-color); }
+.rarity-tag.ssr { background: var(--ssr-color); }
+.rarity-tag.ur { background: linear-gradient(135deg, #6a11cb, #a855f7); }
+.rarity-tag.sec { background: linear-gradient(135deg, #7b00d4, #e91e8c); }
+.rarity-tag.leg { background: linear-gradient(135deg, #ff0000, #ff8800, #ffee00, #00ff88); background-size: 400% 400%; animation: moveGradient 3s linear infinite; }
+
+.detail-ability-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.25rem;
+    border-radius: 12px;
+    font-size: 1rem;
     line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    max-height: 250px;
+    overflow-y: auto;
+    backdrop-filter: blur(5px);
 }
 
 /* God Pack Effect */

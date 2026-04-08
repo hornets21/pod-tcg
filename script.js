@@ -536,14 +536,47 @@ function showCardDetail(card) {
 
     detail.innerHTML = `
         <div class="detail-container">
-            <img src="${card.image}" alt="${card.name}" loading="lazy" style="width: 250px; border-radius: 15px;">
+            <div class="modal-card-wrapper">
+                <div class="card revealed ${card.rarity.toLowerCase()}" id="modal-card">
+                    <div class="card-gloss"></div>
+                    <div class="card-holo"></div>
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-content">
+                                <div class="card-header">
+                                    <span class="name">${card.name}</span>
+                                </div>
+                                <div class="image-box">
+                                    <img src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/180x270?text=Image+Not+Found'">
+                                </div>
+                                <div class="card-body">
+                                    <div class="ability">
+                                        <strong>ความสามารถ</strong>
+                                        <p>${card.ability || '—'}</p>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="rarity-symbol">${getRarityStars(card.rarity)}</span>
+                                    <span class="rarity-text">${card.rarity}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="detail-info">
                 <h2 class="rarity-${card.rarity}">${card.name}</h2>
-                <p><strong>ระดับ:</strong> ${card.rarity}</p>
-                <p><strong>ความสามารถ:</strong> ${card.ability}</p>
+                <div class="detail-stats">
+                    <p><strong>ระดับ:</strong> <span class="rarity-tag ${card.rarity.toLowerCase()}">${card.rarity}</span></p>
+                    <p><strong>ความสามารถ:</strong></p>
+                    <div class="detail-ability-box">${card.ability}</div>
+                </div>
             </div>
         </div>
     `;
+
+    const modalCard = document.getElementById('modal-card');
+    setupCardInteractions(modalCard);
 
     modal.style.display = "block";
 }
