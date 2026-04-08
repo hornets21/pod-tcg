@@ -26,6 +26,7 @@ body {
     font-family: 'Kanit', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
 }
 
 /* --- Modern Top Navigation Bar --- */
@@ -37,9 +38,10 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
-    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
-    will-change: background, box-shadow, padding;
-    /* Optimization for transition */
+    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease, padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: background, box-shadow, padding, transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .header-inner {
@@ -960,13 +962,21 @@ section.active {
 /* Collection Section */
 .collection-header {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    position: relative;
+    z-index: 10;
 }
 
 .collection-header h2 {
+    margin: 0;
     font-size: 1.8rem;
     font-weight: 600;
     color: #fff;
@@ -1072,6 +1082,22 @@ section.active {
     border-radius: 24px;
     position: relative;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 210, 255, 0.1);
+}
+
+/* Custom Dialogue System */
+#dialog-icon {
+    animation: dialogPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes dialogPop {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1464,5 +1490,156 @@ section.active {
 
     100% {
         background-position: 200% 50%;
+    }
+}
+
+.empty-lot-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    width: 100%;
+}
+
+/* --- Lot Management Styles --- */
+#lot-section {
+    padding-top: 2.5rem;
+    padding-bottom: 5rem;
+}
+
+.lot-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.quick-select-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--glass);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quick-select-container label {
+    font-size: 0.9rem;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+#rarity-select {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    border: 1px solid rgba(0, 210, 255, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-family: 'Kanit', sans-serif;
+    outline: none;
+    cursor: pointer;
+    flex: 1;
+}
+
+#rarity-select optgroup {
+    background: var(--bg-dark);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.6rem 1.5rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Kanit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#start-lot-btn:disabled {
+    background: #444;
+    box-shadow: none;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    opacity: 0.6;
+}
+
+/* Selection Mode Cards */
+.selection-mode .card {
+    filter: grayscale(0.8) brightness(0.7);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.selection-mode .card:hover {
+    filter: grayscale(0.4) brightness(0.9);
+    transform: translateY(-5px);
+}
+
+.selection-mode .card.selected {
+    filter: none !important;
+    transform: translateY(-8px) scale(1.02) !important;
+    box-shadow: 0 0 30px var(--accent-glow);
+    border: 2px solid var(--accent);
+}
+
+.selection-mode .card.selected::before {
+    content: '✓ Selected';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #000;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+/* Single Card Display (Lot Opening) */
+.single-card-display {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.single-card-display .card {
+    width: 280px;
+    height: 400px;
+}
+
+/* Lot Opening Layout */
+.lot-opening-content {
+    margin-top: 1rem;
+    padding: 1rem;
+}
+
+.lot-opening-content .single-card-display {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .single-card-display .card {
+        width: 220px;
+        height: 310px;
     }
 }

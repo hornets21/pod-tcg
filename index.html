@@ -16,6 +16,7 @@
             <div class="header-inner">
                 <nav class="nav-links">
                     <button onclick="showSection('opening')">เปิดซอง</button>
+                    <button onclick="showSection('lot')">จัดการล็อต</button>
                     <button onclick="showSection('collection')">สมุดการ์ด</button>
                 </nav>
                 <h1 id="main-title">POD TCG Simulator</h1>
@@ -74,6 +75,47 @@
                 </div>
                 <div id="collection-grid" class="cards-grid"></div>
             </section>
+
+            <section id="lot-section">
+                <!-- Lot Selection Mode -->
+                <div id="lot-selection-view">
+                    <div class="collection-header">
+                        <h2>เลือกการ์ดเข้าล็อต (<span id="lot-selected-count">0</span>/10)</h2>
+                        <div class="lot-actions">
+                            <button id="start-lot-btn" class="btn-primary" onclick="startLot()"
+                                disabled>เริ่มล็อตนี้</button>
+                            <button class="btn-secondary" onclick="clearLotSelection()">ล้างทั้งหมด</button>
+                        </div>
+                        <div class="quick-select-container">
+                            <label for="rarity-select">เลือกระดับการ์ดเพื่อแสดงรายการ:</label>
+                            <select id="rarity-select" onchange="filterLotByRarity(this.value)">
+                                <option value="">-- กรุณาเลือกระดับ --</option>
+                                <option value="LEG">LEG</option>
+                                <option value="SEC">SEC</option>
+                                <option value="UR">UR</option>
+                                <option value="SSR">SSR</option>
+                                <option value="SR">SR</option>
+                                <option value="R">R</option>
+                                <option value="C">C</option>
+                            </select>
+                        </div>
+
+                    </div>
+                    <div id="lot-selection-grid" class="cards-grid selection-mode"></div>
+                </div>
+
+                <!-- Lot Opening Mode -->
+                <div id="lot-opening-view" style="display: none;">
+                    <div class="collection-header">
+                        <h2>เปิดการ์ดจากล็อต (<span id="lot-remaining-count">0</span>/<span
+                                id="lot-total-count">0</span>)</h2>
+                        <button class="btn-secondary" onclick="confirmResetLot()">จบล็อต / รีเซ็ต</button>
+                    </div>
+                    <div class="lot-opening-content">
+                        <div id="lot-cards-display" class="cards-grid"></div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Logout Confirmation Dialog -->
@@ -122,6 +164,15 @@
                 <button class="btn-primary"
                     style="margin-top: 20px; padding: 10px 25px; font-size: 1em; border-radius: 30px;"
                     onclick="closePolicyModal()">เข้าใจแล้ว</button>
+            </div>
+        </div>
+        <!-- Custom Dialog Modal -->
+        <div id="custom-dialog" class="modal">
+            <div class="modal-content" style="max-width: 400px; text-align: center; padding: 2rem;">
+                <div id="dialog-icon" style="font-size: 3rem; margin-bottom: 1rem;"></div>
+                <h3 id="dialog-title" style="margin-bottom: 0.5rem; color: var(--accent); font-size: 1.4rem;"></h3>
+                <p id="dialog-message" style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.5; margin-bottom: 1.5rem;"></p>
+                <div id="dialog-buttons" style="display: flex; gap: 0.8rem; justify-content: center;"></div>
             </div>
         </div>
     </div>
