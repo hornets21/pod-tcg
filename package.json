@@ -1,0 +1,13 @@
+{
+  "name": "pod-tcg",
+  "version": "1.0.0",
+  "description": "POD TCG Pack Opening Simulator",
+  "main": "script.js",
+  "scripts": {
+    "version": "node version_update.js",
+    "dev": "npx servor . --reload"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
