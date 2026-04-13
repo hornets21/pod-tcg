@@ -1,3 +1,5 @@
+const APP_VERSION = '1.0.1';
+
 // Rarity Rates (Total 100%) — isGacha='Y' cards only
 // Tier order: LEG > SEC > UR > SSR > SR > R > C
 const RATE = {
@@ -26,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showSection('opening'); // Set initial active section
     updateCollectionUI();
     document.getElementById('total-count').textContent = CARDS.length;
+    document.getElementById('app-version').textContent = `Version ${APP_VERSION}`;
     checkAuth();
 
     // Back to Top and Header Collapse Logic
