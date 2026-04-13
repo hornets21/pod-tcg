@@ -311,6 +311,12 @@ function openPack() {
         selectedIds.add(card.role_id);
     }
 
+    // Shuffle pack order so high-rarity cards don't always appear at the same position
+    for (let i = pack.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pack[i], pack[j]] = [pack[j], pack[i]];
+    }
+
     return { pack, isGod };
 }
 
@@ -342,6 +348,7 @@ async function startOpening() {
         showGodpackDialog();
     }
 
+    // Reveal cards one by one — each awaits its own jitter + rarity suspense
     for (let i = 0; i < pack.length; i++) {
         await revealCard(pack[i], i);
     }
@@ -409,22 +416,86 @@ function createCardElement(card, index) {
     return cardEl;
 }
 
-async function revealCard(card, index) {
-    return new Promise(resolve => {
-        const display = document.getElementById('cards-display');
-        const cardEl = createCardElement(card, index);
-        display.appendChild(cardEl);
+function createCardElementWithoutHolog(card, index) {
+    const cardEl = document.createElement('div');
+    cardEl.className = `card ${card.rarity.toLowerCase()}`;
+    cardEl.innerHTML = `
+        <div class="card-inner">
+            <div class="card-back"></div>
+            <div class="card-front">
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="name">${card.name}</span>
+                    </div>
+                    <div class="image-box">
+                        <img src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/180x270?text=Image+Not+Found'">
+                    </div>
+                    <div class="card-body">
+                        <div class="ability">
+                            <strong>ความสามารถ</strong>
+                            <p>${card.ability}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="rarity-symbol">${getRarityStars(card.rarity)}</span>
+                        <span class="rarity-text">${card.rarity}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
-        // Staggered entry
+    // No setupCardInteractions for non-holographic version
+
+    cardEl.onclick = () => {
+        if (!cardEl.classList.contains('revealed')) {
+            cardEl.classList.add('revealed');
+            addToCollection(card);
+        } else {
+            showCardDetail(card);
+        }
+    };
+
+    return cardEl;
+}
+
+// Rarity suspense config: higher rarity = longer pre-reveal pause
+const RARITY_SUSPENSE_MS = {
+    C:   0,
+    R:   0,
+    SR:  200,
+    SSR: 500,
+    UR:  900,
+    SEC: 1400,
+    LEG: 2000
+};
+
+async function revealCard(card, index) {
+    const display = document.getElementById('cards-display');
+    const cardEl = createCardElement(card, index);
+    display.appendChild(cardEl);
+
+    // Random jitter entry delay: base stagger + random offset (±80ms)
+    const baseDelay = index * 180;
+    const jitter = Math.floor(Math.random() * 160) - 80;
+    const entryDelay = Math.max(0, baseDelay + jitter);
+
+    // Suspense pause before flip based on rarity
+    const suspense = RARITY_SUSPENSE_MS[card.rarity] ?? 0;
+    // Extra random suspense nudge so even same-rarity cards don't feel identical
+    const suspenseJitter = Math.floor(Math.random() * 200);
+
+    return new Promise(resolve => {
         setTimeout(() => {
             cardEl.style.opacity = '1';
-            // Auto-reveal after a short delay
+
+            // Brief suspense before auto-reveal
             setTimeout(() => {
                 cardEl.classList.add('revealed');
                 addToCollection(card);
                 resolve();
-            }, 600);
-        }, index * 200);
+            }, 600 + suspense + suspenseJitter);
+        }, entryDelay);
     });
 }
 
@@ -718,28 +789,9 @@ function renderLotSelection() {
 
         const isSelected = lotSelection.has(card.role_id);
 
-        const cardEl = document.createElement('div');
-        cardEl.className = `card revealed ${card.rarity.toLowerCase()}${isSelected ? ' selected' : ''}`;
-        cardEl.innerHTML = `
-            <div class="card-gloss"></div>
-            <div class="card-holo"></div>
-            <div class="card-inner">
-                <div class="card-front">
-                    <div class="card-content">
-                        <div class="card-header">
-                            <span class="name">${card.name}</span>
-                        </div>
-                        <div class="image-box">
-                            <img src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.style.display='none'">
-                        </div>
-                        <div class="card-footer">
-                            <span class="rarity-symbol">${getRarityStars(card.rarity)}</span>
-                            <span class="rarity-text">${card.rarity}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        const cardEl = createCardElementWithoutHolog(card, 0); // index not used for logic here
+        cardEl.classList.add('revealed');
+        if (isSelected) cardEl.classList.add('selected');
 
         cardEl.onclick = () => toggleLotCard(card.role_id);
         fragment.appendChild(cardEl);
@@ -797,7 +849,7 @@ async function startLot() {
     const selectedCards = selectedIds.map(id => CARDS.find(c => c.role_id === id)).filter(Boolean);
 
     // Shuffle and add isOpened state
-    activeLot = [...selectedCards].sort(() => Math.random() - 0.5).map(c => ({...c, isOpened: false}));
+    activeLot = [...selectedCards].sort(() => Math.random() - 0.5).map(c => ({ ...c, isOpened: false }));
     currentLotIndex = 0;
 
     localStorage.setItem('pod_active_lot', JSON.stringify(activeLot));
@@ -814,17 +866,17 @@ function updateLotOpeningUI() {
     const total = activeLot.length;
     const openedCount = activeLot.filter(c => c.isOpened).length;
     const remaining = total - openedCount;
-    
+
     document.getElementById('lot-remaining-count').textContent = remaining;
     document.getElementById('lot-total-count').textContent = total;
 
     const display = document.getElementById('lot-cards-display');
-    
+
     // Always render all cards if they are not already rendered correctly
     if (display.children.length !== total) {
         display.innerHTML = '';
         activeLot.forEach((card, index) => {
-            const cardEl = createCardElement(card, index);
+            const cardEl = createCardElementWithoutHolog(card, index);
             if (card.isOpened) {
                 cardEl.classList.add('revealed');
             } else {
@@ -846,14 +898,14 @@ function handleLotCardFlip(cardEl, index) {
         addToCollection(card);
         saveCollection();
         localStorage.setItem('pod_active_lot', JSON.stringify(activeLot));
-        
+
         // Update counts
         const total = activeLot.length;
         const openedCount = activeLot.filter(c => c.isOpened).length;
         document.getElementById('lot-remaining-count').textContent = total - openedCount;
-        
+
         if (openedCount === total) {
-             // Optional: highlight completion
+            // Optional: highlight completion
         }
     } else {
         // Subsequent clicks: Show detail
