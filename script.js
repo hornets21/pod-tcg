@@ -243,6 +243,15 @@ function showSection(sectionId) {
     }
 }
 
+// Helper: Fisher-Yates Shuffle
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 // Roll Rarity Logic — only isGacha='Y' cards enter the pool
 function rollRarity() {
     const rand = Math.random() * 100;
@@ -312,10 +321,7 @@ function openPack() {
     }
 
     // Shuffle pack order so high-rarity cards don't always appear at the same position
-    for (let i = pack.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pack[i], pack[j]] = [pack[j], pack[i]];
-    }
+    shuffleArray(pack);
 
     return { pack, isGod };
 }
@@ -849,7 +855,7 @@ async function startLot() {
     const selectedCards = selectedIds.map(id => CARDS.find(c => c.role_id === id)).filter(Boolean);
 
     // Shuffle and add isOpened state
-    activeLot = [...selectedCards].sort(() => Math.random() - 0.5).map(c => ({ ...c, isOpened: false }));
+    activeLot = shuffleArray([...selectedCards]).map(c => ({ ...c, isOpened: false }));
     currentLotIndex = 0;
 
     localStorage.setItem('pod_active_lot', JSON.stringify(activeLot));
