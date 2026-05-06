@@ -10,8 +10,9 @@ trigger: manual
 
 * 1 ซอง = 5 ใบ
 * มี rarity:
-
-  * SSSR
+  * LEG
+  * SEC
+  * UR
   * SSR
   * SR
   * R
@@ -44,11 +45,13 @@ project/
 
 ```js
 const RATE = {
-  SSSR: 0.5,
-  SSR: 2,
-  SR: 7.5,
-  R: 20,
-  C: 70
+  LEG: 0.1,
+  SEC: 0.4,
+  UR: 1.0,
+  SSR: 6.5,
+  SR: 12.0,
+  R: 30.0,
+  C: 50.0
 };
 ```
 
@@ -68,8 +71,8 @@ function isGodPack() {
 
 * ถ้าเป็น GOD PACK:
 
-  * การ์ดทั้ง 5 ใบ = SR ขึ้นไป
-  * มีโอกาส SSR / SSSR สูงขึ้น
+  * การ์ดทั้ง 5 ใบ = SSR ขึ้นไป
+  * มีโอกาส LEG / SEC / UR สูงขึ้น
 
 ---
 
@@ -78,18 +81,20 @@ function isGodPack() {
 ```js
 const CARDS = [
   {
-    id: "OP1-001",
+    role_id: "OP1-001",
     name: "Luffy",
-    rarity: "SSSR",
+    rarity: "LEG",
     image: "assets/cards/luffy.png",
-    set: "OP-1"
+    set: "OP-1",
+    isGacha: "Y"
   },
   {
-    id: "OP1-010",
+    role_id: "OP1-010",
     name: "Zoro",
     rarity: "SSR",
     image: "assets/cards/zoro.png",
-    set: "OP-1"
+    set: "OP-1",
+    isGacha: "Y"
   }
 ];
 ```
@@ -139,10 +144,12 @@ function drawCard(isGod) {
 function rollRarity() {
   const rand = Math.random() * 100;
 
-  if (rand < 0.5) return "SSSR";
-  if (rand < 2.5) return "SSR";
-  if (rand < 10) return "SR";
-  if (rand < 30) return "R";
+  if (rand < 0.1) return "LEG";
+  if (rand < 0.5) return "SEC";
+  if (rand < 1.5) return "UR";
+  if (rand < 8.0) return "SSR";
+  if (rand < 20.0) return "SR";
+  if (rand < 50.0) return "R";
   return "C";
 }
 ```
@@ -155,9 +162,10 @@ function rollRarity() {
 function getHighRarity() {
   const rand = Math.random() * 100;
 
-  if (rand < 10) return "SSSR";
-  if (rand < 40) return "SSR";
-  return "SR";
+  if (rand < 5) return "LEG";
+  if (rand < 15) return "SEC";
+  if (rand < 45) return "UR";
+  return "SSR";
 }
 ```
 
@@ -167,7 +175,13 @@ function getHighRarity() {
 
 ```js
 function getRandomCardByRarity(rarity) {
-  const filtered = CARDS.filter(c => c.rarity === rarity);
+  // Only allow cards with isGacha = 'Y' into the gacha pool
+  const filtered = CARDS.filter(c => c.rarity === rarity && c.isGacha === 'Y');
+  if (filtered.length === 0) {
+    // Fallback: any gacha-eligible card
+    const gachaPool = CARDS.filter(c => c.isGacha === 'Y');
+    return gachaPool[Math.floor(Math.random() * gachaPool.length)];
+  }
   return filtered[Math.floor(Math.random() * filtered.length)];
 }
 ```
