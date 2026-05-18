@@ -1,1 +1,35 @@
-node_modules
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn-integrity
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+
+# OS Files
+.DS_Store
+Thumbs.db
