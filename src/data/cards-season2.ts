@@ -1,4 +1,6 @@
-const CARDS = [
+import { Card } from "./types";
+
+export const CARDS_SEASON2: Card[] = [
     { "role_id": "1403054141269606572", "name": "หลานชายพี่ข่าวปด", "rarity": "UR", "image": "https://img.lucky-pod.fun/SSR_หลานชายพี่ข่าวปด.png", "ability": "สามารถเข้าแชทกลุ่มหลานชายพี่ข่าวปด", "isGacha": "Y" },
     { "role_id": "1375863411371409529", "name": "ลูกชายพี่ข่าวปด", "rarity": "UR", "image": "https://img.lucky-pod.fun/R_ลูกชายพี่ข่าวปด.png", "ability": "ลดราคาหลานชายเหลือ 199 เข้ากลุ่มลูกชายพี่ข่าวปด", "isGacha": "Y" },
     { "role_id": "1334640667485274152", "name": "คนควยหอม", "rarity": "UR", "image": "https://img.lucky-pod.fun/SSR_คนควยหอม.png", "ability": "ลดราคาหลานชายเหลือ 199 เข้ากลุ่มลูกชายพี่ข่าวปด", "isGacha": "Y" },
