@@ -574,6 +574,33 @@ section.active {
     padding-top: 2rem;
 }
 
+/* Season 2 uses larger base cards but we want 5 columns like Season 1 */
+.cards-grid.season2-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+@media (max-width: 1440px) {
+    .cards-grid.season2-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .cards-grid.season2-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .cards-grid.season2-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
 .card {
     width: 230px;
     height: 330px;
@@ -1796,7 +1823,7 @@ section.active {
 
 .selection-mode .card.selected {
     filter: none !important;
-    transform: translateY(-8px) scale(1.02) !important;
+    transform: translateY(-8px) scale(1.02);
     box-shadow: 0 0 30px var(--accent-glow);
     border: 2px solid var(--accent);
 }
@@ -1953,18 +1980,50 @@ section.active {
     border-left: 3px solid var(--accent);
 }
 
-.dropdown-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.08);
-    margin: 0.5rem 0;
+.font-chakra {
+    font-family: var(--font-chakra), sans-serif;
 }
 
-.arrow {
-    font-size: 0.7rem;
-    transition: transform 0.3s ease;
-    display: inline-block;
+.font-prompt {
+    font-family: var(--font-prompt), sans-serif;
 }
 
-.arrow.rotated {
-    transform: rotate(180deg);
-}
+/* --- Pokemon TCG Full Art Styles --- */
+
+.text-shadow-stroke {
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,1))
+            drop-shadow(-1px -1px 0 rgba(0,0,0,1))
+            drop-shadow(1px -1px 0 rgba(0,0,0,1))
+            drop-shadow(-1px 1px 0 rgba(0,0,0,1));
+}
+
+/* Rarity Border Presets */
+.rarity-border-UR { border-color: #ea580c !important; }
+.rarity-border-SEG { border-color: #ca8a04 !important; } /* SEG / SSR */
+.rarity-border-SEC { border-color: #6366f1 !important; }
+.rarity-border-LEG { border-color: #991b1b !important; }
+
+/* Rarity Glow Presets (Outer Glow) */
+.rarity-glow-UR { box-shadow: 0 0 28px rgba(249,115,22,.45), 0 16px 40px rgba(0,0,0,.5); }
+.rarity-glow-SEG { box-shadow: 0 0 32px rgba(250,204,21,.5), 0 18px 44px rgba(0,0,0,.5); }
+.rarity-glow-SEC { box-shadow: 0 0 35px rgba(99, 102, 241, 0.5), 0 18px 45px rgba(0,0,0,0.5); }
+.rarity-glow-LEG { box-shadow: 0 0 35px rgba(239, 68, 68, 0.5), 0 18px 45px rgba(0,0,0,0.5); }
+
+@keyframes shine-fullart {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.animate-shine-fullart {
+    background: linear-gradient(
+      120deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.2) 45%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.2) 55%,
+      transparent 70%
+    );
+    background-size: 200% 100%;
+    animation: shine-fullart 4s infinite linear;
+}
+

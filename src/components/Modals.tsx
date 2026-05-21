@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Card, getRarityStars } from "./Card";
+import { Card } from "./Card";
+import { FullArtCard } from "./FullArtCard";
 import { Card as CardType } from "../data/types";
 
 // --- 1. LOGOUT DIALOG ---
@@ -120,7 +121,7 @@ export const PolicyDialog: React.FC<PolicyDialogProps> = ({
           }}
         >
           การเข้าสู่ระบบด้วย Discord เป็นเพียงการแสดงผล <b>ชื่อ</b>, <b>ภาพอวตาร</b> และ <b>ยศ</b>
-          ของผู้ใช้จากเซิร์ฟเวอร์ <span style={{ color: "#00d2ff", fontWeight: "bold" }}>"กองบัญชาการชาวปด"</span>
+          ของผู้ใช้จากเซิร์ฟเวอร์ <span style={{ color: "#00d2ff", fontWeight: "bold" }}>&quot;กองบัญชาการชาวปด&quot;</span>
           เท่านั้น
           <br />
           <br />
@@ -146,14 +147,18 @@ interface CardDetailDialogProps {
   isOpen: boolean;
   card: CardType | null;
   onClose: () => void;
+  season?: string;
 }
 
 export const CardDetailDialog: React.FC<CardDetailDialogProps> = ({
   isOpen,
   card,
   onClose,
+  season = "season1",
 }) => {
   if (!isOpen || !card) return null;
+
+  const CardComponent = season === "season2" ? FullArtCard : Card;
 
   return (
     <div
@@ -169,7 +174,7 @@ export const CardDetailDialog: React.FC<CardDetailDialogProps> = ({
         </span>
         <div className="detail-container">
           <div className="modal-card-wrapper">
-            <Card card={card} isRevealed={true} enableHolo={true} />
+            <CardComponent card={card} isRevealed={true} enableHolo={true} />
           </div>
           <div className="detail-info">
             <h2 className={`rarity-${card.rarity}`}>{card.name}</h2>

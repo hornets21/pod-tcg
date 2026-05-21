@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
-import { Card } from "../../../components/Card";
 import { useGacha } from "../../../hooks/useGacha";
 import { CustomDialog, DialogButton } from "../../../components/Modals";
 import { useModal } from "../../../components/ModalContext";
+import { LotSeason1 } from "./components/LotSeason1";
+import { LotSeason2 } from "./components/LotSeason2";
 
 export default function LotClient() {
   const params = useParams();
@@ -24,9 +25,6 @@ export default function LotClient() {
   } = useGacha(season);
 
   const { setSelectedDetailCard } = useModal();
-
-  // Selection states
-  const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
 
   // Custom Confirmation Dialog states
   const [customDialog, setCustomDialog] = useState<{
@@ -87,17 +85,6 @@ export default function LotClient() {
     });
   };
 
-  // Filter cards by selected rarity for custom lot selection
-  const lotSelectionCards = useMemo(() => {
-    if (!selectedRarity) return [];
-    return cards.filter((c) => c.rarity === selectedRarity && c.isGacha === "Y");
-  }, [cards, selectedRarity]);
-
-  // Statistics calculations
-  const totalInLot = activeLot.length;
-  const openedInLot = activeLot.filter((c) => c.isOpened).length;
-  const remainingInLot = totalInLot - openedInLot;
-
   if (!isLoaded) {
     return (
       <div
@@ -116,109 +103,27 @@ export default function LotClient() {
     );
   }
 
-  const rarityFilters = ["LEG", "SEC", "UR", "SSR", "SR", "R", "C"];
+  const commonProps = {
+    cards,
+    lotSelection,
+    toggleLotCard,
+    clearLotSelection,
+    activeLot,
+    startLot,
+    revealLotCard,
+    handleResetConfirm,
+    setSelectedDetailCard,
+    handleStartLot,
+  };
 
   return (
     <div className="main-wrapper">
       <main>
-        <section id="lot-section" className="active">
-          {activeLot.length === 0 ? (
-            /* --- LOT SELECTION VIEW --- */
-            <div id="lot-selection-view">
-              <div className="collection-header">
-                <h2>
-                  เลือกการ์ดเข้าล็อต (<span id="lot-selected-count">{lotSelection.length}</span>/10)
-                </h2>
-                <div className="lot-actions">
-                  <button
-                    id="start-lot-btn"
-                    className="btn-primary"
-                    style={{ padding: "0.6rem 1.6rem", fontSize: "0.95rem" }}
-                    onClick={handleStartLot}
-                    disabled={lotSelection.length === 0 || lotSelection.length > 10}
-                  >
-                    เริ่มล็อตนี้
-                  </button>
-                  <button className="btn-secondary" onClick={clearLotSelection}>
-                    ล้างทั้งหมด
-                  </button>
-                </div>
-                <div className="quick-select-container">
-                  <label htmlFor="rarity-select">เลือกระดับการ์ดเพื่อแสดงรายการ:</label>
-                  <select
-                    id="rarity-select"
-                    value={selectedRarity || ""}
-                    onChange={(e) => setSelectedRarity(e.target.value || null)}
-                  >
-                    <option value="">-- กรุณาเลือกระดับ --</option>
-                    {rarityFilters.map((rarity) => (
-                      <option key={rarity} value={rarity}>
-                        {rarity}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {selectedRarity === null ? (
-                <div className="empty-lot-msg">
-                  กรุณาเลือกระดับการ์ดด้านบน เพื่อแสดงรายการการ์ด
-                </div>
-              ) : lotSelectionCards.length === 0 ? (
-                <div className="empty-lot-msg">ไม่มีการ์ด gacha สำหรับระดับนี้</div>
-              ) : (
-                <div id="lot-selection-grid" className="cards-grid selection-mode">
-                  {lotSelectionCards.map((card) => {
-                    const isSelected = lotSelection.includes(card.role_id);
-                    return (
-                      <Card
-                        key={card.role_id}
-                        card={card}
-                        isRevealed={true}
-                        isSelectionMode={true}
-                        isSelected={isSelected}
-                        enableHolo={false} // Selection grids disable holo tilt to avoid distraction
-                        onClick={() => toggleLotCard(card.role_id)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* --- LOT OPENING VIEW --- */
-            <div id="lot-opening-view">
-              <div className="collection-header">
-                <h2>
-                  เปิดการ์ดจากล็อต (<span id="lot-remaining-count">{remainingInLot}</span>/
-                  <span id="lot-total-count">{totalInLot}</span>)
-                </h2>
-                <button className="btn-secondary" onClick={handleResetConfirm}>
-                  จบล็อต / รีเซ็ต
-                </button>
-              </div>
-              <div className="lot-opening-content">
-                <div id="lot-cards-display" className="cards-grid">
-                  {activeLot.map((card, idx) => (
-                    <Card
-                      key={`${card.role_id}-${idx}`}
-                      card={card}
-                      isRevealed={card.isOpened}
-                      enableHolo={card.isOpened} // Only enable 3D holo tilt if revealed!
-                      onClick={() => {
-                        if (!card.isOpened) {
-                          revealLotCard(idx);
-                        } else {
-                          setSelectedDetailCard(card);
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
+        {season === "season2" ? (
+          <LotSeason2 {...commonProps} />
+        ) : (
+          <LotSeason1 {...commonProps} />
+        )}
 
         <CustomDialog
           isOpen={customDialog.isOpen}

@@ -74,6 +74,7 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
       <CardDetailDialog
         isOpen={selectedDetailCard !== null}
         card={selectedDetailCard}
+        season={season}
         onClose={() => setSelectedDetailCard(null)}
       />
 

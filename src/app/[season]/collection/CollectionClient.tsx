@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "../../../components/Card";
+import { FullArtCard } from "../../../components/FullArtCard";
 import { useGacha } from "../../../hooks/useGacha";
 import { useModal } from "../../../components/ModalContext";
 
@@ -114,11 +115,12 @@ export default function CollectionClient() {
             </div>
           </div>
 
-          <div id="collection-grid" className="cards-grid">
+          <div id="collection-grid" className={`cards-grid ${season === "season2" ? "season2-grid" : ""}`}>
             {filteredCards.map((card) => {
               const owned = isOwned(card);
+              const CardComponent = season === "season2" ? FullArtCard : Card;
               return (
-                <Card
+                <CardComponent
                   key={card.role_id}
                   card={card}
                   isRevealed={true}

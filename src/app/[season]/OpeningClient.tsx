@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { PackVisual } from "../../components/PackVisual";
 import { Card } from "../../components/Card";
+import { FullArtCard } from "../../components/FullArtCard";
 import { useGacha, RARITY_SUSPENSE_MS } from "../../hooks/useGacha";
 import { GodPackDialog } from "../../components/Modals";
 import { Card as CardType } from "../../data/types";
@@ -151,17 +152,20 @@ export default function OpeningClient() {
             />
           </div>
 
-          <div id="cards-display" className="cards-grid">
-            {packCards.map((card, idx) => (
-              <Card
-                key={`${card.role_id}-${idx}`}
-                card={card}
-                isRevealed={revealedStatus[idx]}
-                enableHolo={true}
-                className={revealedOpacity[idx] ? "opacity-visible" : "opacity-hidden"}
-                onClick={() => handleCardClick(card, idx)}
-              />
-            ))}
+          <div id="cards-display" className={`cards-grid ${season === "season2" ? "season2-grid" : ""}`}>
+            {packCards.map((card, idx) => {
+              const CardComponent = season === "season2" ? FullArtCard : Card;
+              return (
+                <CardComponent
+                  key={`${card.role_id}-${idx}`}
+                  card={card}
+                  isRevealed={revealedStatus[idx]}
+                  enableHolo={true}
+                  className={revealedOpacity[idx] ? "opacity-visible" : "opacity-hidden"}
+                  onClick={() => handleCardClick(card, idx)}
+                />
+              );
+            })}
           </div>
         </section>
       </main>
