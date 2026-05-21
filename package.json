@@ -4,7 +4,7 @@
   "description": "POD TCG Pack Opening Simulator",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 8080",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

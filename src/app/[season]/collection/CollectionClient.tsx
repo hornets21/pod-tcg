@@ -2,36 +2,21 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Header } from "../../../components/Header";
 import { Card } from "../../../components/Card";
 import { useGacha } from "../../../hooks/useGacha";
-import { useAuth } from "../../../hooks/useAuth";
-import {
-  LogoutDialog,
-  PolicyDialog,
-  CardDetailDialog,
-} from "../../../components/Modals";
-import { Card as CardType } from "../../../data/types";
+import { useModal } from "../../../components/ModalContext";
 
 export default function CollectionClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
 
   const { cards, isLoaded, ownedCount, isOwned } = useGacha(season);
-  const { logout } = useAuth();
+  const { setSelectedDetailCard } = useModal();
 
   // Filter & Search states
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [searchVal, setSearchVal] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
-
-  // Modals state
-  const [showPolicy, setShowPolicy] = useState(false);
-  const [showLogout, setShowLogout] = useState(false);
-  const [selectedDetailCard, setSelectedDetailCard] = useState<CardType | null>(null);
-
-  // Back to top scroll state
-  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Debounce search input by 250ms (same as original TCG script)
   useEffect(() => {
@@ -41,18 +26,6 @@ export default function CollectionClient() {
 
     return () => clearTimeout(handler);
   }, [searchVal]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   // Filtered Cards logic
   const filteredCards = useMemo(() => {
@@ -81,20 +54,18 @@ export default function CollectionClient() {
 
   if (!isLoaded) {
     return (
-      <div className="main-wrapper">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-            color: "white",
-            fontFamily: "var(--font-kanit)",
-            fontSize: "1.2rem",
-          }}
-        >
-          กำลังโหลดสมุดสะสมการ์ด...
-        </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          color: "white",
+          fontFamily: "var(--font-kanit)",
+          fontSize: "1.2rem",
+        }}
+      >
+        กำลังโหลดสมุดสะสมการ์ด...
       </div>
     );
   }
@@ -113,13 +84,6 @@ export default function CollectionClient() {
 
   return (
     <div className="main-wrapper">
-      <Header
-        currentSeason={season}
-        currentSection="collection"
-        onShowPolicy={() => setShowPolicy(true)}
-        onLogoutClick={() => setShowLogout(true)}
-      />
-
       <main>
         <section id="collection-section" className="active">
           <div className="collection-header">
@@ -167,37 +131,6 @@ export default function CollectionClient() {
           </div>
         </section>
       </main>
-
-      {/* --- MODALS --- */}
-      <LogoutDialog
-        isOpen={showLogout}
-        onClose={() => setShowLogout(false)}
-        onConfirm={logout}
-      />
-
-      <PolicyDialog
-        isOpen={showPolicy}
-        onClose={() => setShowPolicy(false)}
-        appVersion="1.0.1"
-      />
-
-      <CardDetailDialog
-        isOpen={selectedDetailCard !== null}
-        card={selectedDetailCard}
-        onClose={() => setSelectedDetailCard(null)}
-      />
-
-      {/* --- SCROLL TO TOP --- */}
-      {showBackToTop && (
-        <button
-          id="back-to-top-btn"
-          className="back-to-top visible"
-          onClick={scrollToTop}
-          title="กลับไปด้านบน"
-        >
-          ↑
-        </button>
-      )}
     </div>
   );
 }

@@ -1,27 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Header } from "../../components/Header";
+import { useParams } from "next/navigation";
 import { PackVisual } from "../../components/PackVisual";
 import { Card } from "../../components/Card";
 import { useGacha, RARITY_SUSPENSE_MS } from "../../hooks/useGacha";
-import { useAuth } from "../../hooks/useAuth";
-import {
-  LogoutDialog,
-  GodPackDialog,
-  PolicyDialog,
-  CardDetailDialog,
-} from "../../components/Modals";
+import { GodPackDialog } from "../../components/Modals";
 import { Card as CardType } from "../../data/types";
+import { useModal } from "../../components/ModalContext";
 
 export default function OpeningClient() {
   const params = useParams();
-  const router = useRouter();
   const season = params.season === "season2" ? "season2" : "season1";
 
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { logout } = useAuth();
+  const { setSelectedDetailCard } = useModal();
 
   // Gacha states
   const [isTearing, setIsTearing] = useState(false);
@@ -43,26 +36,6 @@ export default function OpeningClient() {
   ]);
   const [isGodPackOpen, setIsGodPackOpen] = useState(false);
   const [isGodPackEffectActive, setIsGodPackEffectActive] = useState(false);
-
-  // Modals
-  const [showPolicy, setShowPolicy] = useState(false);
-  const [showLogout, setShowLogout] = useState(false);
-  const [selectedDetailCard, setSelectedDetailCard] = useState<CardType | null>(null);
-
-  // Back to top scroll state
-  const [showBackToTop, setShowBackToTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const startOpening = async () => {
     if (isTearing) return;
@@ -149,33 +122,24 @@ export default function OpeningClient() {
   // Safe check if gacha/collection state is loaded from LocalStorage
   if (!isLoaded) {
     return (
-      <div className="main-wrapper">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-            color: "white",
-            fontFamily: "var(--font-kanit)",
-            fontSize: "1.2rem",
-          }}
-        >
-          กำลังโหลดข้อมูลระบบสุ่ม...
-        </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          color: "white",
+          fontFamily: "var(--font-kanit)",
+          fontSize: "1.2rem",
+        }}
+      >
+        กำลังโหลดข้อมูลระบบสุ่ม...
       </div>
     );
   }
 
   return (
     <div className={`main-wrapper ${isGodPackEffectActive ? "god-pack-effect" : ""}`}>
-      <Header
-        currentSeason={season}
-        currentSection="opening"
-        onShowPolicy={() => setShowPolicy(true)}
-        onLogoutClick={() => setShowLogout(true)}
-      />
-
       <main>
         <section id="opening-section" className="active">
           <div className="pack-container">
@@ -202,13 +166,6 @@ export default function OpeningClient() {
         </section>
       </main>
 
-      {/* --- MODALS --- */}
-      <LogoutDialog
-        isOpen={showLogout}
-        onClose={() => setShowLogout(false)}
-        onConfirm={logout}
-      />
-
       <GodPackDialog
         isOpen={isGodPackOpen}
         onClose={() => {
@@ -217,30 +174,6 @@ export default function OpeningClient() {
           setTimeout(() => setIsGodPackEffectActive(false), 5000);
         }}
       />
-
-      <PolicyDialog
-        isOpen={showPolicy}
-        onClose={() => setShowPolicy(false)}
-        appVersion="1.0.1"
-      />
-
-      <CardDetailDialog
-        isOpen={selectedDetailCard !== null}
-        card={selectedDetailCard}
-        onClose={() => setSelectedDetailCard(null)}
-      />
-
-      {/* --- SCROLL TO TOP --- */}
-      {showBackToTop && (
-        <button
-          id="back-to-top-btn"
-          className="back-to-top visible"
-          onClick={scrollToTop}
-          title="กลับไปด้านบน"
-        >
-          ↑
-        </button>
-      )}
     </div>
   );
 }

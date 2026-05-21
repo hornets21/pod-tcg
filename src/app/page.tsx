@@ -7,7 +7,10 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/season1");
+    if (typeof window !== "undefined") {
+      const search = window.location.search;
+      router.replace(`/season1${search}`);
+    }
   }, [router]);
 
   return (

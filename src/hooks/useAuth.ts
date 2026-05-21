@@ -29,7 +29,8 @@ export const useAuth = () => {
 
       if (extractedToken && extractedToken !== "null" && extractedToken !== "undefined") {
         try {
-          const res = await fetch("https://pod-tcg-backend-production.up.railway.app/auth/me", {
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://pod-tcg-backend-production.up.railway.app";
+          const res = await fetch(`${apiBaseUrl}/auth/me`, {
             headers: { Authorization: `Bearer ${extractedToken}` },
           });
 

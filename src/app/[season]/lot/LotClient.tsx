@@ -1,19 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Header } from "../../../components/Header";
 import { Card } from "../../../components/Card";
 import { useGacha } from "../../../hooks/useGacha";
-import { useAuth } from "../../../hooks/useAuth";
-import {
-  LogoutDialog,
-  PolicyDialog,
-  CardDetailDialog,
-  CustomDialog,
-  DialogButton,
-} from "../../../components/Modals";
-import { Card as CardType } from "../../../data/types";
+import { CustomDialog, DialogButton } from "../../../components/Modals";
+import { useModal } from "../../../components/ModalContext";
 
 export default function LotClient() {
   const params = useParams();
@@ -31,15 +23,10 @@ export default function LotClient() {
     confirmResetLot,
   } = useGacha(season);
 
-  const { logout } = useAuth();
+  const { setSelectedDetailCard } = useModal();
 
   // Selection states
   const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
-
-  // Modals state
-  const [showPolicy, setShowPolicy] = useState(false);
-  const [showLogout, setShowLogout] = useState(false);
-  const [selectedDetailCard, setSelectedDetailCard] = useState<CardType | null>(null);
 
   // Custom Confirmation Dialog states
   const [customDialog, setCustomDialog] = useState<{
@@ -55,21 +42,6 @@ export default function LotClient() {
     message: "",
     buttons: [],
   });
-
-  // Back to top scroll state
-  const [showBackToTop, setShowBackToTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const handleStartLot = () => {
     if (lotSelection.length === 0 || lotSelection.length > 10) {
@@ -128,20 +100,18 @@ export default function LotClient() {
 
   if (!isLoaded) {
     return (
-      <div className="main-wrapper">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-            color: "white",
-            fontFamily: "var(--font-kanit)",
-            fontSize: "1.2rem",
-          }}
-        >
-          กำลังโหลดหน้าจัดการล็อต...
-        </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          color: "white",
+          fontFamily: "var(--font-kanit)",
+          fontSize: "1.2rem",
+        }}
+      >
+        กำลังโหลดหน้าจัดการล็อต...
       </div>
     );
   }
@@ -150,13 +120,6 @@ export default function LotClient() {
 
   return (
     <div className="main-wrapper">
-      <Header
-        currentSeason={season}
-        currentSection="lot"
-        onShowPolicy={() => setShowPolicy(true)}
-        onLogoutClick={() => setShowLogout(true)}
-      />
-
       <main>
         <section id="lot-section" className="active">
           {activeLot.length === 0 ? (
@@ -256,47 +219,16 @@ export default function LotClient() {
             </div>
           )}
         </section>
+
+        <CustomDialog
+          isOpen={customDialog.isOpen}
+          icon={customDialog.icon}
+          title={customDialog.title}
+          message={customDialog.message}
+          buttons={customDialog.buttons}
+          onClose={() => setCustomDialog((prev) => ({ ...prev, isOpen: false }))}
+        />
       </main>
-
-      {/* --- MODALS --- */}
-      <LogoutDialog
-        isOpen={showLogout}
-        onClose={() => setShowLogout(false)}
-        onConfirm={logout}
-      />
-
-      <PolicyDialog
-        isOpen={showPolicy}
-        onClose={() => setShowPolicy(false)}
-        appVersion="1.0.1"
-      />
-
-      <CardDetailDialog
-        isOpen={selectedDetailCard !== null}
-        card={selectedDetailCard}
-        onClose={() => setSelectedDetailCard(null)}
-      />
-
-      <CustomDialog
-        isOpen={customDialog.isOpen}
-        icon={customDialog.icon}
-        title={customDialog.title}
-        message={customDialog.message}
-        buttons={customDialog.buttons}
-        onClose={() => setCustomDialog((prev) => ({ ...prev, isOpen: false }))}
-      />
-
-      {/* --- SCROLL TO TOP --- */}
-      {showBackToTop && (
-        <button
-          id="back-to-top-btn"
-          className="back-to-top visible"
-          onClick={scrollToTop}
-          title="กลับไปด้านบน"
-        >
-          ↑
-        </button>
-      )}
     </div>
   );
 }
