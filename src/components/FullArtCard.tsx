@@ -173,20 +173,6 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
                             {card.name}
                         </h2>
 
-                        {/* TYPE BADGE - TOP RIGHT */}
-                        <div style={{ 
-                            position: "absolute", top: "24px", right: "22px",
-                            backgroundColor: "rgba(59, 130, 246, 0.8)", border: "1.5px solid rgba(255,255,255,0.6)",
-                            borderRadius: "6px", padding: "2px 10px", backdropFilter: "blur(4px)", boxShadow: "0 4px 8px rgba(0,0,0,0.4)"
-                        }}>
-                            <span style={{ 
-                                fontSize: "10px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.15em",
-                                fontFamily: "var(--font-chakra), sans-serif", ...textStrokeStyle
-                            }}>
-                                CHARACTER
-                            </span>
-                        </div>
-
                         {/* BOTTOM BLOCK (Ability + Footer) */}
                         <div style={{ position: "absolute", bottom: "18px", left: "24px", right: "24px" }}>
                             
