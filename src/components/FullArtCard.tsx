@@ -65,7 +65,7 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
   const [my, setMy] = useState(0.5);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!enableHolo || !cardRef.current || !isRevealed) return;
+    if (!enableHolo || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
@@ -132,7 +132,7 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
                 boxShadow: isRevealed ? "0 30px 60px -12px rgba(0, 0, 0, 0.8)" : "none",
                 display: "block",
                 position: "absolute",
-                transform: `rotateX(calc((var(--my, 0.5) - 0.5) * -25deg)) rotateY(calc((var(--mx, 0.5) - 0.5) * 25deg)) scale(${finalScale}) translateY(${lift}px)`,
+                transform: `scale(${finalScale}) translateY(${lift}px)`,
                 transformOrigin: "center center",
                 pointerEvents: "none"
             } as React.CSSProperties}
@@ -143,9 +143,7 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
 
             <div className="card-inner" style={{ width: "100%", height: "100%", position: "relative" }}>
                 {/* BACK */}
-                <div className="card-back" style={{ borderRadius: "22px", border: "10px solid #1a1a1a", background: "#0a0a0a", overflow: "hidden", display: "flex", padding: "0" }}>
-                <div className="w-full h-full bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://img.lucky-pod.fun/back-card.png')" }}></div>
-                </div>
+                <div className="card-back" style={{ borderRadius: "22px", borderWidth: "6px" }}></div>
 
                 {/* FRONT */}
                 <div className="card-front" style={{ borderRadius: "22px", border: `10px solid ${borderColor}`, padding: "0", overflow: "hidden", background: "black", boxShadow: "inset 0 0 30px rgba(0,0,0,0.6)" }}>
