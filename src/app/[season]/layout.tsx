@@ -41,7 +41,9 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Determine current section from pathname
-  const currentSection = pathname.includes("/lot")
+  const currentSection = pathname.includes("/unboxing")
+    ? "unboxing"
+    : pathname.includes("/lot")
     ? "lot"
     : pathname.includes("/collection")
     ? "collection"

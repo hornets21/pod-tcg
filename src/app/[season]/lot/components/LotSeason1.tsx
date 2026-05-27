@@ -3,14 +3,14 @@
 import React, { useState, useMemo } from "react";
 import { Card } from "../../../../components/Card";
 import { Card as CardType } from "../../../../data/types";
-import { DialogButton } from "../../../../components/Modals";
+import { ActiveLotCard } from "../../../../hooks/useGacha";
 
 interface LotSeason1Props {
   cards: CardType[];
   lotSelection: string[];
   toggleLotCard: (id: string) => void;
   clearLotSelection: () => void;
-  activeLot: any[];
+  activeLot: ActiveLotCard[];
   startLot: () => void;
   revealLotCard: (idx: number) => void;
   handleResetConfirm: () => void;

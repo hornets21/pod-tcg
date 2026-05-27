@@ -3,13 +3,14 @@
 import React, { useState, useMemo } from "react";
 import { FullArtCard } from "../../../../components/FullArtCard";
 import { Card as CardType } from "../../../../data/types";
+import { ActiveLotCard } from "../../../../hooks/useGacha";
 
 interface LotSeason2Props {
   cards: CardType[];
   lotSelection: string[];
   toggleLotCard: (id: string) => void;
   clearLotSelection: () => void;
-  activeLot: any[];
+  activeLot: ActiveLotCard[];
   startLot: () => void;
   revealLotCard: (idx: number) => void;
   handleResetConfirm: () => void;

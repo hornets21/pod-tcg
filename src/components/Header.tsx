@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 
 interface HeaderProps {
   currentSeason: "season1" | "season2";
-  currentSection: "opening" | "lot" | "collection";
+  currentSection: "opening" | "unboxing" | "lot" | "collection";
   onShowPolicy?: () => void;
   onLogoutClick?: () => void;
 }
@@ -114,6 +114,12 @@ export const Header: React.FC<HeaderProps> = ({
               className={currentSection === "opening" ? "active" : ""}
             >
               🔓 เปิดซอง
+            </Link>
+            <Link
+              href={`/${currentSeason}/unboxing`}
+              className={currentSection === "unboxing" ? "active" : ""}
+            >
+              📦 แกะกล่อง
             </Link>
             <Link
               href={`/${currentSeason}/lot`}

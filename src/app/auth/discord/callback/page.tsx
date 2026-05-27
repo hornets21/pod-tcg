@@ -76,10 +76,10 @@ export default function DiscordCallbackPage() {
           window.location.href = "/season2";
         }, 1500);
 
-      } catch (error: any) {
+      } catch (error) {
         console.error("[Discord OAuth Callback Error]:", error);
         setStatus("error");
-        setErrorMessage(error.message || "เกิดข้อผิดพลาดในการยืนยันตัวตนด้วย Discord");
+        setErrorMessage(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการยืนยันตัวตนด้วย Discord");
       }
     };
 
