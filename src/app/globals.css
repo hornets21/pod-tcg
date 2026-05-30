@@ -612,16 +612,7 @@ section.active {
     transition: transform 0.1s ease-out, opacity 0.4s ease;
     transform-style: preserve-3d;
     will-change: transform, opacity;
-    contain: layout;
-
-    /* Performance Optimizations for rapid scrolling */
-    content-visibility: auto;
-    /* Browser only renders when near viewport */
-    contain-intrinsic-size: 230px 330px;
-    /* Placeholder size for layout stability */
     transform: translateZ(0);
-    /* Force GPU Layer promotion */
-    backface-visibility: hidden;
 }
 
 .card:hover {

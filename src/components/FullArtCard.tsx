@@ -41,6 +41,24 @@ const getRarityClasses = (rarity: string) => {
         glow: "rarity-glow-LEG",
         overlay: "bg-[radial-gradient(circle,rgba(239,68,68,0.1)_0%,transparent_70%)]",
       };
+    case "SR":
+      return {
+        borderColor: "#9333ea",
+        glow: "rarity-glow-SR",
+        overlay: "bg-gradient-to-br from-purple-400/10 via-transparent to-purple-600/15",
+      };
+    case "R":
+      return {
+        borderColor: "#2563eb",
+        glow: "rarity-glow-R",
+        overlay: "bg-gradient-to-br from-blue-300/10 via-transparent to-blue-500/10",
+      };
+    case "C":
+      return {
+        borderColor: "#6b7280",
+        glow: "",
+        overlay: "",
+      };
     default:
       return {
         borderColor: "#475569",
@@ -174,23 +192,9 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
                         {/* BOTTOM BLOCK (Ability + Footer) */}
                         <div style={{ position: "absolute", bottom: "18px", left: "24px", right: "24px" }}>
                             
-                            {/* ABILITY SECTION (Badge then Text below) */}
-                            <div style={{ marginBottom: "12px" }}>
-                                {/* ABILITY BADGE */}
-                                <div style={{ display: "flex", marginBottom: "10px" }}>
-                                    <div style={{ 
-                                        backgroundColor: "#ef4444", border: "1px solid rgba(255,255,255,0.4)",
-                                        borderRadius: "20px", padding: "3px 14px", boxShadow: "0 4px 8px rgba(0,0,0,0.4)"
-                                    }}>
-                                        <span style={{ 
-                                            fontSize: "10px", fontWeight: "900", fontStyle: "italic", textTransform: "uppercase", letterSpacing: "0.08em",
-                                            fontFamily: "var(--font-prompt), sans-serif", ...textStrokeStyle
-                                        }}>
-                                            ABILITY
-                                        </span>
-                                    </div>
-                                </div>
-                                {/* ABILITY DESCRIPTION TEXT */}
+{/* ABILITY SECTION */}
+                             <div style={{ marginBottom: "12px" }}>
+                                 {/* ABILITY DESCRIPTION TEXT */}
                                 <p style={{ 
                                     fontSize: "14px", fontWeight: "800", lineHeight: "1.4", margin: 0,
                                     fontFamily: "var(--font-prompt), sans-serif", ...textStrokeStyle,
@@ -224,7 +228,7 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
                                         fontSize: "10px", fontWeight: "900", letterSpacing: "0.1em", opacity: "0.85",
                                         fontFamily: "var(--font-prompt), sans-serif", ...textStrokeStyle
                                     }}>
-                                        SVI-222
+                                        {card.rarity}
                                     </div>
                                 </div>
                             </div>

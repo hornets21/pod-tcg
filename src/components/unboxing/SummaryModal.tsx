@@ -7,37 +7,50 @@ import { FullArtCard } from "../FullArtCard";
 
 interface SummaryModalProps {
   isOpen: boolean;
-  cards: CardType[];
+  packContents: Record<number, CardType[]>;
+  packOrder: number[];
   season: string;
   onClose: () => void;
 }
 
 export const SummaryModal: React.FC<SummaryModalProps> = ({
   isOpen,
-  cards,
+  packContents,
+  packOrder,
   season,
   onClose,
 }) => {
   if (!isOpen) return null;
 
   const CardComponent = season === "season2" ? FullArtCard : Card;
+  const totalCards = packOrder.reduce((sum, idx) => sum + (packContents[idx]?.length || 0), 0);
 
   return (
     <div className="summary-overlay">
       <div className="summary-container">
         <header className="summary-header">
           <h2>สรุปการเปิดกล่อง (BOX SUMMARY)</h2>
-          <p>คุณได้รับทั้งหมด {cards.length} ใบ</p>
+          <p>คุณได้รับทั้งหมด {totalCards} ใบ</p>
         </header>
 
         <div className="cards-grid-container">
-          <div className="cards-grid">
-            {cards.map((card, idx) => (
-              <div key={`${card.role_id}-${idx}`} className="grid-card-wrapper">
-                <CardComponent card={card} isRevealed={true} enableHolo={true} />
+          {packOrder.map((packIdx, orderIdx) => {
+            const cards = packContents[packIdx] || [];
+            return (
+              <div key={packIdx} className="pack-row">
+                <div className="pack-label">
+                  ซองที่ {packIdx + 1} <span className="pack-order">เปิดลำดับที่ {orderIdx + 1}</span>
+                </div>
+              <div className="cards-grid">
+                  {cards.map((card, idx) => (
+                    <div key={`${card.role_id}-${idx}`} className="grid-card-wrapper">
+                      <CardComponent card={card} isRevealed={true} enableHolo={true} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         <div className="summary-actions">
@@ -61,14 +74,14 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         }
 
         .summary-container {
-          width: 90%;
-          max-width: 1200px;
-          height: 90vh;
+          width: 100%;
+          max-width: 100%;
+          height: 100vh;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 20px;
-          padding: 40px 20px;
+          padding: 30px 40px;
         }
 
         .summary-header {
@@ -108,15 +121,35 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           border-radius: 10px;
         }
 
+        .pack-row {
+          margin-bottom: 30px;
+        }
+
+        .pack-label {
+          color: #ffcb05;
+          font-family: 'Kanit', sans-serif;
+          font-size: 1.1rem;
+          margin-bottom: 10px;
+          padding-left: 10px;
+          border-left: 3px solid #ffcb05;
+        }
+
+        .pack-order {
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.85rem;
+          margin-left: 8px;
+        }
+
         .cards-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-          gap: 30px;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 20px;
           justify-items: center;
         }
 
         .grid-card-wrapper {
-          width: 180px;
+          width: 100%;
+          max-width: 200px;
           transition: transform 0.3s ease;
         }
 
@@ -155,11 +188,14 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 
         @media (max-width: 768px) {
           .cards-grid {
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
           }
           .grid-card-wrapper {
-            width: 140px;
+            max-width: none;
+          }
+          .pack-label {
+            font-size: 0.9rem;
           }
           .summary-header h2 {
             font-size: 1.5rem;

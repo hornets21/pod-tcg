@@ -21,7 +21,10 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
 }) => {
   useEffect(() => {
     if (isOpen) {
-      onRipComplete();
+      const timer = setTimeout(() => {
+        onRipComplete();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);

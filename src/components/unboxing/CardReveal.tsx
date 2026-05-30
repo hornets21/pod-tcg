@@ -10,20 +10,10 @@ interface CardRevealProps {
   season: string;
 }
 
-export const CardReveal: React.FC<CardRevealProps> = ({
-  cards,
-  season,
-}) => {
+export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
   const [revealedStates, setRevealedStates] = React.useState<boolean[]>([]);
 
-  // Fan positions for 5 cards
-  const fanStyles = [
-    { x: -220, y: 40, rotate: -15, scale: 0.9, delay: 400 },
-    { x: -110, y: 15, rotate: -7, scale: 0.95, delay: 500 },
-    { x: 0, y: 0, rotate: 0, scale: 1.05, delay: 600 },
-    { x: 110, y: 15, rotate: 7, scale: 0.95, delay: 700 },
-    { x: 220, y: 40, rotate: 15, scale: 0.9, delay: 800 },
-  ];
+  const cardDelays = [400, 600, 900, 1300, 1800];
 
   React.useEffect(() => {
     if (cards.length > 0) {
@@ -33,11 +23,11 @@ export const CardReveal: React.FC<CardRevealProps> = ({
       // Flip them one by one after they fan in
       const timers: NodeJS.Timeout[] = [];
       cards.forEach((_, index) => {
-        const style = fanStyles[index % fanStyles.length];
-        const flipDelay = style.delay + 800; // Wait for fanIn (600ms) + small buffer
-        
+        const delay = cardDelays[index % cardDelays.length];
+        const flipDelay = delay + 800;
+
         const timer = setTimeout(() => {
-          setRevealedStates(prev => {
+          setRevealedStates((prev) => {
             const next = [...prev];
             next[index] = true;
             return next;
@@ -54,8 +44,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({
 
   const packImgMap: Record<string, string> = {
     season1: "https://img.lucky-pod.fun/pack_tcg_op_1.png",
-    season2:
-      "https://pub-8d9c494520194a9fb9ae47448111809e.r2.dev/pack_tcg_op_2.png",
+    season2: "https://img.lucky-pod.fun/pack_tcg_op_2.png",
   };
 
   const packImg = packImgMap[season] || packImgMap["season1"];
@@ -67,33 +56,35 @@ export const CardReveal: React.FC<CardRevealProps> = ({
       {/* Torn Pack Animation */}
       <div className="pack-visual-tear">
         <div className="pack-shaker">
-          <div className="pack-half top" style={{ backgroundImage: `url(${packImg})` }}></div>
-          <div className="pack-half bottom" style={{ backgroundImage: `url(${packImg})` }}></div>
+          <div
+            className="pack-half top"
+            style={{ backgroundImage: `url(${packImg})` }}
+          ></div>
+          <div
+            className="pack-half bottom"
+            style={{ backgroundImage: `url(${packImg})` }}
+          ></div>
         </div>
       </div>
 
       {cards.map((card, index) => {
-        const style = fanStyles[index % fanStyles.length];
+        const delay = cardDelays[index % cardDelays.length];
         const isRevealed = revealedStates[index] || false;
-        
+
         return (
           <div
             key={`${card.role_id}-${index}`}
             className="fan-card-wrapper"
             style={
               {
-                "--tx": `${style.x}px`,
-                "--ty": `${style.y}px`,
-                "--rot": `${style.rotate}deg`,
-                "--sc": style.scale,
-                "--delay": `${style.delay}ms`,
+                "--delay": `${delay}ms`,
               } as React.CSSProperties
             }
           >
-            <CardComponent 
-              card={card} 
-              isRevealed={isRevealed} 
-              enableHolo={true} 
+            <CardComponent
+              card={card}
+              isRevealed={isRevealed}
+              enableHolo={true}
             />
           </div>
         );
@@ -107,6 +98,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 16px;
           margin-top: -50px;
         }
 
@@ -201,10 +193,9 @@ export const CardReveal: React.FC<CardRevealProps> = ({
         }
 
         .fan-card-wrapper {
-          position: absolute;
           opacity: 0;
           transform: translateY(100px) scale(0.5);
-          animation: fanIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
             var(--delay) forwards;
           z-index: 10;
         }
@@ -213,15 +204,14 @@ export const CardReveal: React.FC<CardRevealProps> = ({
           z-index: 100;
         }
 
-        @keyframes fanIn {
+        @keyframes slideUp {
           from {
             opacity: 0;
             transform: translateY(100px) scale(0.5);
           }
           to {
             opacity: 1;
-            transform: translate(var(--tx), var(--ty)) rotate(var(--rot))
-              scale(var(--sc));
+            transform: translateY(0) scale(1);
           }
         }
       `}</style>
