@@ -19,7 +19,7 @@ export default function DiscordCallbackPage() {
         }
 
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://pod-tcg-backend-production.up.railway.app";
-        const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "http://localhost:3000/auth/discord/callback";
+        const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "https://pod-tcg-backend-production.up.railway.app/auth/discord/callback";
 
         // Call the backend to exchange the authorization code for a token
         const exchangeUrl = `${apiBaseUrl}/auth/discord/callback?code=${code}&redirect_uri=${encodeURIComponent(redirectUri)}`;

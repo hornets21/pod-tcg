@@ -1,0 +1,78 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_tag:
+        description: "Deploy tag to rollback to (e.g. deploy-20260531-000000)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ inputs.deploy_tag }}" == deploy-* ]]; then
+            echo "::error::Invalid tag format. Expected deploy-YYYYMMDD-HHMMSS"
+            exit 1
+          fi
+
+      - name: Checkout at tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.deploy_tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload rollback build artifact (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-output-${{ inputs.deploy_tag }}
+          path: out/
+          retention-days: 90
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out/
+
+      - name: Create rollback tag
+        run: |
+          TAG="rollback-$(date +%Y%m%d-%H%M%S)-from-${{ inputs.deploy_tag }}"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+  deploy:
+    needs: rollback
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
