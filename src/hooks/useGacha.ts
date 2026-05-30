@@ -81,24 +81,29 @@ export const useGacha = (season: "season1" | "season2") => {
     return cards.filter((c) => c.isGacha === "Y");
   }, [cards]);
 
-  // Persistent States
+  // Persistent States (season-scoped keys to avoid cross-season data leakage)
+  const collectionKey = `pod_collection_${season}`;
+  const lotSelectionKey = `pod_lot_selection_${season}`;
+  const activeLotKey = `pod_active_lot_${season}`;
+  const lotIndexKey = `pod_lot_index_${season}`;
+
   const [localCollection, setLocalCollection, isCollectionLoaded] = useLocalStorage<string[]>(
-    "pod_collection",
+    collectionKey,
     []
   );
 
   const [lotSelection, setLotSelection, isLotSelectionLoaded] = useLocalStorage<string[]>(
-    "pod_lot_selection",
+    lotSelectionKey,
     []
   );
 
   const [activeLot, setActiveLot, isActiveLotLoaded] = useLocalStorage<ActiveLotCard[]>(
-    "pod_active_lot",
+    activeLotKey,
     []
   );
 
   const [currentLotIndex, setCurrentLotIndex] = useLocalStorage<number>(
-    "pod_lot_index",
+    lotIndexKey,
     0
   );
 

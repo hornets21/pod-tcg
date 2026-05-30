@@ -121,7 +121,7 @@ export default function CollectionClient() {
               const CardComponent = season === "season2" ? FullArtCard : Card;
               return (
                 <CardComponent
-                  key={card.role_id}
+                  key={`${season}-${card.role_id}`}
                   card={card}
                   isRevealed={true}
                   isOwned={owned}

@@ -168,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className={`season-dropdown-item ${currentSeason === "season2" ? "active" : ""}`}
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  ✨ OP-2
+✨ OP-2
                 </Link>
                 <Link
                   href={getSwitchSeasonPath("season1")}
