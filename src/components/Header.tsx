@@ -15,7 +15,7 @@ const getDiscordAuthUrl = (): string => {
   const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || "1485982724463525951";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const redirectUri = siteUrl ? `${siteUrl}/auth/discord/callback` : (process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "");
-  return `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify%20guilds.members.read`;
+  return `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify%20guilds.members.read&integration_type=0`;
 };
 
 export const Header: React.FC<HeaderProps> = ({
