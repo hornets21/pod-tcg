@@ -8,7 +8,7 @@ export default function DiscordCallbackPage() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  useEffect(() => {
+useEffect(() => {
     const handleCallback = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -30,33 +30,25 @@ export default function DiscordCallbackPage() {
           let errorMsg = "เกิดข้อผิดพลาดในการยืนยันตัวตนกับเซิร์ฟเวอร์";
           try {
             const errData = await response.json();
-            errorMsg = errData.details || errData.error || errorMsg;
+            errorMsg = errData.error || errorMsg;
           } catch {}
           throw new Error(errorMsg);
         }
 
         const data = await response.json();
-        const token = data.access_token;
+        const token = data.token;
 
         if (!token) {
           throw new Error("ไม่ได้รับรหัสเข้าสู่ระบบ (Token) จากเซิร์ฟเวอร์");
         }
 
-        const userRes = await fetch(`${apiBaseUrl}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!userRes.ok) {
-          throw new Error("ไม่สามารถดึงข้อมูลโปรไฟล์ผู้ใช้จาก Backend ได้");
-        }
-
-        const userData = await userRes.json();
+        const userData = data.user;
 
         localStorage.setItem("pod_user", JSON.stringify(userData));
         localStorage.setItem("pod_token", token);
         localStorage.removeItem("pod_collection");
+
+        window.history.replaceState({}, document.title, window.location.pathname);
 
         setStatus("success");
 
@@ -65,7 +57,6 @@ export default function DiscordCallbackPage() {
         }, 1500);
 
       } catch (error) {
-        console.error("[Discord OAuth Callback Error]:", error);
         setStatus("error");
         setErrorMessage(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการยืนยันตัวตนด้วย Discord");
       }
