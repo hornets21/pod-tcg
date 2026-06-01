@@ -18,7 +18,6 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
   isOpened,
   onClick,
 }) => {
-  // Define positions for 6 packs (balanced fan)
   const positions = [
     { x: -350, y: -100, rotate: -15 },
     { x: -210, y: -190, rotate: -9 },
@@ -28,7 +27,17 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
     { x: 350, y: -100, rotate: 15 },
   ];
 
+  const mobilePositions = [
+    { x: -100, y: -80, rotate: -10 },
+    { x: -50, y: -160, rotate: -5 },
+    { x: 0, y: -190, rotate: 0 },
+    { x: 50, y: -160, rotate: 5 },
+    { x: 100, y: -80, rotate: 10 },
+    { x: 0, y: -30, rotate: 5 },
+  ];
+
   const pos = positions[index % positions.length];
+  const mobilePos = mobilePositions[index % mobilePositions.length];
   const delay = 500 + index * 150;
 
   return (
@@ -39,6 +48,9 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
         "--target-y": `${pos.y}px`,
         "--target-rotate": `${pos.rotate}deg`,
         "--delay": `${delay}ms`,
+        "--mobile-x": `${mobilePos.x}px`,
+        "--mobile-y": `${mobilePos.y}px`,
+        "--mobile-rotate": `${mobilePos.rotate}deg`,
       } as React.CSSProperties}
       onClick={isEjected && !isOpened ? onClick : undefined}
     >
@@ -94,6 +106,18 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
         .pack-inner {
           width: 150px;
           height: 225px;
+        }
+
+        @media (max-width: 768px) {
+          .pack-inner {
+            width: 110px;
+            height: 165px;
+          }
+          .booster-pack-wrapper.ejected {
+            transform: translate(calc(-50% + var(--mobile-x)), calc(-50% + var(--mobile-y)))
+                       rotate(var(--mobile-rotate))
+                       scale(0.8);
+          }
         }
 
         /* Adjusting the existing PackVisual size within this context */

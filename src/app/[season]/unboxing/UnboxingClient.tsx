@@ -201,6 +201,21 @@ export default function UnboxingClient() {
           justify-content: center;
         }
 
+        @media (max-width: 768px) {
+          .unboxing-container {
+            height: auto;
+            min-height: 70vh;
+            padding-top: 2rem;
+            padding-bottom: 6rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .unboxing-container {
+            min-height: 60vh;
+          }
+        }
+
         .loading-container {
           height: 100vh;
           display: flex;
@@ -217,6 +232,18 @@ export default function UnboxingClient() {
           display: flex;
           gap: 20px;
           animation: fadeIn 0.5s ease forwards;
+        }
+
+        @media (max-width: 768px) {
+          .unboxing-actions {
+            position: relative;
+            bottom: auto;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 1rem;
+            padding-bottom: 2rem;
+          }
         }
 
         .summary-btn {

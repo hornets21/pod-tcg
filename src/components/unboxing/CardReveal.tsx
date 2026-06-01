@@ -102,6 +102,24 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           margin-top: -50px;
         }
 
+        @media (max-width: 768px) {
+          .card-reveal-fan {
+            height: 400px;
+            gap: 8px;
+            margin-top: -30px;
+            flex-wrap: wrap;
+            padding: 0 1rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .card-reveal-fan {
+            height: 350px;
+            gap: 4px;
+            margin-top: -20px;
+          }
+        }
+
         .pack-visual-tear {
           position: absolute;
           width: 200px;

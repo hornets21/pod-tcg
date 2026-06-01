@@ -88,6 +88,26 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
           background: #4b5cda;
         }
 
+        @media (max-width: 768px) {
+          .overlay-actions {
+            margin-top: 30px;
+          }
+          .back-btn {
+            padding: 10px 24px;
+            font-size: 14px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .overlay-actions {
+            margin-top: 20px;
+          }
+          .back-btn {
+            padding: 8px 20px;
+            font-size: 13px;
+          }
+        }
+
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }

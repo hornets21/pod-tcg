@@ -188,7 +188,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 
         @media (max-width: 768px) {
           .cards-grid {
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
           }
           .grid-card-wrapper {
@@ -199,6 +199,25 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           }
           .summary-header h2 {
             font-size: 1.5rem;
+          }
+          .summary-container {
+            padding: 20px 16px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+          }
+          .summary-header h2 {
+            font-size: 1.2rem;
+          }
+          .summary-header p {
+            font-size: 0.9rem;
+          }
+          .summary-container {
+            padding: 16px 12px;
           }
         }
       `}</style>

@@ -68,6 +68,30 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season }) => {
           transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        @media (max-width: 768px) {
+          .box-wrapper {
+            width: 130px;
+            height: 200px;
+            margin: 40px auto;
+            transform: scale(0.75);
+          }
+          .box-wrapper:hover:not(.opened) {
+            transform: rotateX(-5deg) rotateY(15deg) scale(0.83);
+          }
+        }
+
+        @media (max-width: 480px) {
+          .box-wrapper {
+            width: 110px;
+            height: 170px;
+            margin: 30px auto;
+            transform: scale(0.65);
+          }
+          .box-wrapper:hover:not(.opened) {
+            transform: rotateX(-5deg) rotateY(15deg) scale(0.72);
+          }
+        }
+
         .box-wrapper:hover:not(.opened) {
           transform: rotateX(-5deg) rotateY(15deg) scale(1.08);
         }

@@ -109,7 +109,7 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
     `
   };
 
-  // Base scale is 0.657 to fit 350px card into 230px grid slot
+  // Base scale computed via CSS - inner card uses relative units
   const baseScale = 0.657;
   const finalScale = isSelected ? baseScale * 1.03 : baseScale;
   const lift = isSelected ? -15 : 0;
@@ -120,17 +120,6 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
         onClick={onClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{ 
-            width: "230px", 
-            height: "330px", 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center",
-            position: "relative",
-            cursor: "pointer",
-            perspective: "1200px",
-            transition: "opacity 0.4s ease"
-        }}
     >
         <div
             ref={cardRef}
