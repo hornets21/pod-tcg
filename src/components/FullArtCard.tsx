@@ -109,9 +109,6 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
     `
   };
 
-  // Base scale computed via CSS - inner card uses relative units
-  const baseScale = 0.657;
-  const finalScale = isSelected ? baseScale * 1.03 : baseScale;
   const lift = isSelected ? -15 : 0;
 
   return (
@@ -139,7 +136,9 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
                 boxShadow: isRevealed ? "0 30px 60px -12px rgba(0, 0, 0, 0.8)" : "none",
                 display: "block",
                 position: "absolute",
-                transform: `scale(${finalScale}) translateY(${lift}px)`,
+                transform: isSelected
+                    ? `scale(calc(var(--card-scale, 0.657) * 1.03)) translateY(${lift}px)`
+                    : `scale(var(--card-scale, 0.657))`,
                 transformOrigin: "center center",
                 pointerEvents: "none"
             } as React.CSSProperties}

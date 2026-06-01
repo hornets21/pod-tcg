@@ -80,14 +80,16 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 20px;
-          padding: 30px 40px;
+          gap: 16px;
+          padding: 24px 30px;
+          overflow: hidden;
         }
 
         .summary-header {
           text-align: center;
           color: white;
           font-family: 'Kanit', sans-serif;
+          flex-shrink: 0;
         }
 
         .summary-header h2 {
@@ -107,9 +109,10 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           flex: 1;
           width: 100%;
           overflow-y: auto;
-          padding: 20px;
+          padding: 16px;
           scrollbar-width: thin;
           scrollbar-color: #3b4cca transparent;
+          -webkit-overflow-scrolling: touch;
         }
 
         .cards-grid-container::-webkit-scrollbar {
@@ -122,7 +125,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         }
 
         .pack-row {
-          margin-bottom: 30px;
+          margin-bottom: 24px;
         }
 
         .pack-label {
@@ -143,14 +146,25 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         .cards-grid {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
-          gap: 20px;
+          gap: 16px;
           justify-items: center;
         }
 
         .grid-card-wrapper {
           width: 100%;
-          max-width: 200px;
-          transition: transform 0.3s ease;
+          display: flex;
+          justify-content: center;
+        }
+
+        .grid-card-wrapper :global(.card) {
+          width: 180px;
+          height: 257px;
+        }
+
+        .grid-card-wrapper :global(.full-art-card-wrapper) {
+          width: 180px;
+          height: 257px;
+          --card-scale: 0.514;
         }
 
         .grid-card-wrapper:hover {
@@ -159,7 +173,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         }
 
         .summary-actions {
-          margin-top: 20px;
+          flex-shrink: 0;
+          margin-top: 8px;
+          padding-bottom: 16px;
         }
 
         .back-btn {
@@ -187,37 +203,83 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         }
 
         @media (max-width: 768px) {
-          .cards-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+          .summary-container {
+            gap: 10px;
+            padding: 16px 12px;
           }
-          .grid-card-wrapper {
-            max-width: none;
-          }
-          .pack-label {
-            font-size: 0.9rem;
-          }
+
           .summary-header h2 {
             font-size: 1.5rem;
           }
-          .summary-container {
-            padding: 20px 16px;
+
+          .cards-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+          }
+
+          .grid-card-wrapper :global(.card) {
+            width: 140px;
+            height: 200px;
+          }
+
+          .grid-card-wrapper :global(.full-art-card-wrapper) {
+            width: 140px;
+            height: 200px;
+            --card-scale: 0.4;
+          }
+
+          .pack-label {
+            font-size: 0.9rem;
+          }
+
+          .pack-row {
+            margin-bottom: 16px;
           }
         }
 
         @media (max-width: 480px) {
-          .cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
+          .summary-container {
+            gap: 8px;
+            padding: 12px 8px;
           }
+
           .summary-header h2 {
             font-size: 1.2rem;
           }
+
           .summary-header p {
             font-size: 0.9rem;
           }
-          .summary-container {
-            padding: 16px 12px;
+
+          .cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+          }
+
+          .grid-card-wrapper :global(.card) {
+            width: 130px;
+            height: 186px;
+          }
+
+          .grid-card-wrapper :global(.full-art-card-wrapper) {
+            width: 130px;
+            height: 186px;
+            --card-scale: 0.371;
+          }
+
+          .pack-label {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            padding-left: 8px;
+          }
+
+          .pack-order {
+            font-size: 0.75rem;
+          }
+
+          .back-btn {
+            padding: 10px 28px;
+            font-size: 15px;
           }
         }
       `}</style>

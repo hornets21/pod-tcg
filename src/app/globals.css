@@ -741,7 +741,7 @@ section.active {
     margin: 0 auto 2rem;
     position: relative;
     cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), width 0.3s ease, height 0.3s ease;
     z-index: 10;
 }
 
@@ -1242,6 +1242,35 @@ section.active {
         font-size: 1.2rem;
     }
 
+    .pack-visual {
+        width: 160px;
+        height: 240px;
+    }
+
+    .pack-half img {
+        height: 240px;
+    }
+
+    .pack-half.bottom img {
+        margin-top: -120px;
+    }
+
+    .tearing.torn .pack-half.top {
+        transform: translateY(-120px) rotate(-15deg);
+    }
+
+    .tearing.torn .pack-half.bottom {
+        transform: translateY(120px) rotate(15deg);
+    }
+
+    .godpack-title {
+        font-size: 2.4rem;
+    }
+
+    .godpack-subtitle {
+        font-size: 1.3rem;
+    }
+
     main {
         padding: 1rem;
     }
@@ -1331,6 +1360,28 @@ section.active {
     .godpack-btn {
         padding: 0.7rem 2rem;
         font-size: 1rem;
+    }
+
+    .pack-visual {
+        width: 140px;
+        height: 210px;
+        margin: 0 auto 1.5rem;
+    }
+
+    .pack-half img {
+        height: 210px;
+    }
+
+    .pack-half.bottom img {
+        margin-top: -105px;
+    }
+
+    .tearing.torn .pack-half.top {
+        transform: translateY(-105px) rotate(-15deg);
+    }
+
+    .tearing.torn .pack-half.bottom {
+        transform: translateY(105px) rotate(15deg);
     }
 
     .logout-dialog-box {
@@ -2435,13 +2486,15 @@ section.active {
     position: relative;
     cursor: pointer;
     perspective: 1200px;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.4s ease, width 0.3s ease, height 0.3s ease;
+    --card-scale: 0.657;
 }
 
 @media (max-width: 992px) {
     .full-art-card-wrapper {
         width: 200px;
         height: 285px;
+        --card-scale: 0.571;
     }
 }
 
@@ -2449,6 +2502,7 @@ section.active {
     .full-art-card-wrapper {
         width: 160px;
         height: 230px;
+        --card-scale: 0.457;
     }
 }
 
@@ -2456,6 +2510,7 @@ section.active {
     .full-art-card-wrapper {
         width: 145px;
         height: 208px;
+        --card-scale: 0.414;
     }
 }
 

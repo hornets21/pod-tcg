@@ -62,10 +62,17 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
           flex-direction: column;
           align-items: center;
           justify-content: center;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 1rem 0;
         }
 
         .overlay-actions {
-          margin-top: 50px;
+          position: relative;
+          z-index: 20;
+          flex-shrink: 0;
+          margin-top: 30px;
+          padding-bottom: 2rem;
           animation: fadeIn 0.5s ease 1s forwards;
           opacity: 0;
         }
@@ -81,6 +88,7 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
           cursor: pointer;
           transition: transform 0.2s ease, background 0.2s ease;
           font-family: 'Kanit', sans-serif;
+          box-shadow: 0 4px 15px rgba(59, 76, 202, 0.4);
         }
 
         .back-btn:hover {
@@ -89,8 +97,13 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
         }
 
         @media (max-width: 768px) {
+          .revealed-container {
+            justify-content: flex-start;
+            padding-top: 1.5rem;
+          }
           .overlay-actions {
-            margin-top: 30px;
+            margin-top: 16px;
+            padding-bottom: 2rem;
           }
           .back-btn {
             padding: 10px 24px;
@@ -99,11 +112,15 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
         }
 
         @media (max-width: 480px) {
+          .revealed-container {
+            padding-top: 1rem;
+          }
           .overlay-actions {
-            margin-top: 20px;
+            margin-top: 12px;
+            padding-bottom: 2rem;
           }
           .back-btn {
-            padding: 8px 20px;
+            padding: 10px 24px;
             font-size: 13px;
           }
         }

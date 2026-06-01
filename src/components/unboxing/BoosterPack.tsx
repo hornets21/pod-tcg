@@ -28,12 +28,12 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
   ];
 
   const mobilePositions = [
-    { x: -100, y: -80, rotate: -10 },
-    { x: -50, y: -160, rotate: -5 },
-    { x: 0, y: -190, rotate: 0 },
-    { x: 50, y: -160, rotate: 5 },
-    { x: 100, y: -80, rotate: 10 },
-    { x: 0, y: -30, rotate: 5 },
+    { x: -55, y: -50, rotate: -8 },
+    { x: 55, y: -50, rotate: 8 },
+    { x: -75, y: -150, rotate: -4 },
+    { x: 75, y: -150, rotate: 4 },
+    { x: 0, y: -210, rotate: 0 },
+    { x: 0, y: 30, rotate: 0 },
   ];
 
   const pos = positions[index % positions.length];
@@ -110,27 +110,54 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
 
         @media (max-width: 768px) {
           .pack-inner {
-            width: 110px;
-            height: 165px;
+            width: 100px;
+            height: 150px;
           }
           .booster-pack-wrapper.ejected {
             transform: translate(calc(-50% + var(--mobile-x)), calc(-50% + var(--mobile-y)))
                        rotate(var(--mobile-rotate))
-                       scale(0.8);
+                       scale(0.85);
           }
         }
 
-        /* Adjusting the existing PackVisual size within this context */
+        @media (max-width: 480px) {
+          .pack-inner {
+            width: 80px;
+            height: 120px;
+          }
+        }
+
         :global(.booster-pack-wrapper .pack-visual) {
           width: 100% !important;
           height: 100% !important;
           margin: 0 !important;
         }
         :global(.booster-pack-wrapper .pack-half img) {
+          width: 100% !important;
           height: 225px !important;
+          object-fit: cover;
+          border-radius: 12px;
         }
         :global(.booster-pack-wrapper .pack-half.bottom img) {
           margin-top: -112.5px !important;
+        }
+
+        @media (max-width: 768px) {
+          :global(.booster-pack-wrapper .pack-half img) {
+            height: 150px !important;
+          }
+          :global(.booster-pack-wrapper .pack-half.bottom img) {
+            margin-top: -75px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          :global(.booster-pack-wrapper .pack-half img) {
+            height: 120px !important;
+          }
+          :global(.booster-pack-wrapper .pack-half.bottom img) {
+            margin-top: -60px !important;
+          }
         }
       `}</style>
     </div>

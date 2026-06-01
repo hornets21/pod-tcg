@@ -104,19 +104,82 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
 
         @media (max-width: 768px) {
           .card-reveal-fan {
-            height: 400px;
-            gap: 8px;
-            margin-top: -30px;
+            height: auto;
+            min-height: 350px;
+            gap: 10px;
+            margin-top: 0;
             flex-wrap: wrap;
-            padding: 0 1rem;
+            padding: 1rem;
+            overflow: visible;
+            justify-content: center;
+          }
+
+          .fan-card-wrapper :global(.card) {
+            width: 110px;
+            height: 157px;
+          }
+
+          .fan-card-wrapper :global(.full-art-card-wrapper) {
+            width: 110px !important;
+            height: 157px !important;
+            --card-scale: 0.314;
+          }
+
+          .pack-visual-tear {
+            width: 150px;
+            height: 225px;
+          }
+
+          .pack-visual-tear .pack-half {
+            background-size: 100% 225px !important;
+          }
+
+          .pack-glow {
+            width: 400px;
+            height: 400px;
           }
         }
 
         @media (max-width: 480px) {
           .card-reveal-fan {
-            height: 350px;
-            gap: 4px;
-            margin-top: -20px;
+            height: auto;
+            min-height: 280px;
+            gap: 6px;
+            margin-top: 0;
+            flex-wrap: wrap;
+            padding: 0.5rem;
+            overflow: visible;
+            justify-content: center;
+            align-content: flex-start;
+          }
+
+          .fan-card-wrapper {
+            flex: 0 0 auto;
+          }
+
+          .fan-card-wrapper :global(.card) {
+            width: 100px;
+            height: 143px;
+          }
+
+          .fan-card-wrapper :global(.full-art-card-wrapper) {
+            width: 100px !important;
+            height: 143px !important;
+            --card-scale: 0.286;
+          }
+
+          .pack-visual-tear {
+            width: 120px;
+            height: 180px;
+          }
+
+          .pack-visual-tear .pack-half {
+            background-size: 100% 180px !important;
+          }
+
+          .pack-glow {
+            width: 300px;
+            height: 300px;
           }
         }
 
@@ -164,7 +227,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
             opacity: 1;
           }
           100% {
-            transform: translateY(-250px) rotate(-20deg) scale(0.8);
+            transform: translateY(-180px) rotate(-20deg) scale(0.8);
             opacity: 0;
           }
         }
@@ -175,7 +238,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
             opacity: 1;
           }
           100% {
-            transform: translateY(250px) rotate(20deg) scale(0.8);
+            transform: translateY(180px) rotate(20deg) scale(0.8);
             opacity: 0;
           }
         }

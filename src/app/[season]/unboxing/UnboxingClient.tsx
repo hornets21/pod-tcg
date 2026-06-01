@@ -8,14 +8,12 @@ import { BoosterPack } from "../../../components/unboxing/BoosterPack";
 import { PackRipOverlay } from "../../../components/unboxing/PackRipOverlay";
 import { SummaryModal } from "../../../components/unboxing/SummaryModal";
 import { Card as CardType } from "../../../data/types";
-import { useModal } from "../../../components/ModalContext";
 import { GodPackDialog } from "../../../components/Modals";
 
 export default function UnboxingClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { setSelectedDetailCard } = useModal();
 
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [openedPacks, setOpenedPacks] = useState<Set<number>>(new Set());
@@ -171,7 +169,10 @@ export default function UnboxingClient() {
               <button className="reset-confirm-btn" onClick={handleReset}>
                 ยืนยัน
               </button>
-              <button className="reset-cancel-btn" onClick={() => setIsResetDialogOpen(false)}>
+              <button
+                className="reset-cancel-btn"
+                onClick={() => setIsResetDialogOpen(false)}
+              >
                 ยกเลิก
               </button>
             </div>
@@ -258,11 +259,21 @@ export default function UnboxingClient() {
           cursor: pointer;
           transition: all 0.2s ease;
           font-family: "Kanit", sans-serif;
+          white-space: nowrap;
         }
 
         .summary-btn:hover {
           background: rgba(255, 255, 255, 0.2);
           transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+          .summary-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 320px;
+          }
         }
 
         .reset-btn {
@@ -279,11 +290,21 @@ export default function UnboxingClient() {
             box-shadow 0.2s ease;
           box-shadow: 0 5px 15px rgba(255, 203, 5, 0.4);
           font-family: "Kanit", sans-serif;
+          white-space: nowrap;
         }
 
         .reset-btn:hover {
           transform: scale(1.05);
           box-shadow: 0 8px 25px rgba(255, 203, 5, 0.6);
+        }
+
+        @media (max-width: 768px) {
+          .reset-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 320px;
+          }
         }
 
         .reset-overlay {
@@ -305,7 +326,7 @@ export default function UnboxingClient() {
           padding: 40px;
           text-align: center;
           color: white;
-          font-family: 'Kanit', sans-serif;
+          font-family: "Kanit", sans-serif;
           max-width: 400px;
           width: 90%;
         }
@@ -339,7 +360,7 @@ export default function UnboxingClient() {
           font-weight: bold;
           font-size: 16px;
           cursor: pointer;
-          font-family: 'Kanit', sans-serif;
+          font-family: "Kanit", sans-serif;
           transition: transform 0.2s ease;
         }
 
@@ -356,7 +377,7 @@ export default function UnboxingClient() {
           font-weight: bold;
           font-size: 16px;
           cursor: pointer;
-          font-family: 'Kanit', sans-serif;
+          font-family: "Kanit", sans-serif;
           transition: background 0.2s ease;
         }
 
@@ -375,7 +396,6 @@ export default function UnboxingClient() {
           }
         }
       `}</style>
-
     </div>
   );
 }
