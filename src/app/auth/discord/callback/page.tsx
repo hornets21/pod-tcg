@@ -19,31 +19,24 @@ export default function DiscordCallbackPage() {
         }
 
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-        const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "";
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+        const redirectUri = siteUrl ? `${siteUrl}/auth/discord/callback` : window.location.origin + "/auth/discord/callback";
 
         const exchangeUrl = `${apiBaseUrl}/auth/discord/callback?code=${code}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-        
-        const response = await fetch(exchangeUrl, { redirect: "manual" });
 
-        let token: string | null = null;
+        const response = await fetch(exchangeUrl);
 
-        if (response.status >= 300 && response.status < 400) {
-          const location = response.headers.get("location") || "";
+        if (!response.ok) {
+          let errorMsg = "เกิดข้อผิดพลาดในการยืนยันตัวตนกับเซิร์ฟเวอร์";
           try {
-            const redirectUrl = new URL(location);
-            const hashParams = new URLSearchParams(redirectUrl.hash.substring(1));
-            token = hashParams.get("token");
-            if (!token) {
-              token = redirectUrl.searchParams.get("token");
-            }
+            const errData = await response.json();
+            errorMsg = errData.details || errData.error || errorMsg;
           } catch {}
-        } else {
-          const responseText = await response.text();
-          try {
-            const data = JSON.parse(responseText);
-            token = data.token || data.access_token || data.jwt;
-          } catch {}
+          throw new Error(errorMsg);
         }
+
+        const data = await response.json();
+        const token = data.access_token;
 
         if (!token) {
           throw new Error("ไม่ได้รับรหัสเข้าสู่ระบบ (Token) จากเซิร์ฟเวอร์");
@@ -61,14 +54,12 @@ export default function DiscordCallbackPage() {
 
         const userData = await userRes.json();
 
-        // Persist session to LocalStorage (matching standard hook logic)
         localStorage.setItem("pod_user", JSON.stringify(userData));
         localStorage.setItem("pod_token", token);
-        localStorage.removeItem("pod_collection"); // Clear guest collection
+        localStorage.removeItem("pod_collection");
 
         setStatus("success");
 
-        // Redirect back to main dashboard
         setTimeout(() => {
           window.location.href = "/season2";
         }, 1500);
