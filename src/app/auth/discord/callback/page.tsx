@@ -18,40 +18,37 @@ export default function DiscordCallbackPage() {
           throw new Error("ไม่พบรหัสยืนยันตัวตน (Authorization Code) จาก Discord");
         }
 
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://pod-tcg-backend-production.up.railway.app";
-        const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "https://pod-tcg-backend-production.up.railway.app/auth/discord/callback";
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "";
 
-        // Call the backend to exchange the authorization code for a token
         const exchangeUrl = `${apiBaseUrl}/auth/discord/callback?code=${code}&redirect_uri=${encodeURIComponent(redirectUri)}`;
         
-        const response = await fetch(exchangeUrl);
-
-        const responseText = await response.text();
-        console.log("[Discord Callback Response URL]:", response.url);
-        console.log("[Discord Callback Response Status]:", response.status);
-        console.log("[Discord Callback Response Text (first 500 chars)]:", responseText.substring(0, 500));
+        const response = await fetch(exchangeUrl, { redirect: "manual" });
 
         let token: string | null = null;
 
-        // Try to parse the response as JSON
-        try {
-          const data = JSON.parse(responseText);
-          token = data.token || data.access_token || data.jwt;
-        } catch (jsonError) {
-          // If the backend returned a redirect that fetch followed, check the final URL
+        if (response.status >= 300 && response.status < 400) {
+          const location = response.headers.get("location") || "";
           try {
-            const finalUrl = new URL(response.url);
-            token = finalUrl.searchParams.get("token");
-          } catch (urlError) {
-            console.error("Failed to parse response.url as URL:", urlError);
-          }
+            const redirectUrl = new URL(location);
+            const hashParams = new URLSearchParams(redirectUrl.hash.substring(1));
+            token = hashParams.get("token");
+            if (!token) {
+              token = redirectUrl.searchParams.get("token");
+            }
+          } catch {}
+        } else {
+          const responseText = await response.text();
+          try {
+            const data = JSON.parse(responseText);
+            token = data.token || data.access_token || data.jwt;
+          } catch {}
         }
 
         if (!token) {
-          throw new Error(`ไม่ได้รับรหัสเข้าสู่ระบบ (Token) จากเซิร์ฟเวอร์. (Response Status: ${response.status}, URL: ${response.url})`);
+          throw new Error("ไม่ได้รับรหัสเข้าสู่ระบบ (Token) จากเซิร์ฟเวอร์");
         }
 
-        // Fetch user data using the new token
         const userRes = await fetch(`${apiBaseUrl}/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,

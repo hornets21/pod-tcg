@@ -29,6 +29,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "https://img.lucky-pod.fun/pack_tcg_op_1.ico",
   },
+  referrer: "strict-origin-when-cross-origin",
 };
 
 export default function RootLayout({

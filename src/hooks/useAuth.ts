@@ -10,6 +10,36 @@ export interface User {
   roles?: string[];
 }
 
+const extractTokenFromUrl = (): string | null => {
+  if (typeof window === "undefined") return null;
+
+  const hash = window.location.hash.substring(1);
+  const hashParams = new URLSearchParams(hash);
+  const hashToken = hashParams.get("token");
+  if (hashToken && hashToken !== "null" && hashToken !== "undefined") {
+    return hashToken;
+  }
+
+  let searchString = window.location.search;
+  if (!searchString && window.location.href.includes("?")) {
+    searchString = "?" + window.location.href.split("?")[1];
+  }
+  const urlParams = new URLSearchParams(searchString);
+  const queryToken = urlParams.get("token");
+  if (queryToken && queryToken !== "null" && queryToken !== "undefined") {
+    return queryToken;
+  }
+
+  return null;
+};
+
+const cleanUrlFragment = () => {
+  if (typeof window === "undefined") return;
+  if (window.location.hash || window.location.search.includes("token=")) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -19,17 +49,11 @@ export const useAuth = () => {
     const initAuth = async () => {
       if (typeof window === "undefined") return;
 
-      let searchString = window.location.search;
-      if (!searchString && window.location.href.includes("?")) {
-        searchString = "?" + window.location.href.split("?")[1];
-      }
+      const extractedToken = extractTokenFromUrl();
 
-      const urlParams = new URLSearchParams(searchString);
-      const extractedToken = urlParams.get("token");
-
-      if (extractedToken && extractedToken !== "null" && extractedToken !== "undefined") {
+      if (extractedToken) {
         try {
-          const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://pod-tcg-backend-production.up.railway.app";
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "";
           const res = await fetch(`${apiBaseUrl}/auth/me`, {
             headers: { Authorization: `Bearer ${extractedToken}` },
           });
@@ -38,15 +62,14 @@ export const useAuth = () => {
             const userData = await res.json();
             localStorage.setItem("pod_user", JSON.stringify(userData));
             localStorage.setItem("pod_token", extractedToken);
-            localStorage.removeItem("pod_collection"); // Clear guest collection when logging in
+            localStorage.removeItem("pod_collection");
 
             setUser(userData);
             setToken(extractedToken);
 
-            // Clear query string from address bar
-            window.history.replaceState({}, document.title, window.location.pathname);
+            cleanUrlFragment();
           } else {
-            console.error("[Auth] Failed to fetch user profile with query token");
+            console.error("[Auth] Failed to fetch user profile with token");
           }
         } catch (e) {
           console.error("[Auth] Error fetching user:", e);
@@ -75,7 +98,6 @@ export const useAuth = () => {
     localStorage.removeItem("pod_collection");
     setUser(null);
     setToken(null);
-    // Reload page or trigger collection refresh
     if (typeof window !== "undefined") {
       window.location.reload();
     }

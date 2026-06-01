@@ -31,7 +31,7 @@ jobs:
       - name: Checkout at tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.inputs.deploy_tag }}
+          ref: ${{ inputs.deploy_tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
