@@ -100,43 +100,45 @@ export const Header: React.FC<HeaderProps> = ({
     <>
       <header id="main-header" className={isCollapsed ? "collapsed" : ""}>
         <div className="header-inner">
-          <Link href={`/${currentSeason}`} className="logo-group">
-            <svg
-              width="30"
-              height="30"
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="header-logo-svg"
-            >
-              <polygon
-                points="50,5 90,25 90,75 50,95 10,75 10,25"
-                stroke="#00d2ff"
-                strokeWidth="7"
-                fill="rgba(0, 210, 255, 0.15)"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="50,22 74,34 74,66 50,78 26,66 26,34"
-                fill="#00d2ff"
-                opacity="0.85"
-              />
-              <circle cx="50" cy="50" r="11" fill="#fff" />
-            </svg>
-            <span id="main-title">POD TCG</span>
-          </Link>
-
-          <nav className="nav-links desktop-only">
-            {navLinks.map((link) => (
-              <Link
-                key={link.section}
-                href={link.href}
-                className={currentSection === link.section ? "active" : ""}
+          <div className="nav-group-container">
+            <Link href={`/${currentSeason}`} className="logo-group">
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 100 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="header-logo-svg"
               >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+                <polygon
+                  points="50,5 90,25 90,75 50,95 10,75 10,25"
+                  stroke="#00d2ff"
+                  strokeWidth="7"
+                  fill="rgba(0, 210, 255, 0.15)"
+                  strokeLinejoin="round"
+                />
+                <polygon
+                  points="50,22 74,34 74,66 50,78 26,66 26,34"
+                  fill="#00d2ff"
+                  opacity="0.85"
+                />
+                <circle cx="50" cy="50" r="11" fill="#fff" />
+              </svg>
+              <span id="main-title">POD TCG</span>
+            </Link>
+
+            <nav className="nav-links desktop-only">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.section}
+                  href={link.href}
+                  className={currentSection === link.section ? "active" : ""}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           <div className="auth-group-container desktop-only">
             <div className="season-dropdown-wrapper" ref={dropdownRef}>

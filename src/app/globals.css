@@ -309,6 +309,7 @@ body {
     display: flex;
     align-items: center;
     height: 100%;
+    gap: 2.5rem;
 }
 
 .auth-group-container {
@@ -354,7 +355,7 @@ body {
     align-items: center;
     justify-content: flex-start;
     height: 100%;
-    margin-left: 2.5rem;
+    margin-left: 0;
     gap: 0;
     align-self: stretch;
 }
