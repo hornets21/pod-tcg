@@ -6,14 +6,15 @@ interface Box3DProps {
   isOpen: boolean;
   onClick: () => void;
   season: string;
+  shouldAnimate?: boolean;
 }
 
-export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season }) => {
+export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAnimate = true }) => {
   const boxImg = "https://img.lucky-pod.fun/front-box.png";
 
   return (
     <div
-      className={`box-wrapper ${isOpen ? "opened" : ""}`}
+      className={`box-wrapper ${isOpen ? "opened" : ""} ${!shouldAnimate ? "no-transition" : ""}`}
       onClick={!isOpen ? onClick : undefined}
     >
       <div className="box-container">
@@ -66,6 +67,14 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season }) => {
           margin: 60px auto;
           cursor: pointer;
           transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .box-wrapper.no-transition {
+          transition: none !important;
+        }
+
+        .box-wrapper.no-transition .lid {
+          transition: none !important;
         }
 
         @media (max-width: 768px) {

@@ -109,14 +109,25 @@ export const FullArtCard: React.FC<FullArtCardProps> = ({
     `
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if ((e.key === "Enter" || e.key === " ") && onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   const lift = isSelected ? -15 : 0;
 
   return (
     <div 
         className={`full-art-card-wrapper ${className}`} 
         onClick={onClick}
+        onKeyDown={handleKeyDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        tabIndex={0}
+        role="button"
+        aria-label={`${card.name} - ${card.rarity}`}
     >
         <div
             ref={cardRef}

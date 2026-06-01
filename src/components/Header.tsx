@@ -158,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <path
                     d="M1.5 2L6 6L10.5 2"
                     stroke="currentColor"
-                    strokeWidth="25%"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
@@ -196,7 +196,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <img
                     id="user-avatar"
                     src={getAvatarUrl()}
-                    alt="Avatar"
+                    alt={user?.global_name || user?.username || "User"}
                     width="28"
                     height="28"
                     className="avatar-img"
@@ -329,13 +329,13 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="mobile-auth-section">
             {user ? (
               <div className="mobile-user-info">
-                <img
-                  src={getAvatarUrl()}
-                  alt="Avatar"
-                  width="32"
-                  height="32"
-                  className="avatar-img"
-                />
+<img
+                   src={getAvatarUrl()}
+                   alt={user?.global_name || user?.username || "User"}
+                   width="32"
+                   height="32"
+                   className="avatar-img"
+                 />
                 <span className="user-name">{user.global_name || user.username}</span>
                 <button
                   className="mobile-logout-btn"

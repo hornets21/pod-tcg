@@ -8,7 +8,9 @@ interface BoosterPackProps {
   season: string;
   isEjected: boolean;
   isOpened: boolean;
+  isFadingOut?: boolean;
   onClick: () => void;
+  shouldAnimate?: boolean;
 }
 
 export const BoosterPack: React.FC<BoosterPackProps> = ({
@@ -16,41 +18,17 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
   season,
   isEjected,
   isOpened,
+  isFadingOut = false,
   onClick,
+  shouldAnimate = true,
 }) => {
-  const positions = [
-    { x: -350, y: -100, rotate: -15 },
-    { x: -210, y: -190, rotate: -9 },
-    { x: -70, y: -230, rotate: -3 },
-    { x: 70, y: -230, rotate: 3 },
-    { x: 210, y: -190, rotate: 9 },
-    { x: 350, y: -100, rotate: 15 },
-  ];
-
-  const mobilePositions = [
-    { x: -55, y: -50, rotate: -8 },
-    { x: 55, y: -50, rotate: 8 },
-    { x: -75, y: -150, rotate: -4 },
-    { x: 75, y: -150, rotate: 4 },
-    { x: 0, y: -210, rotate: 0 },
-    { x: 0, y: 30, rotate: 0 },
-  ];
-
-  const pos = positions[index % positions.length];
-  const mobilePos = mobilePositions[index % mobilePositions.length];
-  const delay = 500 + index * 150;
+  const delay = index * 150;
 
   return (
     <div
-      className={`booster-pack-wrapper ${isEjected ? "ejected" : ""} ${isOpened ? "opened" : ""}`}
+      className={`booster-pack-wrapper ${isEjected ? "ejected" : ""} ${isOpened ? "opened" : ""} ${isFadingOut ? "fading-out" : ""} ${!shouldAnimate ? "no-transition" : ""}`}
       style={{
-        "--target-x": `${pos.x}px`,
-        "--target-y": `${pos.y}px`,
-        "--target-rotate": `${pos.rotate}deg`,
         "--delay": `${delay}ms`,
-        "--mobile-x": `${mobilePos.x}px`,
-        "--mobile-y": `${mobilePos.y}px`,
-        "--mobile-rotate": `${mobilePos.rotate}deg`,
       } as React.CSSProperties}
       onClick={isEjected && !isOpened ? onClick : undefined}
     >
@@ -65,58 +43,76 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
 
       <style jsx>{`
         .booster-pack-wrapper {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) scale(0.2) translateZ(20px);
-          opacity: 0;
-          pointer-events: none;
-          transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
-                      opacity 0.4s ease,
-                      filter 0.3s ease;
-          z-index: 100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .booster-pack-wrapper.ejected {
-          opacity: 1;
+          animation: ejectPack 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--delay) both;
           pointer-events: auto;
-          transform: translate(calc(-50% + var(--target-x)), calc(-50% + var(--target-y))) 
-                     rotate(var(--target-rotate)) 
-                     scale(1);
-          transition-delay: var(--delay);
+        }
+
+        .booster-pack-wrapper.no-transition.ejected {
+          animation: none !important;
         }
 
         .booster-pack-wrapper.ejected:hover {
           filter: brightness(1.2);
-          transform: translate(calc(-50% + var(--target-x)), calc(-50% + var(--target-y) - 10px)) 
-                     rotate(var(--target-rotate)) 
-                     scale(1.05);
+          transform: scale(1.06) translateY(-4px);
           cursor: pointer;
+          transition: transform 0.2s ease, filter 0.2s ease;
         }
 
         .booster-pack-wrapper.opened {
+          animation: none !important;
           opacity: 0.3;
           filter: grayscale(1);
           pointer-events: none;
-          transform: translate(calc(-50% + var(--target-x)), calc(-50% + var(--target-y))) 
-                     rotate(var(--target-rotate)) 
-                     scale(0.9) !important;
+          transform: scale(0.9);
+        }
+
+        .booster-pack-wrapper.fading-out {
+          animation: none !important;
+          opacity: 0 !important;
+          filter: grayscale(1) blur(4px) !important;
+          pointer-events: none;
+          transform: scale(0.5) translateY(30px) !important;
+          transition: transform 0.5s ease-in,
+                      opacity 0.5s ease-in,
+                      filter 0.5s ease-in !important;
+        }
+
+        @keyframes ejectPack {
+          from {
+            transform: scale(0) translateY(80px) rotate(-20deg);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1) translateY(0) rotate(0deg);
+            opacity: 1;
+          }
         }
 
         .pack-inner {
-          width: 150px;
-          height: 225px;
+          width: 160px;
+          height: 240px;
         }
 
         @media (max-width: 768px) {
           .pack-inner {
-            width: 100px;
-            height: 150px;
+            width: 110px;
+            height: 165px;
           }
-          .booster-pack-wrapper.ejected {
-            transform: translate(calc(-50% + var(--mobile-x)), calc(-50% + var(--mobile-y)))
-                       rotate(var(--mobile-rotate))
-                       scale(0.85);
+          @keyframes ejectPack {
+            from {
+              transform: scale(0) translateY(50px) rotate(-20deg);
+              opacity: 0;
+            }
+            to {
+              transform: scale(1) translateY(0) rotate(0deg);
+              opacity: 1;
+            }
           }
         }
 
@@ -124,6 +120,16 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
           .pack-inner {
             width: 80px;
             height: 120px;
+          }
+          @keyframes ejectPack {
+            from {
+              transform: scale(0) translateY(40px) rotate(-20deg);
+              opacity: 0;
+            }
+            to {
+              transform: scale(1) translateY(0) rotate(0deg);
+              opacity: 1;
+            }
           }
         }
 
@@ -134,20 +140,20 @@ export const BoosterPack: React.FC<BoosterPackProps> = ({
         }
         :global(.booster-pack-wrapper .pack-half img) {
           width: 100% !important;
-          height: 225px !important;
+          height: 240px !important;
           object-fit: cover;
           border-radius: 12px;
         }
         :global(.booster-pack-wrapper .pack-half.bottom img) {
-          margin-top: -112.5px !important;
+          margin-top: -120px !important;
         }
 
         @media (max-width: 768px) {
           :global(.booster-pack-wrapper .pack-half img) {
-            height: 150px !important;
+            height: 165px !important;
           }
           :global(.booster-pack-wrapper .pack-half.bottom img) {
-            margin-top: -75px !important;
+            margin-top: -82.5px !important;
           }
         }
 

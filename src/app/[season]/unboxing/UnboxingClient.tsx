@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useGacha } from "../../../hooks/useGacha";
+import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import { Box3D } from "../../../components/unboxing/Box3D";
 import { BoosterPack } from "../../../components/unboxing/BoosterPack";
 import { PackRipOverlay } from "../../../components/unboxing/PackRipOverlay";
@@ -15,25 +16,58 @@ export default function UnboxingClient() {
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection } = useGacha(season);
 
-  const [isBoxOpen, setIsBoxOpen] = useState(false);
-  const [openedPacks, setOpenedPacks] = useState<Set<number>>(new Set());
+  const [isBoxOpen, setIsBoxOpen, isBoxOpenLoaded] = useLocalStorage<boolean>(
+    `pod_unboxing_boxOpen_${season}`,
+    false,
+  );
+  const [openedPacksArr, setOpenedPacksArr, isOpenedPacksLoaded] =
+    useLocalStorage<number[]>(`pod_unboxing_openedPacks_${season}`, []);
+  const [packContents, setPackContents, isPackContentsLoaded] = useLocalStorage<
+    Record<number, CardType[]>
+  >(`pod_unboxing_packContents_${season}`, {});
+  const [openedPackOrder, setOpenedPackOrder, isOpenedPackOrderLoaded] =
+    useLocalStorage<number[]>(`pod_unboxing_openedPackOrder_${season}`, []);
+  const [
+    isGodPackEffectActive,
+    setIsGodPackEffectActive,
+    isGodPackEffectLoaded,
+  ] = useLocalStorage<boolean>(`pod_unboxing_godEffect_${season}`, false);
+
+  const openedPacks = new Set(openedPacksArr);
+
   const [selectedPackIndex, setSelectedPackIndex] = useState<number | null>(
     null,
   );
-  const [packContents, setPackContents] = useState<Record<number, CardType[]>>(
-    {},
-  );
-
-  const [openedPackOrder, setOpenedPackOrder] = useState<number[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isGodPackOpen, setIsGodPackOpen] = useState(false);
-  const [isGodPackEffectActive, setIsGodPackEffectActive] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [packsReady, setPacksReady] = useState(false);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setMounted(true);
+        if (isBoxOpen) {
+          setPacksReady(true);
+        }
+      });
+    });
+  }, []);
+
+  const isUnboxingLoaded =
+    isBoxOpenLoaded &&
+    isOpenedPacksLoaded &&
+    isPackContentsLoaded &&
+    isOpenedPackOrderLoaded &&
+    isGodPackEffectLoaded;
 
   const TOTAL_PACKS = 6;
 
   const handleBoxClick = useCallback(() => {
     setIsBoxOpen(true);
+    setTimeout(() => setPacksReady(true), 1500);
     const openSound = new Audio("https://img.lucky-pod.fun/box_open.mp3");
     openSound.play().catch(() => {});
   }, []);
@@ -52,7 +86,7 @@ export default function UnboxingClient() {
         setIsGodPackEffectActive(true);
       }
 
-      // Play rip sound
+      // Play rip sound sound
       const tearSound = new Audio("https://img.lucky-pod.fun/tear.mp3");
       tearSound.play().catch(() => {});
     },
@@ -64,38 +98,60 @@ export default function UnboxingClient() {
       const cards = packContents[selectedPackIndex];
       if (cards) {
         cards.forEach((card) => addToCollection(card));
-        setOpenedPacks((prev) => new Set(prev).add(selectedPackIndex));
-        setOpenedPackOrder((prev) => [...prev, selectedPackIndex]);
+        setOpenedPacksArr((prev) => {
+          if (prev.includes(selectedPackIndex)) return prev;
+          return [...prev, selectedPackIndex];
+        });
+        setOpenedPackOrder((prev) => {
+          if (prev.includes(selectedPackIndex)) return prev;
+          return [...prev, selectedPackIndex];
+        });
       }
     }
-  }, [selectedPackIndex, packContents, addToCollection]);
+  }, [
+    selectedPackIndex,
+    packContents,
+    addToCollection,
+    setOpenedPacksArr,
+    setOpenedPackOrder,
+  ]);
 
   const closeRipOverlay = useCallback(() => {
     setSelectedPackIndex(null);
   }, []);
 
   const handleReset = useCallback(() => {
-    setIsBoxOpen(false);
-    setOpenedPacks(new Set());
-    setSelectedPackIndex(null);
-    setPackContents({});
-    setOpenedPackOrder([]);
-    setIsGodPackEffectActive(false);
-    setIsHistoryOpen(false);
-    setIsResetDialogOpen(false);
-  }, []);
+    setIsFadingOut(true);
+    setTimeout(() => {
+      setIsBoxOpen(false);
+      setOpenedPacksArr([]);
+      setSelectedPackIndex(null);
+      setPackContents({});
+      setOpenedPackOrder([]);
+      setIsGodPackEffectActive(false);
+      setIsHistoryOpen(false);
+      setIsResetDialogOpen(false);
+      setIsFadingOut(false);
+      setPacksReady(false);
+    }, 600);
+  }, [
+    setIsBoxOpen,
+    setOpenedPacksArr,
+    setPackContents,
+    setOpenedPackOrder,
+    setIsGodPackEffectActive,
+  ]);
 
   const confirmReset = useCallback(() => {
     setIsResetDialogOpen(true);
   }, []);
 
-  if (!isLoaded) {
+  if (!isLoaded || !isUnboxingLoaded) {
     return (
       <div className="loading-container">กำลังโหลดระบบ Box Unboxing...</div>
     );
   }
 
-  const allPacksOpened = openedPacks.size === TOTAL_PACKS;
   const allOpenedCards = Object.values(packContents).flat();
 
   return (
@@ -103,18 +159,20 @@ export default function UnboxingClient() {
       className={`unboxing-page ${isGodPackEffectActive ? "god-pack-effect" : ""}`}
     >
       <div className="unboxing-container">
-        <Box3D isOpen={isBoxOpen} onClick={handleBoxClick} season={season} />
-
-        {[...Array(TOTAL_PACKS)].map((_, i) => (
-          <BoosterPack
-            key={i}
-            index={i}
-            season={season}
-            isEjected={isBoxOpen}
-            isOpened={openedPacks.has(i)}
-            onClick={() => handlePackClick(i)}
-          />
-        ))}
+        <div className="packs-grid">
+          {packsReady && [...Array(TOTAL_PACKS)].map((_, i) => (
+            <BoosterPack
+              key={i}
+              index={i}
+              season={season}
+              isEjected={packsReady}
+              isOpened={openedPacks.has(i)}
+              isFadingOut={isFadingOut}
+              onClick={() => handlePackClick(i)}
+              shouldAnimate={mounted}
+            />
+          ))}
+        </div>
 
         {isBoxOpen && openedPacks.size > 0 && (
           <div className="unboxing-actions">
@@ -125,13 +183,20 @@ export default function UnboxingClient() {
               VIEW ALL PULLS ({allOpenedCards.length})
             </button>
 
-            {allPacksOpened && (
+            {openedPacks.size >= 1 && (
               <button className="reset-btn" onClick={confirmReset}>
                 UNBOX NEW BOX
               </button>
             )}
           </div>
         )}
+
+        <Box3D
+          isOpen={isBoxOpen}
+          onClick={handleBoxClick}
+          season={season}
+          shouldAnimate={mounted}
+        />
       </div>
 
       <PackRipOverlay
@@ -161,7 +226,12 @@ export default function UnboxingClient() {
       />
 
       {isResetDialogOpen && (
-        <div className="reset-overlay">
+        <div
+          className="reset-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="ยืนยันเริ่มใหม่"
+        >
           <div className="reset-dialog">
             <h3>เริ่ม Unbox กล่องใหม่?</h3>
             <p>การ์ดที่เก็บไว้จะไม่ถูกลบออกจากคอลเลกชัน</p>
@@ -193,27 +263,44 @@ export default function UnboxingClient() {
         }
 
         .unboxing-container {
-          position: relative;
           width: 100%;
-          max-width: 1200px;
-          height: 80vh;
+          max-width: 800px;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          min-height: 80vh;
+          padding: 1rem;
+          gap: 1rem;
+        }
+
+        .packs-grid {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: nowrap;
+          width: 100%;
         }
 
         @media (max-width: 768px) {
           .unboxing-container {
-            height: auto;
             min-height: 70vh;
-            padding-top: 2rem;
-            padding-bottom: 6rem;
+            padding: 1rem 0.5rem;
+            gap: 1.5rem;
+          }
+          .packs-grid {
+            gap: 0.5rem;
           }
         }
 
         @media (max-width: 480px) {
           .unboxing-container {
             min-height: 60vh;
+            gap: 1rem;
+          }
+          .packs-grid {
+            gap: 0.4rem;
           }
         }
 
@@ -228,22 +315,17 @@ export default function UnboxingClient() {
         }
 
         .unboxing-actions {
-          position: absolute;
-          bottom: 50px;
           display: flex;
           gap: 20px;
           animation: fadeIn 0.5s ease forwards;
+          margin-top: 1rem;
         }
 
         @media (max-width: 768px) {
           .unboxing-actions {
-            position: relative;
-            bottom: auto;
             flex-direction: column;
             align-items: center;
             gap: 12px;
-            margin-top: 1rem;
-            padding-bottom: 2rem;
           }
         }
 
@@ -334,9 +416,7 @@ export default function UnboxingClient() {
         .reset-dialog h3 {
           font-size: 1.6rem;
           margin-bottom: 10px;
-          background: linear-gradient(90deg, #ffcb05, #ffffff);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #ffd700;
         }
 
         .reset-dialog p {

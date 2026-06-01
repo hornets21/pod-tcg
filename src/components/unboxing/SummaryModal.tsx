@@ -26,7 +26,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   const totalCards = packOrder.reduce((sum, idx) => sum + (packContents[idx]?.length || 0), 0);
 
   return (
-    <div className="summary-overlay">
+    <div className="summary-overlay" role="dialog" aria-modal="true" aria-label="สรุปผลการเปิดกล่อง">
       <div className="summary-container">
         <header className="summary-header">
           <h2>สรุปการเปิดกล่อง (BOX SUMMARY)</h2>
@@ -95,9 +95,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         .summary-header h2 {
           font-size: 2rem;
           margin-bottom: 5px;
-          background: linear-gradient(90deg, #ffcb05, #ffffff);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #ffcb05;
         }
 
         .summary-header p {
@@ -133,8 +131,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           font-family: 'Kanit', sans-serif;
           font-size: 1.1rem;
           margin-bottom: 10px;
-          padding-left: 10px;
-          border-left: 3px solid #ffcb05;
+          padding-left: 0;
+          border-bottom: 2px solid #ffcb05;
+          padding-bottom: 6px;
         }
 
         .pack-order {

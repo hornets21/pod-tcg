@@ -97,6 +97,7 @@ export default function CollectionClient() {
               <input
                 type="text"
                 id="card-search"
+                aria-label="ค้นหาชื่อการ์ด"
                 placeholder="ค้นหาชื่อการ์ด..."
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}

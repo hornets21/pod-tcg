@@ -56,6 +56,13 @@ export const Card: React.FC<CardProps> = ({
     setMy(0.5);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if ((e.key === "Enter" || e.key === " ") && onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   const rarityClass = card.rarity.toLowerCase();
 
   return (
@@ -65,8 +72,12 @@ export const Card: React.FC<CardProps> = ({
         isSelectionMode ? "selection-mode" : ""
       } ${isSelected ? "selected" : ""} ${!isOwned ? "not-owned" : ""} ${className}`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      tabIndex={0}
+      role="button"
+      aria-label={`${card.name} - ${card.rarity}`}
       style={{
         "--mx": mx,
         "--my": my,

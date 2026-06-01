@@ -26,13 +26,21 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
       }, 100);
       return () => clearTimeout(timer);
     }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="rip-overlay">
+    <div className="rip-overlay" role="dialog" aria-modal="true" aria-label="แสดงผลการเปิดซอง">
       <div className="revealed-container">
         <CardReveal cards={cards} season={season} />
         
