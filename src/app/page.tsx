@@ -9,7 +9,8 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search;
-      router.replace(`/season2${search}`);
+      const hash = window.location.hash;
+      router.replace(`/season2${search}${hash}`);
     }
   }, [router]);
 

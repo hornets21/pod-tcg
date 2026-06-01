@@ -33,6 +33,14 @@ const extractTokenFromUrl = (): string | null => {
   return null;
 };
 
+const extractErrorFromUrl = (): string | null => {
+  if (typeof window === "undefined") return null;
+
+  const hash = window.location.hash.substring(1);
+  const hashParams = new URLSearchParams(hash);
+  return hashParams.get("error");
+};
+
 const cleanUrlFragment = () => {
   if (typeof window === "undefined") return;
   if (window.location.hash || window.location.search.includes("token=")) {
@@ -48,6 +56,14 @@ export const useAuth = () => {
   useEffect(() => {
     const initAuth = async () => {
       if (typeof window === "undefined") return;
+
+      const urlError = extractErrorFromUrl();
+      if (urlError) {
+        console.error("[Auth] Login failed:", urlError);
+        cleanUrlFragment();
+        setLoading(false);
+        return;
+      }
 
       const extractedToken = extractTokenFromUrl();
 

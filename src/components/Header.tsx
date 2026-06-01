@@ -13,8 +13,8 @@ interface HeaderProps {
 
 const getDiscordAuthUrl = (): string => {
   const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || "1485982724463525951";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const redirectUri = siteUrl ? `${siteUrl}/auth/discord/callback` : (process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  const redirectUri = `${apiBaseUrl}/auth/discord/callback`;
   return `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify%20guilds.members.read`;
 };
 
