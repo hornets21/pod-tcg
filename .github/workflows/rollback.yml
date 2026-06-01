@@ -31,7 +31,7 @@ jobs:
       - name: Checkout at tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.deploy_tag }}
+          ref: ${{ inputs.inputs.deploy_tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -60,12 +60,6 @@ jobs:
         with:
           path: out/
 
-      - name: Create rollback tag
-        run: |
-          TAG="rollback-$(date +%Y%m%d-%H%M%S)-from-${{ inputs.deploy_tag }}"
-          git tag "$TAG"
-          git push origin "$TAG"
-
   deploy:
     needs: rollback
     runs-on: ubuntu-latest
@@ -76,3 +70,12 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Checkout Code for Tagging
+        uses: actions/checkout@v4
+
+      - name: Create rollback tag
+        run: |
+          TAG="rollback-$(date +%Y%m%d-%H%M%S)-from-${{ inputs.deploy_tag }}"
+          git tag "$TAG"
+          git push origin "$TAG"
