@@ -40,12 +40,6 @@ jobs:
           path: out/
           retention-days: 90
 
-      - name: Create deploy tag
-        run: |
-          TAG="deploy-$(date +%Y%m%d-%H%M%S)"
-          git tag "$TAG"
-          git push origin "$TAG"
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -61,6 +55,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout Code for Tagging
+        uses: actions/checkout@v4
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Create deploy tag
+        run: |
+          TAG="deploy-$(date +%Y%m%d-%H%M%S)"
+          git tag "$TAG"
+          git push origin "$TAG"
