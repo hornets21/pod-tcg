@@ -32,6 +32,8 @@ export default function UnboxingClient() {
     setIsGodPackEffectActive,
     isGodPackEffectLoaded,
   ] = useLocalStorage<boolean>(`pod_unboxing_godEffect_${season}`, false);
+  const [godPackIndices, setGodPackIndices, isGodPackIndicesLoaded] =
+    useLocalStorage<number[]>(`pod_unboxing_godPackIndices_${season}`, []);
 
   const openedPacks = new Set(openedPacksArr);
 
@@ -61,7 +63,8 @@ export default function UnboxingClient() {
     isOpenedPacksLoaded &&
     isPackContentsLoaded &&
     isOpenedPackOrderLoaded &&
-    isGodPackEffectLoaded;
+    isGodPackEffectLoaded &&
+    isGodPackIndicesLoaded;
 
   const TOTAL_PACKS = 6;
 
@@ -82,6 +85,9 @@ export default function UnboxingClient() {
       setSelectedPackIndex(index);
 
       if (isGod) {
+        setGodPackIndices((prev) =>
+          prev.includes(index) ? prev : [...prev, index],
+        );
         setIsGodPackOpen(true);
         setIsGodPackEffectActive(true);
       }
@@ -90,8 +96,43 @@ export default function UnboxingClient() {
       const tearSound = new Audio("https://img.lucky-pod.fun/tear.mp3");
       tearSound.play().catch(() => {});
     },
-    [openedPacks, openPack],
+    [openedPacks, openPack, setGodPackIndices],
   );
+
+  const handleOpenAll = useCallback(() => {
+    const alreadyOpened = new Set(openedPacksArr);
+    const newContents = { ...packContents };
+    const newOpenedPacks = [...openedPacksArr];
+    const newOpenedOrder = [...openedPackOrder];
+    const newGodPackIndices = [...godPackIndices];
+    let hasGod = false;
+
+    for (let i = 0; i < TOTAL_PACKS; i++) {
+      if (alreadyOpened.has(i)) continue;
+      const { pack, isGod } = openPack();
+      newContents[i] = pack;
+      newOpenedPacks.push(i);
+      newOpenedOrder.push(i);
+      if (isGod) {
+        hasGod = true;
+        if (!newGodPackIndices.includes(i)) {
+          newGodPackIndices.push(i);
+        }
+      }
+    }
+
+    setPackContents(newContents);
+    setOpenedPacksArr(newOpenedPacks);
+    setOpenedPackOrder(newOpenedOrder);
+    setGodPackIndices(newGodPackIndices);
+
+    if (hasGod) {
+      setIsGodPackOpen(true);
+      setIsGodPackEffectActive(true);
+    }
+
+    setIsHistoryOpen(true);
+  }, [openedPacksArr, openedPackOrder, packContents, godPackIndices, openPack, setGodPackIndices]);
 
   const handleRipComplete = useCallback(() => {
     if (selectedPackIndex !== null) {
@@ -128,6 +169,7 @@ export default function UnboxingClient() {
       setSelectedPackIndex(null);
       setPackContents({});
       setOpenedPackOrder([]);
+      setGodPackIndices([]);
       setIsGodPackEffectActive(false);
       setIsHistoryOpen(false);
       setIsResetDialogOpen(false);
@@ -139,6 +181,7 @@ export default function UnboxingClient() {
     setOpenedPacksArr,
     setPackContents,
     setOpenedPackOrder,
+    setGodPackIndices,
     setIsGodPackEffectActive,
   ]);
 
@@ -174,19 +217,25 @@ export default function UnboxingClient() {
           ))}
         </div>
 
-        {isBoxOpen && openedPacks.size > 0 && (
+        {isBoxOpen && (
           <div className="unboxing-actions">
-            <button
-              className="summary-btn"
-              onClick={() => setIsHistoryOpen(true)}
-            >
-              VIEW ALL PULLS ({allOpenedCards.length})
-            </button>
-
-            {openedPacks.size >= 1 && (
-              <button className="reset-btn" onClick={confirmReset}>
-                UNBOX NEW BOX
+            {packsReady && openedPacks.size < TOTAL_PACKS && (
+              <button className="open-all-btn" onClick={handleOpenAll}>
+                OPEN ALL ({TOTAL_PACKS - openedPacks.size})
               </button>
+            )}
+            {openedPacks.size > 0 && (
+              <>
+                <button
+                  className="summary-btn"
+                  onClick={() => setIsHistoryOpen(true)}
+                >
+                  VIEW ALL PULLS ({allOpenedCards.length})
+                </button>
+                <button className="reset-btn" onClick={confirmReset}>
+                  UNBOX NEW BOX
+                </button>
+              </>
             )}
           </div>
         )}
@@ -214,6 +263,7 @@ export default function UnboxingClient() {
         packContents={packContents}
         packOrder={openedPackOrder}
         season={season}
+        godPackIndices={godPackIndices}
         onClose={() => setIsHistoryOpen(false)}
       />
 
@@ -347,6 +397,29 @@ export default function UnboxingClient() {
         .summary-btn:hover {
           background: rgba(255, 255, 255, 0.2);
           transform: translateY(-2px);
+        }
+
+        .open-all-btn {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 12px 30px;
+          border-radius: 30px;
+          font-weight: bold;
+          font-size: 16px;
+          cursor: pointer;
+          transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+          box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+          font-family: "Kanit", sans-serif;
+          white-space: nowrap;
+          animation: fadeIn 0.5s ease forwards;
+        }
+
+        .open-all-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
         }
 
         @media (max-width: 768px) {

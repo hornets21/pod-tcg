@@ -10,6 +10,7 @@ interface SummaryModalProps {
   packContents: Record<number, CardType[]>;
   packOrder: number[];
   season: string;
+  godPackIndices?: number[];
   onClose: () => void;
 }
 
@@ -18,6 +19,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   packContents,
   packOrder,
   season,
+  godPackIndices = [],
   onClose,
 }) => {
   if (!isOpen) return null;
@@ -40,6 +42,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
               <div key={packIdx} className="pack-row">
                 <div className="pack-label">
                   ซองที่ {packIdx + 1} <span className="pack-order">เปิดลำดับที่ {orderIdx + 1}</span>
+                  {godPackIndices.includes(packIdx) && (
+                    <span className="godpack-badge">⚡ GODPACK</span>
+                  )}
                 </div>
               <div className="cards-grid">
                   {cards.map((card, idx) => (
@@ -140,6 +145,24 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           color: rgba(255, 255, 255, 0.5);
           font-size: 0.85rem;
           margin-left: 8px;
+        }
+
+        .godpack-badge {
+          display: inline-block;
+          margin-left: 10px;
+          padding: 2px 10px;
+          background: linear-gradient(135deg, #ffd700, #ffaa00);
+          color: #1a1a2e;
+          font-size: 0.78rem;
+          font-weight: bold;
+          border-radius: 12px;
+          letter-spacing: 0.5px;
+          animation: godpackPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes godpackPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
         }
 
         .cards-grid {
