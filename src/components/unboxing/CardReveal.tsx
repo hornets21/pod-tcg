@@ -13,7 +13,7 @@ interface CardRevealProps {
 export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
   const [revealedStates, setRevealedStates] = React.useState<boolean[]>([]);
 
-  const cardDelays = [400, 600, 900, 1300, 1800];
+  const cardDelays = [400, 900, 1500, 2200, 3000];
 
   React.useEffect(() => {
     if (cards.length > 0) {
@@ -24,7 +24,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
       const timers: NodeJS.Timeout[] = [];
       cards.forEach((_, index) => {
         const delay = cardDelays[index % cardDelays.length];
-        const flipDelay = delay + 800;
+        const flipDelay = delay + 1800;
 
         const timer = setTimeout(() => {
           setRevealedStates((prev) => {
