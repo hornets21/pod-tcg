@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useAuth } from "../hooks/useAuth";
 
 interface HeaderProps {
-  currentSeason: "season1" | "season2";
-  currentSection: "opening" | "unboxing" | "lot" | "collection";
+  currentSeason?: "season1" | "season2";
+  currentSection: "opening" | "unboxing" | "lot" | "collection" | "hall-of-fame";
   onShowPolicy?: () => void;
   onLogoutClick?: () => void;
 }
@@ -80,6 +80,8 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, [isMobileMenuOpen]);
 
+  const season = currentSeason || "season2";
+
   const getSwitchSeasonPath = (targetSeason: "season1" | "season2") => {
     if (currentSection === "opening") {
       return `/${targetSeason}`;
@@ -88,10 +90,11 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const navLinks = [
-    { href: `/${currentSeason}`, label: "🔓 เปิดซอง", section: "opening" },
-    { href: `/${currentSeason}/unboxing`, label: "📦 แกะกล่อง", section: "unboxing" },
-    { href: `/${currentSeason}/lot`, label: "📦 จัดการล็อต", section: "lot" },
-    { href: `/${currentSeason}/collection`, label: "📖 สมุดการ์ด", section: "collection" },
+    { href: `/${season}`, label: "🔓 เปิดซอง", section: "opening" },
+    { href: `/${season}/unboxing`, label: "📦 แกะกล่อง", section: "unboxing" },
+    { href: `/${season}/lot`, label: "📦 จัดการล็อต", section: "lot" },
+    { href: `/${season}/collection`, label: "📖 สมุดการ์ด", section: "collection" },
+    { href: "/hall-of-fame", label: "🏆 Hall of Fame", section: "hall-of-fame" },
   ];
 
   return (
@@ -99,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
       <header id="main-header" className={isCollapsed ? "collapsed" : ""}>
         <div className="header-inner">
           <div className="nav-group-container">
-            <Link href={`/${currentSeason}`} className="logo-group">
+            <Link href={`/${season}`} className="logo-group">
               <svg
                 width="30"
                 height="30"
@@ -144,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="season-dropdown-trigger"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <span>{currentSeason === "season1" ? "✨ OP-1" : "✨ OP-2"}</span>
+                <span>{season === "season1" ? "✨ OP-1" : "✨ OP-2"}</span>
                 <svg
                   className={`arrow-icon ${isDropdownOpen ? "open" : ""}`}
                   width="12"
@@ -166,14 +169,14 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="season-dropdown-menu">
                   <Link
                     href={getSwitchSeasonPath("season2")}
-                    className={`season-dropdown-item ${currentSeason === "season2" ? "active" : ""}`}
+                    className={`season-dropdown-item ${season === "season2" ? "active" : ""}`}
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     ✨ OP-2
                   </Link>
                   <Link
                     href={getSwitchSeasonPath("season1")}
-                    className={`season-dropdown-item ${currentSeason === "season1" ? "active" : ""}`}
+                    className={`season-dropdown-item ${season === "season1" ? "active" : ""}`}
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     ✨ OP-1
@@ -309,14 +312,14 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="mobile-season-buttons">
               <Link
                 href={getSwitchSeasonPath("season2")}
-                className={`mobile-season-btn ${currentSeason === "season2" ? "active" : ""}`}
+                className={`mobile-season-btn ${season === "season2" ? "active" : ""}`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 ✨ OP-2
               </Link>
               <Link
                 href={getSwitchSeasonPath("season1")}
-                className={`mobile-season-btn ${currentSeason === "season1" ? "active" : ""}`}
+                className={`mobile-season-btn ${season === "season1" ? "active" : ""}`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 ✨ OP-1

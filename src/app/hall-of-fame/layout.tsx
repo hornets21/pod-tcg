@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, usePathname } from "next/navigation";
 import { Header } from "../../components/Header";
 import { useAuth } from "../../hooks/useAuth";
 import { ModalProvider, useModal } from "../../components/ModalContext";
@@ -11,11 +10,7 @@ import {
   CardDetailDialog,
 } from "../../components/Modals";
 
-const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const params = useParams();
-  const pathname = usePathname();
-  const season = params.season === "season2" ? "season2" : "season1";
-  
+const HallOfFameLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { logout } = useAuth();
   const {
     showPolicy,
@@ -40,29 +35,17 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Determine current section from pathname
-  const currentSection = pathname.includes("/unboxing")
-    ? "unboxing"
-    : pathname.includes("/lot")
-    ? "lot"
-    : pathname.includes("/collection")
-    ? "collection"
-    : pathname.includes("/hall-of-fame")
-    ? "hall-of-fame"
-    : "opening";
-
   return (
     <>
       <Header
-        currentSeason={season}
-        currentSection={currentSection}
+        currentSeason="season2"
+        currentSection="hall-of-fame"
         onShowPolicy={() => setShowPolicy(true)}
         onLogoutClick={() => setShowLogout(true)}
       />
 
       {children}
 
-      {/* --- SHARED MODALS --- */}
       <LogoutDialog
         isOpen={showLogout}
         onClose={() => setShowLogout(false)}
@@ -78,11 +61,10 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
       <CardDetailDialog
         isOpen={selectedDetailCard !== null}
         card={selectedDetailCard}
-        season={season}
+        season="season2"
         onClose={() => setSelectedDetailCard(null)}
       />
 
-      {/* --- SCROLL TO TOP --- */}
       {showBackToTop && (
         <button
           id="back-to-top-btn"
@@ -97,10 +79,10 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export default function SeasonLayout({ children }: { children: React.ReactNode }) {
+export default function HallOfFameLayout({ children }: { children: React.ReactNode }) {
   return (
     <ModalProvider>
-      <SeasonLayoutContent>{children}</SeasonLayoutContent>
+      <HallOfFameLayoutContent>{children}</HallOfFameLayoutContent>
     </ModalProvider>
   );
 }
