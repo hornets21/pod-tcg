@@ -27,7 +27,7 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
   const [phase, setPhase] = useState<RevealPhase>("cutscene");
   const { startBGM, stopBGM } = useAudio();
 
-  const isGodPack = cards.every(c => ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity)) && cards.length === 5;
+  const isGodPack = cards.every(c => ["SSR", "UR", "SEC", "LEG"].includes(c.rarity)) && cards.length === 5;
 
   useEffect(() => {
     if (isOpen && isGodPack) {
