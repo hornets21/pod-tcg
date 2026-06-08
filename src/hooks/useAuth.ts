@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface User {
   id: string;
@@ -108,7 +108,7 @@ export const useAuth = () => {
     initAuth();
   }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("pod_user");
     localStorage.removeItem("pod_token");
     localStorage.removeItem("pod_collection");
@@ -117,9 +117,9 @@ export const useAuth = () => {
     if (typeof window !== "undefined") {
       window.location.reload();
     }
-  };
+  }, []);
 
-  const getAvatarUrl = (): string => {
+  const getAvatarUrl = useCallback((): string => {
     if (!user) return "";
     if (user.avatar && user.avatar !== "null") {
       if (user.avatar.startsWith("http")) {
@@ -128,7 +128,7 @@ export const useAuth = () => {
       return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
     }
     return "https://cdn.discordapp.com/embed/avatars/0.png";
-  };
+  }, [user]);
 
   return { user, token, loading, logout, getAvatarUrl };
 };

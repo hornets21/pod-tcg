@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card as CardType } from "../../data/types";
 import { Card } from "../Card";
 import { FullArtCard } from "../FullArtCard";
+import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
 
 interface CardRevealProps {
   cards: CardType[];
@@ -11,20 +12,20 @@ interface CardRevealProps {
 }
 
 export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
-  const [revealedStates, setRevealedStates] = React.useState<boolean[]>([]);
+  const [revealedStates, setRevealedStates] = useState<boolean[]>(() => 
+    new Array(cards.length).fill(false)
+  );
+  const [showHighRarityFlash, setShowHighRarityFlash] = useState(false);
+  const { playSFX } = useAudio();
 
-  const cardDelays = [400, 900, 1500, 2200, 3000];
+  const cardDelays = [200, 600, 1100, 1700, 2400];
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (cards.length > 0) {
-      // Start with all cards hidden (showing back)
-      setRevealedStates(new Array(cards.length).fill(false));
-
-      // Flip them one by one after they fan in
       const timers: NodeJS.Timeout[] = [];
-      cards.forEach((_, index) => {
+      cards.forEach((card, index) => {
         const delay = cardDelays[index % cardDelays.length];
-        const flipDelay = delay + 1800;
+        const flipDelay = delay + 1200; // Adjusted for punchier feel
 
         const timer = setTimeout(() => {
           setRevealedStates((prev) => {
@@ -32,40 +33,31 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
             next[index] = true;
             return next;
           });
+
+          // Play SFX based on rarity
+          const isHighRarity = ["LEG", "SEC", "UR", "SSR"].includes(card.rarity);
+          if (isHighRarity) {
+            playSFX(AUDIO_URLS.CARD_REVEAL_GOLD, 0.6);
+            setShowHighRarityFlash(true);
+            setTimeout(() => setShowHighRarityFlash(false), 500);
+          } else {
+            playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.4);
+          }
         }, flipDelay);
         timers.push(timer);
       });
 
       return () => timers.forEach(clearTimeout);
     }
-  }, [cards]);
+  }, [cards, playSFX]);
 
   const CardComponent = season === "season2" ? FullArtCard : Card;
 
-  const packImgMap: Record<string, string> = {
-    season1: "https://img.lucky-pod.fun/pack_tcg_op_1.png",
-    season2: "https://img.lucky-pod.fun/pack_tcg_op_2.png",
-  };
-
-  const packImg = packImgMap[season] || packImgMap["season1"];
-
   return (
-    <div className="card-reveal-fan">
+    <div className={`card-reveal-fan ${showHighRarityFlash ? "high-rarity-shake" : ""}`}>
+      {showHighRarityFlash && <div className="gold-flash-overlay" />}
+      
       <div className="pack-glow"></div>
-
-      {/* Torn Pack Animation */}
-      <div className="pack-visual-tear">
-        <div className="pack-shaker">
-          <div
-            className="pack-half top"
-            style={{ backgroundImage: `url(${packImg})` }}
-          ></div>
-          <div
-            className="pack-half bottom"
-            style={{ backgroundImage: `url(${packImg})` }}
-          ></div>
-        </div>
-      </div>
 
       {cards.map((card, index) => {
         const delay = cardDelays[index % cardDelays.length];
@@ -100,6 +92,33 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           justify-content: center;
           gap: 16px;
           margin-top: -50px;
+          transition: transform 0.1s ease;
+        }
+
+        .high-rarity-shake {
+          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .gold-flash-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(255, 215, 0, 0.2);
+          box-shadow: inset 0 0 100px rgba(255, 215, 0, 0.5);
+          pointer-events: none;
+          z-index: 500;
+          animation: flash-out 0.5s ease-out forwards;
+        }
+
+        @keyframes flash-out {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
         @media (max-width: 768px) {
@@ -123,15 +142,6 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
             width: 110px !important;
             height: 157px !important;
             --card-scale: 0.314;
-          }
-
-          .pack-visual-tear {
-            width: 150px;
-            height: 225px;
-          }
-
-          .pack-visual-tear .pack-half {
-            background-size: 100% 225px !important;
           }
 
           .pack-glow {
@@ -168,78 +178,9 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
             --card-scale: 0.286;
           }
 
-          .pack-visual-tear {
-            width: 120px;
-            height: 180px;
-          }
-
-          .pack-visual-tear .pack-half {
-            background-size: 100% 180px !important;
-          }
-
           .pack-glow {
             width: 300px;
             height: 300px;
-          }
-        }
-
-        .pack-visual-tear {
-          position: absolute;
-          width: 200px;
-          height: 300px;
-          z-index: 50;
-          pointer-events: none;
-        }
-
-        .pack-shaker {
-          width: 100%;
-          height: 100%;
-          position: relative;
-        }
-
-        .pack-half {
-          position: absolute;
-          width: 100%;
-          height: 50.5%;
-          overflow: hidden;
-          transition: all 0.5s ease-in;
-          background-size: 100% 300px;
-          background-repeat: no-repeat;
-        }
-
-        .pack-half.top {
-          top: 0;
-          background-position: top center;
-          animation: tear-off-top 0.8s cubic-bezier(0.15, 0.85, 0.35, 1.2)
-            forwards;
-        }
-
-        .pack-half.bottom {
-          bottom: 0;
-          background-position: bottom center;
-          animation: tear-off-bottom 0.8s cubic-bezier(0.15, 0.85, 0.35, 1.2)
-            forwards;
-        }
-
-        @keyframes tear-off-top {
-          0% {
-            transform: translateY(0) rotate(0);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-180px) rotate(-20deg) scale(0.8);
-            opacity: 0;
-          }
-        }
-
-        @keyframes tear-off-bottom {
-          0% {
-            transform: translateY(0) rotate(0);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(180px) rotate(20deg) scale(0.8);
-            opacity: 0;
           }
         }
 
@@ -252,7 +193,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           height: 600px;
           background: radial-gradient(
             circle,
-            var(--accent-glow) 0%,
+            rgba(255, 255, 255, 0.2) 0%,
             transparent 70%
           );
           z-index: 1;

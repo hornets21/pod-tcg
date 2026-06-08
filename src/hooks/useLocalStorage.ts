@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export function useLocalStorage<T>(
   key: string,
@@ -25,7 +25,7 @@ export function useLocalStorage<T>(
     setIsLoaded(true);
   }, []);
 
-  const setValue = (value: T | ((val: T) => T)) => {
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
       setStoredValue((prev) => {
         const valueToStore = value instanceof Function ? value(prev) : value;
@@ -37,7 +37,7 @@ export function useLocalStorage<T>(
     } catch (error) {
       console.error(`[LocalStorage] Error setting key "${key}":`, error);
     }
-  };
+  }, [key]);
 
   return [storedValue, setValue, isLoaded];
 }

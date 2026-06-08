@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Card as CardType, Rarity } from "../data/types";
 import { CARDS_SEASON1 } from "../data/cards-season1";
 import { CARDS_SEASON2 } from "../data/cards-season2";
@@ -117,39 +117,39 @@ export const useGacha = (season: "season1" | "season2") => {
 
   const isLoggedIn = !!token;
 
-  const isOwned = (card: CardType): boolean => {
+  const isOwned = useCallback((card: CardType): boolean => {
     if (isLoggedIn) {
       return userRoleIds.has(card.role_id);
     }
     return localCollection.includes(card.role_id);
-  };
+  }, [isLoggedIn, userRoleIds, localCollection]);
 
   const ownedCount = useMemo(() => {
     return cards.filter((c) => isOwned(c)).length;
-  }, [cards, isLoggedIn, userRoleIds, localCollection]);
+  }, [cards, isOwned]);
 
   // Add Card to Guest Collection
-  const addToCollection = (card: CardType) => {
+  const addToCollection = useCallback((card: CardType) => {
     if (!isLoggedIn) {
       setLocalCollection((prev) => {
         if (prev.includes(card.role_id)) return prev;
         return [...prev, card.role_id];
       });
     }
-  };
+  }, [isLoggedIn, setLocalCollection]);
 
   // Helper: Get random gacha card by rarity
-  const getRandomCardByRarity = (rarity: Rarity): CardType => {
+  const getRandomCardByRarity = useCallback((rarity: Rarity): CardType => {
     const filtered = gachaPool.filter((c) => c.rarity === rarity);
     if (filtered.length === 0) {
       // Fallback
       return gachaPool[Math.floor(Math.random() * gachaPool.length)];
     }
     return filtered[Math.floor(Math.random() * filtered.length)];
-  };
+  }, [gachaPool]);
 
   // Open 1 pack = 5 unique cards
-  const openPack = (): { pack: CardType[]; isGod: boolean } => {
+  const openPack = useCallback((): { pack: CardType[]; isGod: boolean } => {
     const isGod = isGodPackRoll();
     const pack: CardType[] = [];
     const selectedIds = new Set<string>();
@@ -185,10 +185,10 @@ export const useGacha = (season: "season1" | "season2") => {
 
     const shuffledPack = shuffleArray(pack);
     return { pack: shuffledPack, isGod };
-  };
+  }, [getRandomCardByRarity, gachaPool]);
 
   // --- CUSTOM LOT MANAGEMENT ---
-  const toggleLotCard = (cardId: string) => {
+  const toggleLotCard = useCallback((cardId: string) => {
     setLotSelection((prev) => {
       if (prev.includes(cardId)) {
         return prev.filter((id) => id !== cardId);
@@ -196,13 +196,13 @@ export const useGacha = (season: "season1" | "season2") => {
       if (prev.length >= 10) return prev;
       return [...prev, cardId];
     });
-  };
+  }, [setLotSelection]);
 
-  const clearLotSelection = () => {
+  const clearLotSelection = useCallback(() => {
     setLotSelection([]);
-  };
+  }, [setLotSelection]);
 
-  const startLot = (): boolean => {
+  const startLot = useCallback((): boolean => {
     if (lotSelection.length === 0 || lotSelection.length > 10) return false;
 
     const selectedCards = lotSelection
@@ -217,22 +217,22 @@ export const useGacha = (season: "season1" | "season2") => {
     setActiveLot(shuffled);
     setCurrentLotIndex(0);
     return true;
-  };
+  }, [lotSelection, cards, setActiveLot, setCurrentLotIndex]);
 
-  const revealLotCard = (index: number) => {
+  const revealLotCard = useCallback((index: number) => {
     const updated = [...activeLot];
     if (updated[index] && !updated[index].isOpened) {
       updated[index].isOpened = true;
       setActiveLot(updated);
       addToCollection(updated[index]);
     }
-  };
+  }, [activeLot, setActiveLot, addToCollection]);
 
-  const confirmResetLot = () => {
+  const confirmResetLot = useCallback(() => {
     setActiveLot([]);
     setCurrentLotIndex(0);
     setLotSelection([]);
-  };
+  }, [setActiveLot, setCurrentLotIndex, setLotSelection]);
 
   return {
     cards,

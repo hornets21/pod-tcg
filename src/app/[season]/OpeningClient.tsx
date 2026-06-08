@@ -1,57 +1,62 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { PackVisual } from "../../components/PackVisual";
-import { Card } from "../../components/Card";
-import { FullArtCard } from "../../components/FullArtCard";
-import { useGacha, RARITY_SUSPENSE_MS } from "../../hooks/useGacha";
-import { GodPackDialog } from "../../components/Modals";
+import { useGacha } from "../../hooks/useGacha";
 import { Card as CardType } from "../../data/types";
-import { useModal } from "../../components/ModalContext";
+import { PackRipOverlay } from "../../components/unboxing/PackRipOverlay";
+import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
 
 export default function OpeningClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
 
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { setSelectedDetailCard } = useModal();
+  const { playSFX, stopBGM } = useAudio();
 
   // Gacha states
+  const [isOpening, setIsOpening] = useState(false);
   const [isTearing, setIsTearing] = useState(false);
   const [isTorn, setIsTorn] = useState(false);
   const [packCards, setPackCards] = useState<CardType[]>([]);
-  const [revealedOpacity, setRevealedOpacity] = useState<boolean[]>([
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
-  const [revealedStatus, setRevealedStatus] = useState<boolean[]>([
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
-  const [isGodPackOpen, setIsGodPackOpen] = useState(false);
   const [isGodPackEffectActive, setIsGodPackEffectActive] = useState(false);
 
-  const startOpening = async () => {
-    if (isTearing) return;
+  // Timeouts tracker
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
+
+  const clearAllTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  }, []);
+
+  useEffect(() => {
+    return () => clearAllTimers();
+  }, [clearAllTimers]);
+
+  const resetToIdle = useCallback(() => {
+    clearAllTimers();
+    setIsOpening(false);
+    setPackCards([]);
+    setIsGodPackEffectActive(false);
+    stopBGM();
+  }, [clearAllTimers, stopBGM]);
+
+  // Reset state when season changes
+  useEffect(() => {
+    resetToIdle();
+  }, [season, resetToIdle]);
+
+  const startOpening = useCallback(async () => {
+    if (isTearing || isOpening) return;
 
     // Reset card states
     setPackCards([]);
-    setRevealedOpacity([false, false, false, false, false]);
-    setRevealedStatus([false, false, false, false, false]);
     setIsGodPackEffectActive(false);
-
     setIsTearing(true);
 
     // Play tear sound
-    const tearSound = new Audio("https://img.lucky-pod.fun/tear.mp3");
-    tearSound.play().catch((e) => console.log("Sound play error:", e));
+    playSFX(AUDIO_URLS.TEAR_PACK, 0.7);
 
     // Wait for shake, then tear
     await new Promise((r) => setTimeout(r, 500));
@@ -64,61 +69,21 @@ export default function OpeningClient() {
     setPackCards(pack);
 
     if (isGod) {
-      setIsGodPackOpen(true);
       setIsGodPackEffectActive(true);
     }
-
-    // Reveal cards one-by-one with dramatic suspense timings
-    for (let i = 0; i < pack.length; i++) {
-      const card = pack[i];
-      const baseDelay = i * 180;
-      const jitter = Math.floor(Math.random() * 160) - 80;
-      const entryDelay = Math.max(0, baseDelay + jitter);
-
-      const suspense = RARITY_SUSPENSE_MS[card.rarity] ?? 0;
-      const suspenseJitter = Math.floor(Math.random() * 200);
-
-      // Fade-in entry
-      await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          setRevealedOpacity((prev) => {
-            const next = [...prev];
-            next[i] = true;
-            return next;
-          });
-
-          // Wait suspense duration before auto-reveal flip
-          setTimeout(() => {
-            setRevealedStatus((prev) => {
-              const next = [...prev];
-              next[i] = true;
-              return next;
-            });
-            addToCollection(card);
-            resolve();
-          }, 600 + suspense + suspenseJitter);
-        }, entryDelay);
-      });
-    }
-
-    // Reset pack visual state so it can be clicked again
+    
+    setIsOpening(true);
+    
+    // Reset pack visual state so it's clean behind the overlay
     setIsTearing(false);
     setIsTorn(false);
-  };
+  }, [isTearing, isOpening, playSFX, openPack]);
 
-  const handleCardClick = (card: CardType, index: number) => {
-    if (revealedStatus[index]) {
-      setSelectedDetailCard(card);
-    } else if (revealedOpacity[index]) {
-      // Instantly reveal card if user clicks during suspense
-      setRevealedStatus((prev) => {
-        const next = [...prev];
-        next[index] = true;
-        return next;
-      });
-      addToCollection(card);
+  const handleRipComplete = useCallback(() => {
+    if (packCards.length > 0) {
+      packCards.forEach((card) => addToCollection(card));
     }
-  };
+  }, [packCards, addToCollection]);
 
   // Safe check if gacha/collection state is loaded from LocalStorage
   if (!isLoaded) {
@@ -143,40 +108,26 @@ export default function OpeningClient() {
     <div className={`main-wrapper ${isGodPackEffectActive ? "god-pack-effect" : ""}`}>
       <main>
         <section id="opening-section" className="active">
-          <div className="pack-container">
-            <PackVisual
-              isTearing={isTearing}
-              isTorn={isTorn}
-              season={season}
-              onClick={startOpening}
-            />
-          </div>
-
-          <div id="cards-display" className={`cards-grid ${season === "season2" ? "season2-grid" : ""}`}>
-            {packCards.map((card, idx) => {
-              const CardComponent = season === "season2" ? FullArtCard : Card;
-              return (
-                <CardComponent
-                  key={`${card.role_id}-${idx}`}
-                  card={card}
-                  isRevealed={revealedStatus[idx]}
-                  enableHolo={true}
-                  className={revealedOpacity[idx] ? "opacity-visible" : "opacity-hidden"}
-                  onClick={() => handleCardClick(card, idx)}
-                />
-              );
-            })}
-          </div>
+          {!isOpening && (
+            <div className="pack-container">
+              <PackVisual
+                isTearing={isTearing}
+                isTorn={isTorn}
+                season={season}
+                onClick={startOpening}
+              />
+            </div>
+          )}
         </section>
       </main>
 
-      <GodPackDialog
-        isOpen={isGodPackOpen}
-        onClose={() => {
-          setIsGodPackOpen(false);
-          // Keep body glow active for 5s then clear
-          setTimeout(() => setIsGodPackEffectActive(false), 5000);
-        }}
+      <PackRipOverlay
+        key={packCards.map(c => c.role_id).join("-") || "closed"}
+        isOpen={isOpening}
+        season={season}
+        cards={packCards}
+        onClose={resetToIdle}
+        onRipComplete={handleRipComplete}
       />
     </div>
   );

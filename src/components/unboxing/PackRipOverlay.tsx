@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card as CardType } from "../../data/types";
 import { CardReveal } from "./CardReveal";
+import { RandomCutscene } from "./RandomCutscene";
+import { CutsceneGodPack } from "./cutscenes/CutsceneGodPack";
+import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
 
 interface PackRipOverlayProps {
   isOpen: boolean;
@@ -12,6 +15,8 @@ interface PackRipOverlayProps {
   onRipComplete: () => void;
 }
 
+type RevealPhase = "cutscene" | "reveal";
+
 export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
   isOpen,
   season,
@@ -19,14 +24,26 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
   onClose,
   onRipComplete,
 }) => {
+  const [phase, setPhase] = useState<RevealPhase>("cutscene");
+  const { startBGM, stopBGM } = useAudio();
+
+  const isGodPack = cards.every(c => ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity)) && cards.length === 5;
+
+  useEffect(() => {
+    if (isOpen && isGodPack) {
+      startBGM(AUDIO_URLS.BGM_GOD, 0.4);
+    }
+  }, [isOpen, isGodPack, startBGM]);
+
   useEffect(() => {
     if (isOpen) {
-      const timer = setTimeout(() => {
-        onRipComplete();
-      }, 100);
-      return () => clearTimeout(timer);
+      return () => {
+        stopBGM();
+      };
     }
+  }, [isOpen, stopBGM]);
 
+  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -34,22 +51,44 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
+  const handleCutsceneComplete = () => {
+    onRipComplete();
+    setPhase("reveal");
+  };
+
   return (
     <div className="rip-overlay" role="dialog" aria-modal="true" aria-label="แสดงผลการเปิดซอง">
-      <div className="revealed-container">
-        <CardReveal cards={cards} season={season} />
-        
-        <div className="overlay-actions">
-          <button className="back-btn" onClick={onClose}>
-            BACK TO BOX
-          </button>
+      {phase === "cutscene" && (
+        isGodPack ? (
+          <CutsceneGodPack onComplete={handleCutsceneComplete} />
+        ) : (
+          <RandomCutscene 
+            cards={cards} 
+            onComplete={handleCutsceneComplete} 
+            onSelectBGM={(url) => startBGM(url, 0.4)}
+          />
+        )
+      )}
+
+      {phase === "reveal" && (
+        <div className="revealed-container">
+          <CardReveal 
+            key={cards.map(c => c.role_id).join("-")} 
+            cards={cards} 
+            season={season} 
+          />
+          
+          <div className="overlay-actions">
+            <button className="back-btn" onClick={onClose}>
+              BACK TO BOX
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <style jsx>{`
         .rip-overlay {
@@ -81,7 +120,7 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
           flex-shrink: 0;
           margin-top: 30px;
           padding-bottom: 2rem;
-          animation: fadeIn 0.5s ease 1s forwards;
+          animation: fadeIn 0.5s ease 0.5s forwards;
           opacity: 0;
         }
 
