@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card as CardType } from "../../data/types";
+import { Card as CardType, Rarity } from "../../data/types";
 import { Card } from "../Card";
 import { FullArtCard } from "../FullArtCard";
 import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
@@ -20,10 +20,10 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
   const { playSFX } = useAudio();
 
   const SPECIAL_ROLE_ID = "1356458345812459611";
-  const ALL_RARITIES = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
+  const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
 
   // Pre-calculate fake rarities for the special card
-  const [fakeRarities] = useState<string[]>(() => 
+  const [fakeRarities] = useState<Rarity[]>(() => 
     cards.map(card => {
       if (card.role_id === SPECIAL_ROLE_ID) {
         return ALL_RARITIES[Math.floor(Math.random() * ALL_RARITIES.length)];

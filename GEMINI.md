@@ -7,6 +7,7 @@ POD TCG Pack Opening Simulator - A Next.js (TypeScript) web app that simulates T
 - **Next.js 16** (App Router)
 - **TypeScript**
 - **React 19**
+- **Node.js 22** (LTS)
 - **Tailwind CSS 4**
 - **LocalStorage** for client-side persistence
 - **Discord OAuth2** for authentication
