@@ -342,7 +342,7 @@ export const CARDS_SEASON2: Card[] = [
     name: "ลูกหาบ พี่ว่าน Craftbeer Hunter",
     isGacha: "Y",
     rarity: "C",
-    image: "https://img.lucky-pod.fun/op2/op-2-ลูกหาบพี่ว่าน.png",
+    image: "https://img.lucky-pod.fun/op2/op-2-พี่ว่าน-v2.webp",
     ability: "สะสมเพื่อซัมม่อน ลูกหาบ Exodia",
   },
   {

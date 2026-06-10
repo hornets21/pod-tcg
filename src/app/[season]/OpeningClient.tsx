@@ -56,7 +56,7 @@ export default function OpeningClient() {
     setIsTearing(true);
 
     // Play tear sound
-    playSFX(AUDIO_URLS.TEAR_PACK, 0.7);
+    playSFX(AUDIO_URLS.TEAR_PACK, 0.2);
 
     // Wait for shake, then tear
     await new Promise((r) => setTimeout(r, 500));

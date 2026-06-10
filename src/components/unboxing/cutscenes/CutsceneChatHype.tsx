@@ -24,7 +24,9 @@ export const CutsceneChatHype: React.FC<CutsceneProps> = ({ cards, onComplete })
 
   const getHighestRarityColor = () => {
     const rarities = cards.map((c) => c.rarity);
-    if (rarities.some((r) => ["LEG", "SEC", "UR", "SSR"].includes(r))) return "gold";
+    const isSpecial = cards.some((c) => c.role_id === "1356458345812459611");
+
+    if (isSpecial || rarities.some((r) => ["LEG", "SEC", "UR", "SSR"].includes(r))) return "gold";
     if (rarities.some((r) => r === "SR")) return "purple";
     return "blue";
   };
@@ -41,11 +43,11 @@ export const CutsceneChatHype: React.FC<CutsceneProps> = ({ cards, onComplete })
     }));
     setMessages(newMsgs);
 
-    playSFX(AUDIO_URLS.METEOR_FLYBY, 0.4);
+    playSFX(AUDIO_URLS.METEOR_FLYBY, 0.15);
 
     const finalTimer = setTimeout(() => {
       setIsFinal(true);
-      playSFX(AUDIO_URLS.HYPE, 0.7);
+      playSFX(AUDIO_URLS.HYPE, 0.2);
     }, 2200);
 
     const completeTimer = setTimeout(() => {

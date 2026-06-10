@@ -18,7 +18,7 @@ export const PackVisual: React.FC<PackVisualProps> = ({
   // Season-specific pack images (easily expandable for OP-3, OP-4, etc.)
   const packImgMap: Record<string, string> = {
     season1: "https://img.lucky-pod.fun/pack_tcg_op_1.png",
-    season2: "https://pub-8d9c494520194a9fb9ae47448111809e.r2.dev/pack_tcg_op_2.png",
+    season2: "https://img.lucky-pod.fun/pack_tcg_op_2.png",
   };
 
   const packImg = packImgMap[season] || packImgMap["season1"];
@@ -26,8 +26,9 @@ export const PackVisual: React.FC<PackVisualProps> = ({
   return (
     <div
       id="pack-visual"
-      className={`pack-visual ${isTearing ? "tearing" : ""} ${isTorn ? "torn" : ""
-        }`}
+      className={`pack-visual ${isTearing ? "tearing" : ""} ${
+        isTorn ? "torn" : ""
+      }`}
       onClick={onClick}
     >
       <div className="pack-shaker">

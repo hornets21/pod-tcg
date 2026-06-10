@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { useAudioContext } from "../components/AudioContext";
 
 export const AUDIO_URLS = {
-  // BGM (Using more reliable Pixabay or similar stable CDN links if possible, otherwise keeping placeholders but fixing indices)
+  // BGM
   BGM_WISH: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
   BGM_SHATTER: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
   BGM_HYPE: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
   BGM_MYSTIC: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-  BGM_GOD: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", // Changed from 15 to 8 (more likely to exist)
+  BGM_GOD: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
   
   // SFX
   METEOR_FLYBY: "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3",
@@ -28,6 +29,7 @@ export const AUDIO_URLS = {
 };
 
 export function useAudio() {
+  const { isMuted } = useAudioContext();
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const sfxRefs = useRef<Set<HTMLAudioElement>>(new Set());
   const isMounted = useRef(true);
@@ -40,8 +42,9 @@ export function useAudio() {
     sfxRefs.current.clear();
   }, []);
 
-  const playSFX = useCallback((url: string, volume = 0.5) => {
+  const playSFX = useCallback((url: string, volume = 0.15) => {
     if (typeof window === "undefined" || !url) return;
+    if (isMuted) return;
     
     try {
       const audio = new Audio(url);
@@ -54,19 +57,17 @@ export function useAudio() {
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Silently ignore abort errors
-        });
+        playPromise.catch(() => {});
       }
     } catch (err) {
       console.warn("SFX Error:", err);
     }
-  }, []);
+  }, [isMuted]);
 
-  const startBGM = useCallback((url: string, volume = 0.3) => {
+  const startBGM = useCallback((url: string, volume = 0.02) => {
     if (typeof window === "undefined" || !url) return;
+    if (isMuted) return;
 
-    // If already playing the same URL, don't restart
     if (bgmRef.current && bgmRef.current.src === url && !bgmRef.current.paused) {
       bgmRef.current.volume = volume;
       return;
@@ -92,7 +93,7 @@ export function useAudio() {
     } catch (err) {
       console.warn("BGM Creation Error:", err);
     }
-  }, []);
+  }, [isMuted]);
 
   const stopBGM = useCallback(() => {
     if (bgmRef.current) {
@@ -102,7 +103,19 @@ export function useAudio() {
     }
   }, []);
 
-  // Cleanup all audio when component unmounts
+  useEffect(() => {
+    if (isMuted) {
+      stopAllSFX();
+      if (bgmRef.current) {
+        bgmRef.current.pause();
+      }
+    } else {
+      if (bgmRef.current && bgmRef.current.src && bgmRef.current.paused) {
+        bgmRef.current.play().catch(() => {});
+      }
+    }
+  }, [isMuted, stopAllSFX]);
+
   useEffect(() => {
     isMounted.current = true;
     return () => {

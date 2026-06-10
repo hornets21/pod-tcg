@@ -19,7 +19,9 @@ export const GenshinWishCutscene: React.FC<GenshinWishCutsceneProps> = ({
   // Determine highest rarity color
   const getHighestRarityColor = () => {
     const rarities = cards.map((c) => c.rarity);
-    if (rarities.some((r) => ["LEG", "SEC", "UR", "SSR"].includes(r))) return "gold";
+    const isSpecial = cards.some((c) => c.role_id === "1356458345812459611");
+
+    if (isSpecial || rarities.some((r) => ["LEG", "SEC", "UR", "SSR"].includes(r))) return "gold";
     if (rarities.some((r) => r === "SR")) return "purple";
     return "blue";
   };
@@ -28,12 +30,12 @@ export const GenshinWishCutscene: React.FC<GenshinWishCutsceneProps> = ({
 
   useEffect(() => {
     // Play meteor sound
-    playSFX(AUDIO_URLS.METEOR_FLYBY);
+    playSFX(AUDIO_URLS.METEOR_FLYBY, 0.15);
 
     // Impact timing (matches animation duration)
     const impactTimer = setTimeout(() => {
       setIsImpacted(true);
-      playSFX(AUDIO_URLS.METEOR_IMPACT);
+      playSFX(AUDIO_URLS.METEOR_IMPACT, 0.2);
     }, 1800);
 
     // Complete timing

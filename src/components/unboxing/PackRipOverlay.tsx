@@ -6,6 +6,7 @@ import { CardReveal } from "./CardReveal";
 import { RandomCutscene } from "./RandomCutscene";
 import { CutsceneGodPack } from "./cutscenes/CutsceneGodPack";
 import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
+import { MuteButton } from "./MuteButton";
 
 interface PackRipOverlayProps {
   isOpen: boolean;
@@ -62,14 +63,16 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
 
   return (
     <div className="rip-overlay" role="dialog" aria-modal="true" aria-label="แสดงผลการเปิดซอง">
+      <MuteButton />
+
       {phase === "cutscene" && (
         isGodPack ? (
           <CutsceneGodPack onComplete={handleCutsceneComplete} />
         ) : (
-          <RandomCutscene 
-            cards={cards} 
-            onComplete={handleCutsceneComplete} 
-            onSelectBGM={(url) => startBGM(url, 0.4)}
+          <RandomCutscene
+            cards={cards}
+            onComplete={handleCutsceneComplete}
+            onSelectBGM={(url) => startBGM(url, 0.05)}
           />
         )
       )}
@@ -180,3 +183,4 @@ export const PackRipOverlay: React.FC<PackRipOverlayProps> = ({
     </div>
   );
 };
+;

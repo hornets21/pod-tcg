@@ -15,13 +15,13 @@ export const CutsceneGodPack: React.FC<CutsceneGodPackProps> = ({ onComplete }) 
     // 1. Divine Accumulation (Suspense)
     const timer1 = setTimeout(() => {
       setPhase("explosion");
-      playSFX(AUDIO_URLS.HEAVENLY, 1.0);
+      playSFX(AUDIO_URLS.HEAVENLY, 0.2);
     }, 1500);
 
     // 2. Celebration (Jackpot state)
     const timer2 = setTimeout(() => {
       setPhase("celebration");
-      playSFX(AUDIO_URLS.CARD_REVEAL_GOLD, 0.8);
+      playSFX(AUDIO_URLS.CARD_REVEAL_GOLD, 0.2);
     }, 2200);
 
     return () => {

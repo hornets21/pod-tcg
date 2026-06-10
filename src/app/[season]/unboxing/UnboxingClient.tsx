@@ -10,6 +10,7 @@ import { BoosterPack } from "../../../components/unboxing/BoosterPack";
 import { PackRipOverlay } from "../../../components/unboxing/PackRipOverlay";
 import { SummaryModal } from "../../../components/unboxing/SummaryModal";
 import { RandomCutscene } from "../../../components/unboxing/RandomCutscene";
+import { MuteButton } from "../../../components/unboxing/MuteButton";
 import { Card as CardType } from "../../../data/types";
 
 export default function UnboxingClient() {
@@ -82,7 +83,7 @@ export default function UnboxingClient() {
   // --- Actions ---
   const handleBoxClick = useCallback(() => {
     setIsBoxOpen(true);
-    playSFX(AUDIO_URLS.BOX_OPEN, 0.6);
+    playSFX(AUDIO_URLS.BOX_OPEN, 0.15);
   }, [playSFX, setIsBoxOpen]);
 
   const handlePackClick = useCallback(
@@ -100,7 +101,7 @@ export default function UnboxingClient() {
         setIsGodPackEffectActive(true);
       }
 
-      playSFX(AUDIO_URLS.TEAR_PACK, 0.7);
+      playSFX(AUDIO_URLS.TEAR_PACK, 0.2);
     },
     [openedPacks, openPack, setGodPackIndices, setIsGodPackEffectActive, playSFX, setPackContents],
   );
@@ -258,10 +259,13 @@ export default function UnboxingClient() {
       />
 
       {cutsceneCards && (
-        <RandomCutscene
-          cards={cutsceneCards}
-          onComplete={handleCutsceneComplete}
-        />
+        <>
+          <MuteButton />
+          <RandomCutscene
+            cards={cutsceneCards}
+            onComplete={handleCutsceneComplete}
+          />
+        </>
       )}
 
       {isResetDialogOpen && (

@@ -5,6 +5,7 @@ import { useParams, usePathname } from "next/navigation";
 import { Header } from "../../components/Header";
 import { useAuth } from "../../hooks/useAuth";
 import { ModalProvider, useModal } from "../../components/ModalContext";
+import { AudioProvider } from "../../components/AudioContext";
 import {
   LogoutDialog,
   PolicyDialog,
@@ -99,8 +100,10 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
 
 export default function SeasonLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ModalProvider>
-      <SeasonLayoutContent>{children}</SeasonLayoutContent>
-    </ModalProvider>
+    <AudioProvider>
+      <ModalProvider>
+        <SeasonLayoutContent>{children}</SeasonLayoutContent>
+      </ModalProvider>
+    </AudioProvider>
   );
 }

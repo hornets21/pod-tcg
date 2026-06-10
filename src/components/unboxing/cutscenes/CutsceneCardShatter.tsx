@@ -16,7 +16,9 @@ export const CutsceneCardShatter: React.FC<CutsceneProps> = ({ cards, onComplete
   // Determine accent color based on highest rarity
   const rarityConfig = useMemo(() => {
     const rarities = cards.map((c) => c.rarity);
-    if (rarities.some((r) => ["LEG", "SEC", "UR"].includes(r))) {
+    const isSpecial = cards.some((c) => c.role_id === "1356458345812459611");
+
+    if (isSpecial || rarities.some((r) => ["LEG", "SEC", "UR"].includes(r))) {
       return { class: "gold", color: "#ffd700", rgb: "255, 215, 0" };
     }
     if (rarities.some((r) => ["SSR", "SR"].includes(r))) {
@@ -29,13 +31,13 @@ export const CutsceneCardShatter: React.FC<CutsceneProps> = ({ cards, onComplete
     // Stage 1: Charging (Wait for suspense)
     const t1 = setTimeout(() => {
       setPhase("slash");
-      playSFX(AUDIO_URLS.SLASH, 0.8);
+      playSFX(AUDIO_URLS.SLASH, 0.2);
     }, 1000);
 
     // Stage 2: Shatter
     const t2 = setTimeout(() => {
       setPhase("shatter");
-      playSFX(AUDIO_URLS.SHATTER, 1.0);
+      playSFX(AUDIO_URLS.SHATTER, 0.15);
     }, 1800);
 
     // Stage 3: Dissolve

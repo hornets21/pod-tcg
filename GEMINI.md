@@ -45,7 +45,13 @@ pod-tcg/
 - `isGacha='N'` cards are excluded from the pool.
 - One-by-one reveal animation with rarity-based suspense timings.
 
-### Collection System
+#### Special Card Logic
+- **Role ID `1356458345812459611` (ลูกหาบ พี่ว่าน)**: 
+  - Magnificent "Rainbow Aura & Sparkles" reveal effect (soft pulsing, not rotating).
+  - Fake random rarity (C to LEG) assigned visually upon reveal.
+  - Must NOT be changed or reverted unless explicitly requested.
+
+## Collection System
 - Persistent via `localStorage`.
 - Logged in: Uses Discord roles (synced with backend).
 - Guest mode: Uses `pod_collection` in `localStorage`.
@@ -64,10 +70,19 @@ npm run dev
 npm run build
 ```
 
+## Audio Standards
+- **BGM (Background Music)**: Default `0.02`.
+- **SFX (Sound Effects)**: Default `0.15`. 
+- **Cutscenes/Impacts**: Max `0.2 - 0.25` for heavy hits.
+- Always prefer conservative volume levels to avoid user annoyance.
+
 ## Styling
 - Mix of **Tailwind CSS 4** and **Custom CSS** in `globals.css`.
 - **Glassmorphism**: Backdrop blur and semi-transparent layers.
 - **Card Effects**: 3D Tilt (via JS-driven CSS variables), Holo overlays, Gloss shine.
+- **Cutscenes**: 
+  - Prefer high-quality transparent PNG/WebP images (Standard Web 1x) over complex CSS shapes for key visual assets.
+  - **Visual Artifacts**: Avoid initial thick white borders or static line indicators (like in PodDrop shockwaves or FoilRip center lines). Always ensure animations start from an invisible or minimal state to prevent "flashing" artifacts.
 
 ## Important Notes
 - Project is configured for **Static Export** (`output: "export"`).
