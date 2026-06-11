@@ -17,7 +17,7 @@ export default function UnboxingClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { playSFX, startBGM } = useAudio();
+  const { playSFX, startBGM, stopAllSFX } = useAudio();
 
   // --- Persistent States ---
   const [isBoxOpen, setIsBoxOpen, isBoxOpenLoaded] = useLocalStorage<boolean>(
