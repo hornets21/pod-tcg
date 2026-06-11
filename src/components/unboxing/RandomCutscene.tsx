@@ -6,6 +6,7 @@ import { CutsceneFoilRip } from "./cutscenes/CutsceneFoilRip";
 import { CutsceneCardShatter } from "./cutscenes/CutsceneCardShatter";
 import { CutscenePodDrop } from "./cutscenes/CutscenePodDrop";
 import { CutsceneChatHype } from "./cutscenes/CutsceneChatHype";
+import { CutsceneWorldCup } from "./cutscenes/CutsceneWorldCup";
 import { GenshinWishCutscene } from "./GenshinWishCutscene";
 
 import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
@@ -20,7 +21,8 @@ export const CUTSCENE_CONFIGS = [
   { component: CutsceneFoilRip, bgm: AUDIO_URLS.BGM_MYSTIC },
   { component: CutsceneCardShatter, bgm: AUDIO_URLS.BGM_SHATTER },
   { component: CutscenePodDrop, bgm: AUDIO_URLS.BGM_WISH },
-  { component: CutsceneChatHype, bgm: AUDIO_URLS.BGM_HYPE }
+  { component: CutsceneChatHype, bgm: AUDIO_URLS.BGM_HYPE },
+  { component: CutsceneWorldCup, bgm: "" }
 ];
 
 export const RandomCutscene: React.FC<RandomCutsceneProps> = ({ cards, onComplete, onSelectBGM }) => {
