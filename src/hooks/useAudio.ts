@@ -34,10 +34,25 @@ export function useAudio() {
   const sfxRefs = useRef<Set<HTMLAudioElement>>(new Set());
   const isMounted = useRef(true);
 
+  // Preload common SFX
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      Object.values(AUDIO_URLS).forEach(url => {
+        if (url) {
+          const img = new Audio();
+          img.src = url;
+          img.preload = "auto";
+        }
+      });
+    }
+  }, []);
+
   const stopAllSFX = useCallback(() => {
     sfxRefs.current.forEach((audio) => {
-      audio.pause();
-      audio.src = "";
+      try {
+        audio.pause();
+        audio.src = "";
+      } catch (e) {}
     });
     sfxRefs.current.clear();
   }, []);
@@ -57,10 +72,13 @@ export function useAudio() {
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {});
+        playPromise.catch((err) => {
+          console.warn("SFX Play Blocked/Error:", err);
+          // Retry once on next interaction if needed? No, just log for now.
+        });
       }
     } catch (err) {
-      console.warn("SFX Error:", err);
+      console.warn("SFX Creation Error:", err);
     }
   }, [isMuted]);
 

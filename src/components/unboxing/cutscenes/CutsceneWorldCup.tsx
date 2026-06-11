@@ -32,21 +32,43 @@ export const CutsceneWorldCup: React.FC<CutsceneWorldCupProps> = ({ onComplete }
     const timer = setTimeout(() => {
       setIsEntering(true);
     }, 50);
-    return () => clearTimeout(timer);
+
+    // Safety timeout: if video doesn't end in 15 seconds, auto-complete
+    const safetyTimer = setTimeout(() => {
+      handleVideoEnded();
+    }, 15000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
+      
+      // Try to force play
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.warn("Video autoplay failed, waiting for interaction or retrying muted:", error);
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play().catch(e => console.error("Muted video play also failed:", e));
+          }
+        });
+      }
     }
   }, [isMuted]);
 
   const handleVideoEnded = () => {
+    if (showGoal) return; // Avoid multiple triggers
     setShowGoal(true);
     setTimeout(() => {
       setIsExiting(true);
       setTimeout(onComplete, 800);
-    }, 2000);
+    }, 2500);
   };
 
   return (
@@ -55,9 +77,16 @@ export const CutsceneWorldCup: React.FC<CutsceneWorldCupProps> = ({ onComplete }
         <video
           ref={videoRef}
           autoPlay
+          muted={isMuted}
           playsInline
+          disablePictureInPicture
+          controlsList="nopictureinpicture"
           onEnded={handleVideoEnded}
           className="wc-video"
+          onError={(e) => {
+            console.error("Video Error:", e);
+            handleVideoEnded(); // Fallback to goal text if video fails
+          }}
         >
           <source src="/videos/worldcup-event.webm" type="video/webm" />
           <source src="/videos/worldcup-event.mp4" type="video/mp4" />

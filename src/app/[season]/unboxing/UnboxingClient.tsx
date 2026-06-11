@@ -17,7 +17,7 @@ export default function UnboxingClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { playSFX } = useAudio();
+  const { playSFX, startBGM } = useAudio();
 
   // --- Persistent States ---
   const [isBoxOpen, setIsBoxOpen, isBoxOpenLoaded] = useLocalStorage<boolean>(
@@ -170,6 +170,7 @@ export default function UnboxingClient() {
 
   const handleReset = useCallback(() => {
     setIsFadingOut(true);
+    stopAllSFX(); // Clear sounds on reset
     const t = setTimeout(() => {
       setIsBoxOpen(false);
       setOpenedPacksArr([]);
@@ -264,6 +265,7 @@ export default function UnboxingClient() {
           <RandomCutscene
             cards={cutsceneCards}
             onComplete={handleCutsceneComplete}
+            onSelectBGM={(url) => startBGM(url)}
           />
         </>
       )}
