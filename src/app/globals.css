@@ -14,6 +14,7 @@
     --sr-color: linear-gradient(135deg, #2196f3, #1976d2, #0d47a1);
     --r-color: linear-gradient(135deg, #4caf50, #388e3c, #1b5e20);
     --c-color: linear-gradient(135deg, #a8a8a8, #d3d3d3);
+    --event-color: linear-gradient(135deg, #e91e63, #f06292);
 }
 
 * {
@@ -1085,6 +1086,10 @@ section.active {
     background: var(--c-color);
 }
 
+.card.event .card-front {
+    background: var(--event-color);
+}
+
 
 @keyframes moveGradient {
     0% {
@@ -1919,6 +1924,7 @@ section.active {
 }
 
 .rarity-tag.c { background: var(--c-color); }
+.rarity-tag.event { background: var(--event-color); }
 .rarity-tag.r { background: var(--r-color); }
 .rarity-tag.sr { background: var(--sr-color); }
 .rarity-tag.ssr { background: var(--ssr-color); }
@@ -2547,6 +2553,7 @@ section.active {
 .rarity-glow-SEG { box-shadow: 0 0 32px rgba(250,204,21,.5), 0 18px 44px rgba(0,0,0,.5); }
 .rarity-glow-SEC { box-shadow: 0 0 35px rgba(99, 102, 241, 0.5), 0 18px 45px rgba(0,0,0,0.5); }
 .rarity-glow-LEG { box-shadow: 0 0 35px rgba(239, 68, 68, 0.5), 0 18px 45px rgba(0,0,0,0.5); }
+.rarity-glow-EVENT { box-shadow: 0 0 28px rgba(233, 30, 99, 0.45), 0 16px 40px rgba(0,0,0,0.5); }
 
 @keyframes shine-fullart {
     0% { background-position: -200% 0; }

@@ -40,7 +40,7 @@ export const LotSeason2: React.FC<LotSeason2Props> = ({
   const openedInLot = activeLot.filter((c) => c.isOpened).length;
   const remainingInLot = totalInLot - openedInLot;
 
-  const rarityFilters = ["LEG", "SEC", "UR", "SSR", "SR", "R", "C"];
+  const rarityFilters = ["LEG", "SEC", "UR", "SSR", "SR", "R", "C", "EVENT"];
 
   return (
     <section id="lot-section" className="active">

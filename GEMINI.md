@@ -36,6 +36,7 @@ pod-tcg/
 5. **SR** (Super Rare) - 12.0%
 6. **R** (Rare) - 30.0%
 7. **C** (Common) - 50.0%
+8. **EVENT** (Event) - Same rate as C (Shares the 50% pool when C is rolled)
 
 - **God Pack Chance**: 1% (All 5 cards are SR+ with boosted rates for high rarity)
 
@@ -47,6 +48,10 @@ pod-tcg/
 - One-by-one reveal animation with rarity-based suspense timings.
 
 #### Special Card Logic
+- **EVENT Rarity**:
+  - **Visuals**: Pink gradient theme (`#e91e63`).
+  - **Behavior**: Fast reveal (0ms delay), same as Common cards.
+  - **Logic**: Shares the drop pool with `C` rarity.
 - **Role ID `1356458345812459611` (ลูกหาบ พี่ว่าน)**: 
   - Magnificent "Rainbow Aura & Sparkles" reveal effect (soft pulsing, not rotating).
   - Fake random rarity (C to LEG) assigned visually upon reveal.

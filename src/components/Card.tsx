@@ -22,7 +22,8 @@ export const getRarityStars = (rarity: string): string => {
     'SSR': '★★★★',
     'UR': '★★★★★',
     'SEC': '★★★★★★',
-    'LEG': '★★★★★★★'
+    'LEG': '★★★★★★★',
+    'EVENT': '✧'
   };
   return stars[rarity] || '★';
 };

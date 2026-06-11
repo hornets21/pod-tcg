@@ -96,6 +96,7 @@ export default function CollectionClient() {
     { label: "SR", value: "SR" },
     { label: "R", value: "R" },
     { label: "C", value: "C" },
+    { label: "EVENT", value: "EVENT" },
   ];
 
   return (
@@ -122,7 +123,7 @@ export default function CollectionClient() {
             </div>
 
             <div className="rarity-completion-bar">
-               {["LEG", "SEC", "UR", "SSR", "SR", "R", "C"].map((r) => {
+               {["LEG", "SEC", "UR", "SSR", "SR", "R", "C", "EVENT"].map((r) => {
                  const stat = rarityStats[r] || { owned: 0, total: 0 };
                  const percent = stat.total > 0 ? (stat.owned / stat.total) * 100 : 0;
                  return (
@@ -234,6 +235,7 @@ export default function CollectionClient() {
         .sr .progress-fill { background: #2196f3; }
         .r .progress-fill { background: #4caf50; }
         .c .progress-fill { background: #a8a8a8; }
+        .event .progress-fill { background: #e91e63; }
 
         .filters-container {
           background: rgba(0, 0, 0, 0.2);

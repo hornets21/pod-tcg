@@ -16,6 +16,7 @@ const RATE: Record<Rarity, number> = {
   SR: 12.0,
   R: 30.0,
   C: 50.0,
+  EVENT: 0,
 };
 
 const GOD_PACK_CHANCE = 1; // 1%
@@ -29,6 +30,7 @@ export const RARITY_SUSPENSE_MS: Record<Rarity, number> = {
   UR: 900,
   SEC: 1400,
   LEG: 2000,
+  EVENT: 0,
 };
 
 // Helper: Fisher-Yates Shuffle
@@ -140,7 +142,8 @@ export const useGacha = (season: "season1" | "season2") => {
 
   // Helper: Get random gacha card by rarity
   const getRandomCardByRarity = useCallback((rarity: Rarity): CardType => {
-    const filtered = gachaPool.filter((c) => c.rarity === rarity);
+    const searchRarities = rarity === "C" ? ["C", "EVENT"] : [rarity];
+    const filtered = gachaPool.filter((c) => searchRarities.includes(c.rarity));
     if (filtered.length === 0) {
       // Fallback
       return gachaPool[Math.floor(Math.random() * gachaPool.length)];

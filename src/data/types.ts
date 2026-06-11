@@ -1,4 +1,4 @@
-export type Rarity = "LEG" | "SEC" | "UR" | "SSR" | "SR" | "R" | "C";
+export type Rarity = "LEG" | "SEC" | "UR" | "SSR" | "SR" | "R" | "C" | "EVENT";
 
 export interface Card {
   role_id: string;

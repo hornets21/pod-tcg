@@ -13,6 +13,7 @@ const RARITY_ORDER: Record<string, number> = {
   SR: 4,
   R: 5,
   C: 6,
+  EVENT: 7,
 };
 
 export default function HallOfFameClient() {
@@ -59,6 +60,7 @@ export default function HallOfFameClient() {
     { label: "UR", value: "UR" },
     { label: "SSR", value: "SSR" },
     { label: "R", value: "R" },
+    { label: "EVENT", value: "EVENT" },
   ];
 
   return (

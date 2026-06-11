@@ -59,6 +59,12 @@ const getRarityClasses = (rarity: string) => {
         glow: "",
         overlay: "",
       };
+    case "EVENT":
+      return {
+        borderColor: "#e91e63",
+        glow: "rarity-glow-EVENT",
+        overlay: "bg-gradient-to-tr from-pink-500/20 to-rose-400/20",
+      };
     default:
       return {
         borderColor: "#475569",
