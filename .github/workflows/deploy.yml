@@ -64,6 +64,7 @@ jobs:
 
       - name: Create deploy tag
         run: |
-          TAG="deploy-$(date +%Y%m%d-%H%M%S)"
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION-deploy-$(date +%Y%m%d-%H%M%S)"
           git tag "$TAG"
           git push origin "$TAG"

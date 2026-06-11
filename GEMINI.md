@@ -90,6 +90,12 @@ npm run build
   - Prefer high-quality transparent PNG/WebP images (Standard Web 1x) over complex CSS shapes for key visual assets.
   - **Visual Artifacts**: Avoid initial thick white borders or static line indicators (like in PodDrop shockwaves or FoilRip center lines). Always ensure animations start from an invisible or minimal state to prevent "flashing" artifacts.
 
+## Deployment & Versioning
+- **Versioning**: Uses semantic versioning in `package.json`.
+- **Auto-Tagging**: GitHub Actions automatically creates a Git tag on every successful deploy to `main`.
+  - Tag format: `v{version}-deploy-{timestamp}` (e.g., `v1.0.1-deploy-20260611-153000`).
+- **Internal Tracking**: Versioning is managed via Git tags for traceability.
+
 ## Important Notes
 - Project is configured for **Static Export** (`output: "export"`).
 - Card images are hosted at `https://img.lucky-pod.fun/`.
