@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     icon: "/pack_tcg_op_1.ico",
   },
   referrer: "strict-origin-when-cross-origin",
+  other: {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "pragma": "no-cache",
+    "expires": "0",
+  },
 };
 
 export default function RootLayout({

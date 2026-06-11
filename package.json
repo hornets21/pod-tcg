@@ -1,6 +1,6 @@
 {
   "name": "pod-tcg",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "POD TCG Pack Opening Simulator",
   "private": true,
   "scripts": {
