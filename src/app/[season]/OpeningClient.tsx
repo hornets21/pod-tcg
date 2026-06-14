@@ -44,7 +44,8 @@ export default function OpeningClient() {
 
   // Reset state when season changes
   useEffect(() => {
-    resetToIdle();
+    const t = setTimeout(() => resetToIdle(), 0);
+    return () => clearTimeout(t);
   }, [season, resetToIdle]);
 
   const startOpening = useCallback(async () => {

@@ -31,7 +31,7 @@ export const CutsceneGodPack: React.FC<CutsceneGodPackProps> = ({ onComplete }) 
   }, [playSFX]);
 
   // Generate gold rain particles
-  const goldRain = useMemo(() => {
+  const [goldRain] = useState(() => {
     return [...Array(50)].map((_, i) => ({
       id: i,
       left: Math.random() * 100,
@@ -40,7 +40,7 @@ export const CutsceneGodPack: React.FC<CutsceneGodPackProps> = ({ onComplete }) 
       duration: 1 + Math.random() * 2,
       opacity: 0.4 + Math.random() * 0.6
     }));
-  }, []);
+  });
 
   // Generate energy rays
   const rays = useMemo(() => {

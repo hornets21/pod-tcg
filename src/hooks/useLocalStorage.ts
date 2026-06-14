@@ -22,7 +22,8 @@ export function useLocalStorage<T>(
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setIsLoaded(true);
+    const timer = setTimeout(() => setIsLoaded(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const setValue = useCallback((value: T | ((val: T) => T)) => {

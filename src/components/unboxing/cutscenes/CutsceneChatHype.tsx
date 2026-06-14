@@ -19,7 +19,12 @@ const CHAT_MESSAGES = [
 
 export const CutsceneChatHype: React.FC<CutsceneProps> = ({ cards, onComplete }) => {
   const { playSFX } = useAudio();
-  const [messages, setMessages] = useState<{id: number, text: string, delay: number, color: string}[]>([]);
+  const [messages] = useState(() => [...Array(40)].map((_, i) => ({
+    id: i,
+    text: CHAT_MESSAGES[Math.floor(Math.random() * CHAT_MESSAGES.length)],
+    delay: Math.random() * 2,
+    color: ["#ff4e50", "#fc913a", "#f9d423", "#ede574", "#e1f5fe"][Math.floor(Math.random() * 5)]
+  })));
   const [isFinal, setIsFinal] = useState(false);
 
   const getHighestRarityColor = () => {
@@ -34,15 +39,6 @@ export const CutsceneChatHype: React.FC<CutsceneProps> = ({ cards, onComplete })
   const color = getHighestRarityColor();
 
   useEffect(() => {
-    // Generate constant stream of messages
-    const newMsgs = [...Array(40)].map((_, i) => ({
-      id: i,
-      text: CHAT_MESSAGES[Math.floor(Math.random() * CHAT_MESSAGES.length)],
-      delay: Math.random() * 2,
-      color: ["#ff4e50", "#fc913a", "#f9d423", "#ede574", "#e1f5fe"][Math.floor(Math.random() * 5)]
-    }));
-    setMessages(newMsgs);
-
     playSFX(AUDIO_URLS.METEOR_FLYBY, 0.15);
 
     const finalTimer = setTimeout(() => {

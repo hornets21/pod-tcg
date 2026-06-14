@@ -57,7 +57,7 @@ export const CutsceneCardShatter: React.FC<CutsceneProps> = ({ cards, onComplete
   }, [onComplete, playSFX]);
 
   // Generate random shard data once
-  const shards = useMemo(() => {
+  const [shards] = useState(() => {
     return [...Array(50)].map((_, i) => ({
       id: i,
       size: 60 + Math.random() * 120,
@@ -70,10 +70,10 @@ export const CutsceneCardShatter: React.FC<CutsceneProps> = ({ cards, onComplete
       delay: Math.random() * 0.2,
       clip: `polygon(${Math.random()*100}% ${Math.random()*100}%, ${Math.random()*100}% ${Math.random()*100}%, ${Math.random()*100}% ${Math.random()*100}%)`,
     }));
-  }, []);
+  });
 
   // Generate random particles
-  const particles = useMemo(() => {
+  const [particles] = useState(() => {
      return [...Array(30)].map((_, i) => ({
         id: i,
         tx: (Math.random() - 0.5) * 1200,
@@ -81,10 +81,10 @@ export const CutsceneCardShatter: React.FC<CutsceneProps> = ({ cards, onComplete
         size: 3 + Math.random() * 5,
         delay: Math.random() * 0.3
      }));
-  }, []);
+  });
 
   // Charging orbs data
-  const orbs = useMemo(() => {
+  const [orbs] = useState(() => {
     return [...Array(12)].map((_, i) => {
         const angle = (i / 12) * Math.PI * 2;
         const dist = 400 + Math.random() * 300;
@@ -95,7 +95,7 @@ export const CutsceneCardShatter: React.FC<CutsceneProps> = ({ cards, onComplete
             delay: Math.random() * 0.5
         };
     });
-  }, []);
+  });
 
   return (
     <div className={`shatter-cutscene-root ${rarityConfig.class} ${phase}`}>

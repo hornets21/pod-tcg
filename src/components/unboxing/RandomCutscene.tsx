@@ -25,11 +25,15 @@ export const CUTSCENE_CONFIGS = [
   { component: CutsceneWorldCup, bgm: "" }
 ];
 
-export const RandomCutscene: React.FC<RandomCutsceneProps> = ({ cards, onComplete, onSelectBGM }) => {
-  const selected = React.useMemo(() => {
+export const RandomCutscene: React.FC<RandomCutsceneProps> = ({
+  cards,
+  onComplete,
+  onSelectBGM,
+}) => {
+  const [selected] = useState(() => {
     const randomIndex = Math.floor(Math.random() * CUTSCENE_CONFIGS.length);
     return CUTSCENE_CONFIGS[randomIndex];
-  }, []);
+  });
 
   useEffect(() => {
     if (onSelectBGM) {

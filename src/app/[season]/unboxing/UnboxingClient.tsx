@@ -61,10 +61,12 @@ export default function UnboxingClient() {
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    const t1 = setTimeout(() => setMounted(true), 0);
+    timersRef.current.push(t1);
+
     if (isBoxOpen) {
-      const t = setTimeout(() => setPacksReady(true), 100);
-      timersRef.current.push(t);
+      const t2 = setTimeout(() => setPacksReady(true), 100);
+      timersRef.current.push(t2);
     }
   }, [isBoxOpen]);
 

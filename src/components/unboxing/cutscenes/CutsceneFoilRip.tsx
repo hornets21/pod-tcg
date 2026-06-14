@@ -52,7 +52,7 @@ export const CutsceneFoilRip: React.FC<CutsceneProps> = ({ cards, onComplete }) 
   }, [onComplete, playSFX]);
 
   // Sparkles for the rip effect
-  const sparkles = useMemo(() => {
+  const [sparkles] = useState(() => {
     return [...Array(30)].map((_, i) => ({
       id: i,
       tx: (Math.random() - 0.5) * 800,
@@ -60,7 +60,7 @@ export const CutsceneFoilRip: React.FC<CutsceneProps> = ({ cards, onComplete }) 
       size: 2 + Math.random() * 4,
       delay: Math.random() * 0.2
     }));
-  }, []);
+  });
 
   return (
     <div className={`foil-cutscene-root ${rarityConfig.class} phase-${phase}`}>

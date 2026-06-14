@@ -14,35 +14,23 @@ export const CutsceneWorldCup: React.FC<CutsceneWorldCupProps> = ({ onComplete }
   const [showGoal, setShowGoal] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [confettiData, setConfettiData] = useState<{id: number, left: number, delay: number, duration: number, color: string}[]>([]);
+  const [confettiData] = useState(() => [...Array(30)].map((_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 2,
+    duration: 1 + Math.random() * 2,
+    color: i % 2 === 0 ? "#FFD700" : "#FFFFFF"
+  })));
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    // Generate confetti on mount
-    const data = [...Array(30)].map((_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 2,
-      duration: 1 + Math.random() * 2,
-      color: i % 2 === 0 ? "#FFD700" : "#FFFFFF"
-    }));
-    setConfettiData(data);
-
-    // Start fade-in with a slight delay to avoid cascading render lint
-    const timer = setTimeout(() => {
-      setIsEntering(true);
-    }, 50);
-
-    // Safety timeout: if video doesn't end in 15 seconds, auto-complete
-    const safetyTimer = setTimeout(() => {
-      handleVideoEnded();
-    }, 15000);
-
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(safetyTimer);
-    };
-  }, []);
+  const handleVideoEnded = React.useCallback(() => {
+    if (showGoal) return; // Avoid multiple triggers
+    setShowGoal(true);
+    setTimeout(() => {
+      setIsExiting(true);
+      setTimeout(onComplete, 800);
+    }, 2500);
+  }, [showGoal, onComplete]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -62,14 +50,22 @@ export const CutsceneWorldCup: React.FC<CutsceneWorldCupProps> = ({ onComplete }
     }
   }, [isMuted]);
 
-  const handleVideoEnded = () => {
-    if (showGoal) return; // Avoid multiple triggers
-    setShowGoal(true);
-    setTimeout(() => {
-      setIsExiting(true);
-      setTimeout(onComplete, 800);
-    }, 2500);
-  };
+  useEffect(() => {
+    // Start fade-in with a slight delay to avoid cascading render lint
+    const timer = setTimeout(() => {
+      setIsEntering(true);
+    }, 50);
+
+    // Safety timeout: if video doesn't end in 15 seconds, auto-complete
+    const safetyTimer = setTimeout(() => {
+      handleVideoEnded();
+    }, 15000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(safetyTimer);
+    };
+  }, [handleVideoEnded]);
 
   return (
     <div className={`worldcup-cutscene-root ${isEntering ? "entering" : ""} ${isExiting ? "exit" : ""}`}>
