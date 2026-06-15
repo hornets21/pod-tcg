@@ -1237,7 +1237,7 @@ export const CARDS_SEASON2: Card[] = [
   {
     role_id: "1514643263565336731",
     name: "แอนตี้วาฬรัส",
-    isGacha: "Y",
+    isGacha: "N",
     rarity: "EVENT",
     image: "https://img.lucky-pod.fun/event/event-แอนตี้วาฬรัส.webp",
     ability: "NTR by คนมีงานทำ",
@@ -1245,7 +1245,7 @@ export const CARDS_SEASON2: Card[] = [
   {
     role_id: "1514640766406754384",
     name: "แบงค์ไวรัส",
-    isGacha: "Y",
+    isGacha: "N",
     rarity: "EVENT",
     image: "https://img.lucky-pod.fun/event/event-แบงค์ไวรัส.webp",
     ability: "คนตกงาน",
