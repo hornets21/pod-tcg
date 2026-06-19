@@ -1250,4 +1250,20 @@ export const CARDS_SEASON2: Card[] = [
     image: "https://img.lucky-pod.fun/event/event-แบงค์ไวรัส.webp",
     ability: "คนตกงาน",
   },
+  {
+    role_id: "1517527871537680544",
+    name: "เหลนชายพี่ข่าวปด",
+    isGacha: "Y",
+    rarity: "UR",
+    image: "https://img.lucky-pod.fun/op2/op-2-เหลนชายพี่ข่าวปด.webp",
+    ability: "สามารถเข้าแชทกลุ่มเหลนชายพี่ข่าวปด",
+  },
+  {
+    role_id: "1517534959907246181",
+    name: "หน่วยปฏิบัติการหมงหมง",
+    isGacha: "Y",
+    rarity: "UR",
+    image: "https://img.lucky-pod.fun/op2/op-2-หมงหมง.webp",
+    ability: "",
+  },
 ];
