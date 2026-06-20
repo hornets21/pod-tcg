@@ -5,27 +5,17 @@ import { useAudioContext } from "../components/AudioContext";
 
 export const AUDIO_URLS = {
   // BGM
-  BGM_WISH: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-  BGM_SHATTER: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-  BGM_HYPE: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-  BGM_MYSTIC: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
   BGM_GOD: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
   
   // SFX
-  METEOR_FLYBY: "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3",
-  METEOR_IMPACT: "https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3",
   CARD_REVEAL_NORMAL: "https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3",
   CARD_REVEAL_GOLD: "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
   TEAR_PACK: "https://img.lucky-pod.fun/tear.mp3",
   BOX_OPEN: "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
   
   // NEW EXCITING SFX
-  SHATTER: "https://assets.mixkit.co/active_storage/sfx/2801/2801-preview.mp3",
-  SLASH: "https://assets.mixkit.co/active_storage/sfx/601/601-preview.mp3",
-  HYPE: "https://assets.mixkit.co/active_storage/sfx/1111/1111-preview.mp3",
   HEAVENLY: "https://assets.mixkit.co/active_storage/sfx/1119/1119-preview.mp3",
   IMPACT_HEAVY: "https://assets.mixkit.co/active_storage/sfx/2601/2601-preview.mp3",
-  ELECTRONIC_BEAM: "https://assets.mixkit.co/active_storage/sfx/2619/2619-preview.mp3",
 };
 
 export function useAudio() {

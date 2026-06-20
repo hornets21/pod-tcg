@@ -2,7 +2,6 @@ import LotClient from "./LotClient";
 
 export function generateStaticParams() {
   return [
-    { season: "season1" },
     { season: "season2" },
   ];
 }

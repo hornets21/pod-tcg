@@ -2,7 +2,6 @@ import UnboxingClient from "./UnboxingClient";
 
 export function generateStaticParams() {
   return [
-    { season: "season1" },
     { season: "season2" },
   ];
 }
