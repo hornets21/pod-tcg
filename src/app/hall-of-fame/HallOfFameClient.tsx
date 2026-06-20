@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { FullArtCard } from "../../components/FullArtCard";
 import { CARDS_DELETE } from "../../data/cards-delete";
 import { useModal } from "../../components/ModalContext";
+import { ThreeScene } from "../../components/three/ThreeScene";
 
 const RARITY_ORDER: Record<string, number> = {
   LEG: 0,
@@ -65,6 +66,10 @@ export default function HallOfFameClient() {
 
   return (
     <div className="main-wrapper">
+      <ThreeScene cameraPosition={[0, 0, 7]} fogColor="#07060a" showDefaultLighting={false} showAtmosphere={true}>
+        {null}
+      </ThreeScene>
+
       <main>
         <section id="collection-section" className="active">
           <div className="collection-header">
@@ -110,6 +115,16 @@ export default function HallOfFameClient() {
           </div>
         </section>
       </main>
+
+      <style jsx>{`
+        .main-wrapper {
+          position: relative;
+          width: 100%;
+          min-height: 100vh;
+          overflow: hidden;
+          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
+        }
+      `}</style>
     </div>
   );
 }

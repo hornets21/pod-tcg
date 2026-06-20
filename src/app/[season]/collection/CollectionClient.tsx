@@ -6,6 +6,7 @@ import { Card } from "../../../components/Card";
 import { FullArtCard } from "../../../components/FullArtCard";
 import { useGacha } from "../../../hooks/useGacha";
 import { useModal } from "../../../components/ModalContext";
+import { ThreeScene } from "../../../components/three/ThreeScene";
 
 export default function CollectionClient() {
   const params = useParams();
@@ -13,6 +14,8 @@ export default function CollectionClient() {
 
   const { cards, isLoaded, ownedCount, isOwned } = useGacha(season);
   const { setSelectedDetailCard } = useModal();
+
+
 
   // Filter & Search states
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
@@ -101,6 +104,11 @@ export default function CollectionClient() {
 
   return (
     <div className="main-wrapper">
+
+      <ThreeScene cameraPosition={[0, 0, 7]} fogColor="#07060a" showDefaultLighting={false} showAtmosphere={true}>
+        {null}
+      </ThreeScene>
+
       <main>
         <section id="collection-section" className="active">
           <div className="collection-header-modern">
@@ -271,6 +279,14 @@ export default function CollectionClient() {
         @media (max-width: 768px) {
           .collection-title-row { flex-direction: column; align-items: stretch; }
           .filters-container { align-self: stretch; overflow-x: auto; border-radius: 15px; }
+        }
+
+        .main-wrapper {
+          position: relative;
+          width: 100%;
+          min-height: 100vh;
+          overflow: hidden;
+          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
         }
       `}</style>
     </div>

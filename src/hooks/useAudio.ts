@@ -5,7 +5,7 @@ import { useAudioContext } from "../components/AudioContext";
 
 export const AUDIO_URLS = {
   // BGM
-  BGM_GOD: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+  BGM_GOD: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", // Energetic Shonen Heavy Guitar Rock
   
   // SFX
   CARD_REVEAL_NORMAL: "https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3",
@@ -13,14 +13,17 @@ export const AUDIO_URLS = {
   TEAR_PACK: "https://img.lucky-pod.fun/tear.mp3",
   BOX_OPEN: "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
   
-  // NEW EXCITING SFX
-  HEAVENLY: "https://assets.mixkit.co/active_storage/sfx/1119/1119-preview.mp3",
-  IMPACT_HEAVY: "https://assets.mixkit.co/active_storage/sfx/2601/2601-preview.mp3",
+  // NEW EXCITING SFX (SHONEN ANIME STYLE)
+  HEAVENLY: "https://assets.mixkit.co/active_storage/sfx/2790/2790-preview.mp3", // Shonen aura flare / whoosh
+  IMPACT_HEAVY: "https://assets.mixkit.co/active_storage/sfx/2601/2601-preview.mp3", // Shonen explosive impact
+  SHONEN_SLASH: "https://assets.mixkit.co/active_storage/sfx/1476/1476-preview.mp3", // Sword slash / screen cut
 };
+
+// Global BGM instance to share background music state across components and prevent duplicate playbacks
+let globalBGM: HTMLAudioElement | null = null;
 
 export function useAudio() {
   const { isMuted } = useAudioContext();
-  const bgmRef = useRef<HTMLAudioElement | null>(null);
   const sfxRefs = useRef<Set<HTMLAudioElement>>(new Set());
   const isMounted = useRef(true);
 
@@ -76,21 +79,21 @@ export function useAudio() {
     if (typeof window === "undefined" || !url) return;
     if (isMuted) return;
 
-    if (bgmRef.current && bgmRef.current.src === url && !bgmRef.current.paused) {
-      bgmRef.current.volume = volume;
+    if (globalBGM && globalBGM.src === url && !globalBGM.paused) {
+      globalBGM.volume = volume;
       return;
     }
 
-    if (bgmRef.current) {
-      bgmRef.current.pause();
-      bgmRef.current.src = "";
+    if (globalBGM) {
+      globalBGM.pause();
+      globalBGM.src = "";
     }
     
     try {
       const audio = new Audio(url);
       audio.volume = volume;
       audio.loop = true;
-      bgmRef.current = audio;
+      globalBGM = audio;
       
       const playPromise = audio.play();
       if (playPromise !== undefined) {
@@ -104,22 +107,22 @@ export function useAudio() {
   }, [isMuted]);
 
   const stopBGM = useCallback(() => {
-    if (bgmRef.current) {
-      bgmRef.current.pause();
-      bgmRef.current.src = "";
-      bgmRef.current = null;
+    if (globalBGM) {
+      globalBGM.pause();
+      globalBGM.src = "";
+      globalBGM = null;
     }
   }, []);
 
   useEffect(() => {
     if (isMuted) {
       stopAllSFX();
-      if (bgmRef.current) {
-        bgmRef.current.pause();
+      if (globalBGM) {
+        globalBGM.pause();
       }
     } else {
-      if (bgmRef.current && bgmRef.current.src && bgmRef.current.paused) {
-        bgmRef.current.play().catch(() => {});
+      if (globalBGM && globalBGM.src && globalBGM.paused) {
+        globalBGM.play().catch(() => {});
       }
     }
   }, [isMuted, stopAllSFX]);
@@ -128,11 +131,6 @@ export function useAudio() {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
-      if (bgmRef.current) {
-        bgmRef.current.pause();
-        bgmRef.current.src = "";
-        bgmRef.current = null;
-      }
       stopAllSFX();
     };
   }, [stopAllSFX]);

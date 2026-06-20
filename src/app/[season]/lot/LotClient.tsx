@@ -7,6 +7,7 @@ import { CustomDialog, DialogButton } from "../../../components/Modals";
 import { useModal } from "../../../components/ModalContext";
 import { LotSeason1 } from "./components/LotSeason1";
 import { LotSeason2 } from "./components/LotSeason2";
+import { ThreeScene } from "../../../components/three/ThreeScene";
 
 export default function LotClient() {
   const params = useParams();
@@ -25,6 +26,8 @@ export default function LotClient() {
   } = useGacha(season);
 
   const { setSelectedDetailCard } = useModal();
+
+
 
   // Custom Confirmation Dialog states
   const [customDialog, setCustomDialog] = useState<{
@@ -118,6 +121,11 @@ export default function LotClient() {
 
   return (
     <div className="main-wrapper">
+
+      <ThreeScene cameraPosition={[0, 0, 7]} fogColor="#07060a" showDefaultLighting={false} showAtmosphere={true}>
+        {null}
+      </ThreeScene>
+
       <main>
         {season === "season2" ? (
           <LotSeason2 {...commonProps} />
@@ -134,6 +142,16 @@ export default function LotClient() {
           onClose={() => setCustomDialog((prev) => ({ ...prev, isOpen: false }))}
         />
       </main>
+
+      <style jsx>{`
+        .main-wrapper {
+          position: relative;
+          width: 100%;
+          min-height: 100vh;
+          overflow: hidden;
+          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
+        }
+      `}</style>
     </div>
   );
 }

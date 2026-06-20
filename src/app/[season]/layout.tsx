@@ -6,6 +6,7 @@ import { Header } from "../../components/Header";
 import { useAuth } from "../../hooks/useAuth";
 import { ModalProvider, useModal } from "../../components/ModalContext";
 import { AudioProvider } from "../../components/AudioContext";
+import NotFound from "../not-found";
 import {
   LogoutDialog,
   PolicyDialog,
@@ -14,6 +15,7 @@ import {
 
 const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const params = useParams();
+  const seasonParam = params?.season;
   const pathname = usePathname();
   const season = params.season === "season2" ? "season2" : "season1";
   
@@ -36,6 +38,10 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (seasonParam && seasonParam !== "season1" && seasonParam !== "season2") {
+    return <NotFound />;
+  }
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });

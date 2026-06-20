@@ -29,8 +29,8 @@ function generateDustData(count: number) {
     arr[i * 3 + 1] = ((i * 0.271) % 1 - 0.5) * 12;
     arr[i * 3 + 2] = ((i * 0.382) % 1 - 0.5) * 10;
     speeds.push({
-      dx: ((i % 11) * 0.00018) - 0.001,
-      dy: ((i % 7) * 0.00043) + 0.001,
+      dx: (((i % 11) * 0.00018) - 0.001) * 0.5,
+      dy: (((i % 7) * 0.00043) + 0.001) * 0.5,
       phase: (i * 0.523) % (Math.PI * 2),
     });
   }
@@ -39,9 +39,10 @@ function generateDustData(count: number) {
 
 interface StarfieldProps {
   count?: number;
+  color?: string;
 }
 
-export function Starfield({ count = 300 }: StarfieldProps) {
+export function Starfield({ count = 300, color = "#c5a880" }: StarfieldProps) {
   const meshRef = useRef<THREE.Points>(null!);
   const data = useMemo(() => generateStarData(count), [count]);
 
@@ -60,9 +61,9 @@ export function Starfield({ count = 300 }: StarfieldProps) {
       </bufferGeometry>
       <pointsMaterial
         size={0.15}
-        color="#aabbff"
+        color={color}
         transparent
-        opacity={0.7}
+        opacity={0.3}
         sizeAttenuation
         depthWrite={false}
       />
@@ -70,7 +71,7 @@ export function Starfield({ count = 300 }: StarfieldProps) {
   );
 }
 
-export function FloatingDust({ count = 60 }: { count?: number }) {
+export function FloatingDust({ count = 60, color = "#c5a880" }: { count?: number; color?: string }) {
   const meshRef = useRef<THREE.Points>(null!);
   const { arr: initialPositions, speeds } = useMemo(() => generateDustData(count), [count]);
   const currentPositions = useMemo(() => new Float32Array(initialPositions), [initialPositions]);
@@ -96,9 +97,9 @@ export function FloatingDust({ count = 60 }: { count?: number }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.05}
-        color="#88aaff"
+        color={color}
         transparent
-        opacity={0.4}
+        opacity={0.2}
         sizeAttenuation
         depthWrite={false}
       />

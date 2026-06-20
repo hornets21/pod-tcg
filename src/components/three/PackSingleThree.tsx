@@ -35,18 +35,15 @@ export function PackSingleThree({
     isS2 ? "/pack_tcg_op_2.png" : "/pack_tcg_op_1.png",
   );
 
-  const { scl, rotY } = useSpring({
-    scl: isClicked ? 0.3 : 1.0,
-    rotY: isClicked ? Math.PI * 2 : 0,
-    config: { tension: 200, friction: 18 },
+  // Match Cut: ซองพุ่งไปข้างหน้าเล็กน้อยก่อนตัดไปหน้าฉีก
+  // ThreeScene camera: z=6.7, fov=45
+  // ที่ z=0.7 (distance=6.0) → ซอง ~65.1% ของจอ → พอดีมองเห็นและไม่ล้นจอ
+  const { posZ } = useSpring({
+    posZ: isClicked ? 0.7 : 0,
+    config: { tension: 150, friction: 14 },
   });
 
-  const { opac } = useSpring({
-    opac: isClicked ? 0 : 1,
-    config: { tension: 80, friction: 15, delay: isClicked ? 300 : 0 },
-  });
-
-  // Idle animation
+  // Idle animation — หยุดเมื่อกดแล้ว
   useFrame((state) => {
     if (!groupRef.current || isClicked) return;
     const t = state.clock.elapsedTime;
@@ -58,17 +55,15 @@ export function PackSingleThree({
   return (
     <animated.group
       ref={groupRef}
-      scale={scl.to((s) => [s, s, s])}
-      rotation-y={rotY}
+      position-z={posZ}
       onClick={isClicked ? undefined : onClick}
     >
       {/* Front face */}
-      <mesh position={[0, 0, thickness / 2 + 0.01]}>
+      <mesh position={[0, 0, thickness / 2]} castShadow>
         <planeGeometry args={[packW, packH]} />
         <AnimatedBasicMaterial
           map={frontTexture}
           transparent
-          opacity={opac}
           side={THREE.FrontSide}
           toneMapped={false}
         />
@@ -80,57 +75,13 @@ export function PackSingleThree({
         <AnimatedMaterial
           color="#d2d2d7"
           transparent
-          opacity={opac.to((o) => o * 0.6)}
+          opacity={0.6}
           roughness={0.15}
           metalness={0.85}
         />
       </mesh>
 
-      {/* Thickness */}
-      {/* Left edge */}
-      <mesh position={[-packW / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <planeGeometry args={[thickness, packH]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
-      {/* Right edge */}
-      <mesh position={[packW / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[thickness, packH]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
-      {/* Top edge */}
-      <mesh position={[0, packH / 2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[packW, thickness]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
-      {/* Bottom edge */}
-      <mesh position={[0, -packH / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[packW, thickness]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
+
     </animated.group>
   );
 }

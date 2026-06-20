@@ -2,6 +2,7 @@ import OpeningClient from "./OpeningClient";
 
 export function generateStaticParams() {
   return [
+    { season: "season1" },
     { season: "season2" },
   ];
 }

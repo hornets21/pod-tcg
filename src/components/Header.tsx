@@ -32,6 +32,16 @@ export const Header: React.FC<HeaderProps> = ({
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (currentSection === "opening" || currentSection === "unboxing") {
+      return;
+    }
+
+    // กำหนดสถานะเริ่มต้นสำหรับหน้าที่สามารถเลื่อนได้ (Scrollable pages) แบบ asynchronous เพื่อหลีกเลี่ยง react-hooks/set-state-in-effect
+    const initialCollapsed = window.scrollY > 60;
+    const t = setTimeout(() => {
+      setIsCollapsed(initialCollapsed);
+    }, 0);
+
     const handleScroll = () => {
       const currentScroll = window.scrollY;
       const collapseThreshold = 60;
@@ -45,8 +55,11 @@ export const Header: React.FC<HeaderProps> = ({
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [currentSection]);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -84,9 +97,11 @@ export const Header: React.FC<HeaderProps> = ({
     { href: "/hall-of-fame", label: "🏆 Hall of Fame", section: "hall-of-fame" },
   ];
 
+  const finalIsCollapsed = (currentSection === "opening" || currentSection === "unboxing") ? true : isCollapsed;
+
   return (
     <>
-      <header id="main-header" className={isCollapsed ? "collapsed" : ""}>
+      <header id="main-header" className={finalIsCollapsed ? "collapsed" : ""}>
         <div className="header-inner">
           <div className="nav-group-container">
             <Link href={`/${playableSeason}`} className="logo-group">
@@ -129,12 +144,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="auth-group-container desktop-only">
-            <div className="season-dropdown-wrapper">
-              <Link href={`/${playableSeason}`} className="season-dropdown-trigger">
-                <span>✨ OP-2</span>
-              </Link>
-            </div>
-
             <div className="auth-section">
               {user ? (
                 <div

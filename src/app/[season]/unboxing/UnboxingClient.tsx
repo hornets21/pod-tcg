@@ -16,7 +16,7 @@ export default function UnboxingClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { playSFX, stopAllSFX } = useAudio();
+  const { playSFX, stopAllSFX, startBGM } = useAudio();
 
   // --- Persistent States ---
   const [isBoxOpen, setIsBoxOpen, isBoxOpenLoaded] = useLocalStorage<boolean>(
@@ -40,12 +40,14 @@ export default function UnboxingClient() {
 
   // --- UI States ---
   const [selectedPackIndex, setSelectedPackIndex] = useState<number | null>(null);
+  const [tempSelectedPackIndex, setTempSelectedPackIndex] = useState<number | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [packsReady, setPacksReady] = useState(false);
 
   const timersRef = useRef<NodeJS.Timeout[]>([]);
+
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
@@ -84,17 +86,25 @@ export default function UnboxingClient() {
 
   const handlePackClick = useCallback(
     (index: number) => {
-      if (openedPacks.has(index)) return;
+      if (openedPacks.has(index) || tempSelectedPackIndex !== null || selectedPackIndex !== null) return;
+      
+      setTempSelectedPackIndex(index);
+      playSFX(AUDIO_URLS.TEAR_PACK, 0.2);
+      startBGM(AUDIO_URLS.BGM_GOD, 0.02);
+
       const { pack, isGod } = openPack();
       setPackContents((prev) => ({ ...prev, [index]: pack }));
-      setSelectedPackIndex(index);
       if (isGod) {
         setGodPackIndices((prev) => (prev.includes(index) ? prev : [...prev, index]));
         setIsGodPackEffectActive(true);
       }
-      playSFX(AUDIO_URLS.TEAR_PACK, 0.2);
+
+      const timer = setTimeout(() => {
+        setSelectedPackIndex(index);
+      }, 350);
+      timersRef.current.push(timer);
     },
-    [openedPacks, openPack, setGodPackIndices, setIsGodPackEffectActive, playSFX, setPackContents],
+    [openedPacks, openPack, setGodPackIndices, setIsGodPackEffectActive, playSFX, setPackContents, startBGM, tempSelectedPackIndex, selectedPackIndex],
   );
 
   const handleOpenAll = useCallback(() => {
@@ -150,7 +160,10 @@ export default function UnboxingClient() {
     }
   }, [selectedPackIndex, packContents, addToCollection, setOpenedPacksArr, setOpenedPackOrder]);
 
-  const closeRipOverlay = useCallback(() => setSelectedPackIndex(null), []);
+  const closeRipOverlay = useCallback(() => {
+    setSelectedPackIndex(null);
+    setTempSelectedPackIndex(null);
+  }, []);
 
   const handleReset = useCallback(() => {
     setIsFadingOut(true);
@@ -159,6 +172,7 @@ export default function UnboxingClient() {
       setIsBoxOpen(false);
       setOpenedPacksArr([]);
       setSelectedPackIndex(null);
+      setTempSelectedPackIndex(null);
       setPackContents({});
       setOpenedPackOrder([]);
       setGodPackIndices([]);
@@ -187,8 +201,9 @@ export default function UnboxingClient() {
   return (
     <div className={`unboxing-3d-page ${isGodPackEffectActive ? "god-pack-effect" : ""}`}>
 
+
       {/* ─── THREE.JS SCENE ─── */}
-      <ThreeScene cameraPosition={[0, 0.5, 7.5]}>
+      <ThreeScene cameraPosition={[0, 0.5, 7.5]} fogColor="#07060a">
         {/* Box — visible when not yet open */}
         {!isBoxOpen && (
           <Suspense fallback={null}>
@@ -212,6 +227,7 @@ export default function UnboxingClient() {
                 isEjected={packsReady}
                 isOpened={openedPacks.has(i)}
                 isFadingOut={isFadingOut}
+                isZooming={tempSelectedPackIndex === i}
                 onClick={() => handlePackClick(i)}
                 shouldAnimate={mounted}
               />
@@ -258,6 +274,7 @@ export default function UnboxingClient() {
         cards={selectedPackIndex !== null ? (packContents[selectedPackIndex] || []) : []}
         onClose={closeRipOverlay}
         onRipComplete={handleRipComplete}
+        mode="box"
       />
 
       {/* ─── SUMMARY MODAL ─── */}
@@ -292,7 +309,7 @@ export default function UnboxingClient() {
           width: 100%;
           min-height: 100vh;
           overflow: hidden;
-          background: linear-gradient(135deg, #06060f 0%, #0d0d2e 50%, #08080f 100%);
+          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
         }
 
         .loading-container-3d {
@@ -323,7 +340,7 @@ export default function UnboxingClient() {
 
         .unboxing-hud {
           position: absolute;
-          bottom: 6%;
+          bottom: 14%;
           left: 50%;
           transform: translateX(-50%);
           z-index: 10;

@@ -1,25 +1,25 @@
 "use client";
 
-import React, {
-  useState,
-  useRef,
+import {
+  Suspense,
   useCallback,
   useEffect,
-  Suspense,
+  useRef,
+  useState,
 } from "react";
 import { useParams } from "next/navigation";
-import { useGacha } from "../../hooks/useGacha";
 import { Card as CardType } from "../../data/types";
-import { PackRipOverlay3D } from "../../components/unboxing/PackRipOverlay3D";
-import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
-import { ThreeScene } from "../../components/three/ThreeScene";
+import { useGacha } from "../../hooks/useGacha";
+import { AUDIO_URLS, useAudio } from "../../hooks/useAudio";
 import { PackSingleThree } from "../../components/three/PackSingleThree";
+import { ThreeScene } from "../../components/three/ThreeScene";
+import { PackRipOverlay3D } from "../../components/unboxing/PackRipOverlay3D";
 
 export default function OpeningClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { playSFX, stopBGM } = useAudio();
+  const { playSFX, startBGM, stopBGM } = useAudio();
 
   const [isOpening, setIsOpening] = useState(false);
   const [packCards, setPackCards] = useState<CardType[]>([]);
@@ -27,6 +27,7 @@ export default function OpeningClient() {
   const [packClicked, setPackClicked] = useState(false);
 
   const timersRef = useRef<NodeJS.Timeout[]>([]);
+
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
@@ -44,52 +45,48 @@ export default function OpeningClient() {
   }, [clearAllTimers, stopBGM]);
 
   useEffect(() => {
-    const t = setTimeout(() => resetToIdle(), 0);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => resetToIdle(), 0);
+    return () => clearTimeout(timer);
   }, [season, resetToIdle]);
 
   const startOpening = useCallback(() => {
     if (packClicked || isOpening) return;
     setPackClicked(true);
     playSFX(AUDIO_URLS.TEAR_PACK, 0.2);
+    startBGM(AUDIO_URLS.BGM_GOD, 0.02);
 
-    const t = setTimeout(() => {
-      const { pack, isGod } = openPack();
-      setPackCards(pack);
-      if (isGod) setIsGodPackEffectActive(true);
+    const { pack, isGod } = openPack();
+    setPackCards(pack);
+    if (isGod) setIsGodPackEffectActive(true);
+
+    // Match Cut: รอให้ซอง zoom เข้ามาก่อน (~350ms เหมือน unboxing) แล้วค่อยตัดไปหน้าฉีก
+    const timer = setTimeout(() => {
       setIsOpening(true);
-    }, 700);
-    timersRef.current.push(t);
-  }, [packClicked, isOpening, playSFX, openPack]);
+    }, 350);
+    timersRef.current.push(timer);
+  }, [packClicked, isOpening, playSFX, openPack, startBGM]);
 
   const handleRipComplete = useCallback(() => {
     packCards.forEach((card) => addToCollection(card));
   }, [packCards, addToCollection]);
 
   if (!isLoaded) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          color: "white",
-          fontFamily: "var(--font-kanit)",
-          fontSize: "1.2rem",
-        }}
-      >
-        กำลังโหลดข้อมูลระบบสุ่ม...
-      </div>
-    );
+    return <div className="opening-loader">กำลังโหลด...</div>;
   }
 
   return (
     <div
-      className={`opening-3d-page ${isGodPackEffectActive ? "god-pack-effect" : ""}`}
+      className={`opening-page ${isGodPackEffectActive ? "god-pack-effect" : ""}`}
     >
-      {/* 3D Scene with single pack */}
-      <ThreeScene cameraPosition={[0, 0, 6]}>
+
+
+      <ThreeScene
+        className="pack-scene"
+        cameraPosition={[0, 0.08, 6.7]}
+        fogColor="#07060a"
+        showAtmosphere={true}
+        showDefaultLighting={false}
+      >
         {!isOpening && (
           <Suspense fallback={null}>
             <PackSingleThree
@@ -101,28 +98,37 @@ export default function OpeningClient() {
         )}
       </ThreeScene>
 
-      {/* 3D Pack Rip Overlay */}
+
+
       <PackRipOverlay3D
-        key={packCards.map((c) => c.role_id).join("-") || "closed"}
+        key={isOpening ? (packCards.map((card) => card.role_id).join("-") || "open") : "closed"}
         isOpen={isOpening}
         season={season}
         cards={packCards}
         onClose={resetToIdle}
         onRipComplete={handleRipComplete}
+        mode="single"
       />
 
       <style jsx>{`
-        .opening-3d-page {
-          position: relative;
+        .opening-loader,
+        .opening-page {
           width: 100%;
           min-height: 100vh;
+          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
+        }
+
+        .opening-loader {
+          display: grid;
+          place-items: center;
+          color: rgba(255, 255, 255, 0.72);
+          font: 400 1rem var(--font-kanit), sans-serif;
+        }
+
+        .opening-page {
+          position: relative;
           overflow: hidden;
-          background: linear-gradient(
-            135deg,
-            #06060f 0%,
-            #0d0d2e 50%,
-            #08080f 100%
-          );
+          isolation: isolate;
         }
       `}</style>
     </div>

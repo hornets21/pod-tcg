@@ -10,6 +10,8 @@ interface ThreeSceneProps {
   className?: string;
   cameraPosition?: [number, number, number];
   fogColor?: string;
+  showAtmosphere?: boolean;
+  showDefaultLighting?: boolean;
 }
 
 export function ThreeScene({
@@ -17,6 +19,8 @@ export function ThreeScene({
   className = "",
   cameraPosition = [0, 0, 7],
   fogColor = "#06060f",
+  showAtmosphere = true,
+  showDefaultLighting = true,
 }: ThreeSceneProps) {
   return (
     <div
@@ -51,11 +55,11 @@ export function ThreeScene({
         <fog attach="fog" args={[fogColor, 15, 50]} />
 
         {/* Lighting */}
-        <SceneLighting />
+        {showDefaultLighting && <SceneLighting />}
 
         {/* Background stars */}
-        <Starfield count={250} />
-        <FloatingDust count={50} />
+        {showAtmosphere && <Starfield count={250} />}
+        {showAtmosphere && <FloatingDust count={50} />}
 
         {/* Scene content */}
         <Suspense fallback={null}>{children}</Suspense>

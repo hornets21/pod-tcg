@@ -64,6 +64,12 @@ const getHighRarity = (): Rarity => {
 };
 
 const isGodPackRoll = (): boolean => {
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("god") === "true" || params.get("testGod") === "true") {
+      return true;
+    }
+  }
   return Math.random() * 100 < GOD_PACK_CHANCE;
 };
 

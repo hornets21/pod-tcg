@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useSpring, animated } from "@react-spring/three";
 import { animated as webAnimated, to } from "@react-spring/web";
 import { Html } from "@react-three/drei";
@@ -14,18 +14,21 @@ interface CardMeshProps {
   card: CardType;
   index: number;
   total: number;
+  isEntered: boolean;
+  isCarouselLayout: boolean;
   isRevealed: boolean;
   isSpecial: boolean;
   season?: string;
 }
 
-function getFanPosition(index: number, total: number): [number, number, number, number] {
-  // Returns [x, y, z, rotZ]
-  const spread = Math.min(total * 0.55, 3.5);
-  const x = (index / (total - 1) - 0.5) * spread * 2;
-  const arc = -Math.abs(x / spread) * 0.3;
-  const rotZ = (index / (total - 1) - 0.5) * -0.4;
-  return [x, arc, 0.05 * index, rotZ];
+function getRowPosition(
+  index: number,
+  total: number,
+  spacing: number,
+): [number, number, number, number] {
+  // Returns [x, y, z, rotZ] for a clean horizontal row.
+  const x = (index - (total - 1) / 2) * spacing;
+  return [x, 0, index * 0.012, 0];
 }
 
 const SPARKLE_PROPS = [
@@ -47,26 +50,45 @@ export function CardMesh({
   card,
   index,
   total,
+  isEntered,
+  isCarouselLayout,
   isRevealed,
   isSpecial,
   season = "season1",
 }: CardMeshProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const [hovered, setHovered] = useState(false);
+  const { size, viewport } = useThree();
 
-  const [fx, fy, fz, fRotZ] = getFanPosition(index, total);
+  const cardPixelWidth =
+    size.width <= 480 ? 145 : size.width <= 768 ? 160 : size.width <= 992 ? 200 : 230;
+  const gapPixels = size.width <= 768 ? 10 : 18;
+  const availableWidth = size.width * 0.9;
+  const naturalRowWidth = total * cardPixelWidth + (total - 1) * gapPixels;
+  const rowScale = Math.min(1, availableWidth / naturalRowWidth);
+  const spacing =
+    (cardPixelWidth * rowScale + gapPixels) * (viewport.width / size.width);
 
-  // Entry animation (positions card and handles hover scale/lift)
-  const { posX, posY, posZ, rotZ, scl } = useSpring({
-    posX: fx,
-    posY: isRevealed ? fy : fy - 5,
-    posZ: isRevealed ? fz + (hovered ? 0.35 : 0) : fz - 2,
-    rotZ: fRotZ,
-    scl: isRevealed ? (hovered ? 1.08 : 1.0) : 0.5,
+  const [fx, fy, fz, fRotZ] = getRowPosition(index, total, spacing);
+  // Place the first card at the far-right edge so it visibly leads the loop.
+  const carouselAngle = (index / total) * Math.PI * 2 + Math.PI / 2;
+  const targetX = isCarouselLayout ? Math.sin(carouselAngle) * 2.85 : fx;
+  const targetY = isCarouselLayout ? 0 : fy;
+  const targetZ = isCarouselLayout ? Math.cos(carouselAngle) * 2.15 : fz;
+  const targetRotZ = isCarouselLayout ? 0 : fRotZ;
+
+  // Settle directly into the reveal row with a short upward entrance.
+  const { entry, layoutX, layoutY, layoutZ, layoutRotZ, scl } = useSpring({
+    entry: isEntered ? 1 : 0,
+    layoutX: targetX,
+    layoutY: targetY,
+    layoutZ: targetZ,
+    layoutRotZ: targetRotZ,
+    scl: isEntered ? rowScale : rowScale * 0.72,
     config: {
-      tension: 180,
-      friction: 22,
-      delay: isRevealed ? 0 : index * 200 + 300,
+      tension: 190,
+      friction: 21,
+      mass: 0.75,
     },
   });
 
@@ -88,9 +110,22 @@ export function CardMesh({
   return (
     <animated.group
       ref={groupRef}
-      position-x={posX}
-      position-y={posY}
-      position-z={posZ}
+      position-x={to(
+        [entry, layoutX],
+        (progress, x) => x * progress,
+      )}
+      position-y={to(
+        [entry, layoutY],
+        (progress, y) =>
+          y * progress - (1 - progress) * 3.2 +
+          Math.sin(progress * Math.PI) * 0.35,
+      )}
+      position-z={to(
+        [entry, layoutZ],
+        (progress, z) =>
+          z * progress - (1 - progress) * 1.2 +
+          Math.sin(progress * Math.PI) * 0.24,
+      )}
     >
       <Html
         center
@@ -116,7 +151,13 @@ export function CardMesh({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transform: to([rotZ, scl], (r, s) => `rotate(${r}rad) scale(${s})`),
+            transformStyle: "preserve-3d",
+            backfaceVisibility: "hidden",
+            transform: to(
+              [entry, layoutRotZ, scl],
+              (progress, rotation, scale) =>
+                `perspective(900px) rotateY(${(1 - progress) * -18}deg) rotateZ(${rotation * progress}rad) scale(${scale})`,
+            ),
           }}
           className={isSpecial && isRevealed ? "magnificent-wrapper" : ""}
         >

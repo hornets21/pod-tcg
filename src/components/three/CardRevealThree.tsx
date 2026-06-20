@@ -8,13 +8,19 @@ import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
 interface CardRevealThreeProps {
   cards: CardType[];
   season: string;
+  onHighRarityImpact?: () => void;
 }
 
 const SPECIAL_ROLE_ID = "1356458345812459611";
 const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
-const CARD_DELAYS = [300, 800, 1400, 2100, 2900];
+const FIRST_REVEAL_TIME = 900;
+const CARD_REVEAL_INTERVAL = 850;
 
-export function CardRevealThree({ cards, season }: CardRevealThreeProps) {
+export function CardRevealThree({
+  cards,
+  season,
+  onHighRarityImpact,
+}: CardRevealThreeProps) {
   const [revealedStates, setRevealedStates] = useState<boolean[]>(() =>
     new Array(cards.length).fill(false)
   );
@@ -35,7 +41,7 @@ export function CardRevealThree({ cards, season }: CardRevealThreeProps) {
     const timers: NodeJS.Timeout[] = [];
 
     cards.forEach((card, index) => {
-      const delay = CARD_DELAYS[index % CARD_DELAYS.length];
+      const delay = FIRST_REVEAL_TIME + index * CARD_REVEAL_INTERVAL;
       const timer = setTimeout(() => {
         setRevealedStates((prev) => {
           const next = [...prev];
@@ -53,13 +59,15 @@ export function CardRevealThree({ cards, season }: CardRevealThreeProps) {
         } else {
           playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.1);
         }
+
+        if (isHighRarity) onHighRarityImpact?.();
       }, delay);
 
       timers.push(timer);
     });
 
     return () => timers.forEach(clearTimeout);
-  }, [cards, playSFX]);
+  }, [cards, onHighRarityImpact, playSFX]);
 
   return (
     <group>
@@ -74,6 +82,8 @@ export function CardRevealThree({ cards, season }: CardRevealThreeProps) {
             card={displayCard}
             index={index}
             total={cards.length}
+            isEntered={true}
+            isCarouselLayout={false}
             isRevealed={revealedStates[index]}
             isSpecial={isSpecial}
             season={season}

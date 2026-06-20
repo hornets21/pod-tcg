@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-    --bg-dark: #0f0c29;
-    --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    --bg-dark: #07060a;
+    --bg-gradient: linear-gradient(135deg, #07060a 0%, #0e0c16 50%, #040306 100%);
     --accent: #00d2ff;
     --accent-glow: rgba(0, 210, 255, 0.5);
-    --glass: rgba(255, 255, 255, 0.1);
+    --glass: rgba(255, 255, 255, 0.05);
 
     /* New Rarity Colors */
     --ssssr-color: linear-gradient(135deg, #ff0000, #ff00cc, #3333ff, #00ffcc, #ffcc00, #ff0000);
@@ -23,6 +23,20 @@
     padding: 0;
 }
 
+canvas,
+canvas:focus,
+canvas:active,
+canvas:focus-visible,
+.three-scene-container,
+.three-scene-container *,
+.pack-scene,
+.pack-scene * {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
 body {
     background: var(--bg-gradient);
     color: #fff;
@@ -30,6 +44,34 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     scrollbar-gutter: stable;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: 
+        radial-gradient(circle at 85% 15%, rgba(255, 60, 0, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 15% 85%, rgba(0, 210, 255, 0.08) 0%, transparent 40%);
+    pointer-events: none;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    /* Stylized modern manga halftone dots and ink grain */
+    background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.016) 1.2px, transparent 0),
+        radial-gradient(rgba(255, 255, 255, 0.008) 1.8px, transparent 0);
+    background-size: 28px 28px, 56px 56px;
+    background-position: 0 0, 14px 14px;
+    opacity: 0.9;
+    pointer-events: none;
+    mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 @media (max-width: 768px) {
@@ -95,7 +137,7 @@ body {
     position: fixed;
     inset: 0;
     z-index: 999;
-    background: rgba(15, 12, 41, 0.97);
+    background: rgba(6, 5, 8, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     opacity: 0;
@@ -286,14 +328,20 @@ body {
 
 /* --- Modern Top Navigation Bar --- */
 #main-header {
-    background: rgba(15, 12, 41, 0.8);
+    background: rgba(8, 7, 11, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
     top: 0;
     z-index: 1000;
-    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease, height 0.4s ease;
+    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease, height 0.4s ease, opacity 0.3s ease, visibility 0.3s ease;
+}
+
+body.pack-rip-overlay-active #main-header {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 .header-inner {
@@ -367,8 +415,8 @@ body {
 
 /* Collapsed (Scrolled) State */
 #main-header.collapsed {
-    background: rgba(10, 8, 30, 0.95);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    background: rgba(4, 3, 5, 0.96);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     border-bottom-color: rgba(0, 210, 255, 0.15);
 }
 

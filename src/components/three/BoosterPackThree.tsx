@@ -12,6 +12,7 @@ interface BoosterPackThreeProps {
   isEjected: boolean;
   isOpened: boolean;
   isFadingOut?: boolean;
+  isZooming?: boolean;
   onClick: () => void;
   shouldAnimate?: boolean;
 }
@@ -23,7 +24,7 @@ function getPackPosition(index: number, total: number): [number, number, number]
   // Slight arc: center packs slightly forward
   const arc = Math.cos(((index - (total - 1) / 2) / (total / 2)) * (Math.PI / 3));
   const z = arc * 0.5 - 0.5;
-  return [x, 0, z];
+  return [x, 0.45, z];
 }
 
 const AnimatedMaterial = animated.meshStandardMaterial as ComponentType<{ [key: string]: unknown }>;
@@ -35,15 +36,15 @@ export function BoosterPackThree({
   isEjected,
   isOpened,
   isFadingOut = false,
+  isZooming = false,
   onClick,
   shouldAnimate = true,
 }: BoosterPackThreeProps) {
   const meshRef = useRef<THREE.Group>(null!);
-  const [hovered, setHovered] = useState(false);
   const [mounted, setMounted] = useState(!shouldAnimate);
 
   const isS2 = season === "season2";
-  const multiPackScale = 0.72;
+  const multiPackScale = 0.85;
   const packW = (isS2 ? 2.0 : 1.6) * multiPackScale;
   const packH = (isS2 ? 2.0 : 2.4) * multiPackScale;
   const thickness = 0.03;
@@ -60,22 +61,25 @@ export function BoosterPackThree({
 
   const targetPos = getPackPosition(index, 6);
 
+  // Match Cut (การซูมเชื่อมซีน): ซองพุ่งเข้ามาตรงกลางก่อนตัดไปหน้าฉีก
+  // UnboxingClient camera: z=7.5, fov=45
+  // ที่ z=3.5 (distance=4.0), scale=1.2 → ซอง ~73.8% ของจอ → พอดีมองเห็นและเด่นชัดขึ้น
   const { posX, posY, posZ, scl, opac } = useSpring({
-    posX: mounted && isEjected ? targetPos[0] : targetPos[0],
-    posY: mounted && isEjected ? targetPos[1] : targetPos[1] - 6,
-    posZ: mounted && isEjected ? targetPos[2] : targetPos[2],
-    scl: isFadingOut ? 0.3 : isOpened ? 0.85 : hovered && !isOpened ? 1.08 : 1,
-    opac: isFadingOut ? 0 : isOpened ? 0.3 : 1,
+    posX: isZooming ? 0 : mounted && isEjected ? targetPos[0] : targetPos[0],
+    posY: isZooming ? 0.2 : mounted && isEjected ? targetPos[1] : targetPos[1] - 6,
+    posZ: isZooming ? 3.5 : mounted && isEjected ? targetPos[2] : targetPos[2],
+    scl: isZooming ? 1.2 : isFadingOut ? 0.3 : isOpened ? 0.85 : 1,
+    opac: isFadingOut ? 0 : 1,
     config: {
-      tension: 200,
-      friction: 18,
-      delay: mounted ? 0 : index * 120,
+      tension: isZooming ? 150 : 200,
+      friction: isZooming ? 14 : 18,
+      delay: isZooming ? 0 : mounted ? 0 : index * 120,
     },
   });
 
   // Idle float
   useFrame((state) => {
-    if (!meshRef.current || isOpened || isFadingOut) return;
+    if (!meshRef.current || isOpened || isFadingOut || isZooming) return;
     const t = state.clock.elapsedTime;
     const phase = index * 0.8;
     meshRef.current.position.y = targetPos[1] + Math.sin(t * 0.9 + phase) * 0.07;
@@ -84,18 +88,16 @@ export function BoosterPackThree({
   });
 
   const handleClick = () => {
-    if (isEjected && !isOpened && !isFadingOut) onClick();
+    if (isEjected && !isOpened && !isFadingOut && !isZooming) onClick();
   };
 
   const handlePointerOver = () => {
-    if (!isOpened && !isFadingOut) {
-      setHovered(true);
+    if (!isOpened && !isFadingOut && !isZooming) {
       document.body.style.cursor = "pointer";
     }
   };
 
   const handlePointerOut = () => {
-    setHovered(false);
     document.body.style.cursor = "default";
   };
 
@@ -111,7 +113,7 @@ export function BoosterPackThree({
       onPointerOut={handlePointerOut}
     >
       {/* Pack front */}
-      <mesh position={[0, 0, thickness / 2 + 0.01]}>
+      <mesh position={[0, 0, thickness / 2]}>
         <planeGeometry args={[packW, packH]} />
         <AnimatedBasicMaterial
           map={frontTexture}
@@ -134,73 +136,20 @@ export function BoosterPackThree({
         />
       </mesh>
 
-      {/* Pack edge thickness (4 side planes) */}
-      {/* Left side */}
-      <mesh position={[-packW / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <planeGeometry args={[thickness, packH]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
-      {/* Right side */}
-      <mesh position={[packW / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[thickness, packH]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
-      {/* Top side */}
-      <mesh position={[0, packH / 2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[packW, thickness]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
-      {/* Bottom side */}
-      <mesh position={[0, -packH / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[packW, thickness]} />
-        <AnimatedMaterial
-          color="#d2d2d7"
-          roughness={0.3}
-          metalness={0.8}
-          transparent
-          opacity={opac}
-        />
-      </mesh>
 
-      {/* Hover glow */}
-      {hovered && !isOpened && (
-        <mesh>
-          <planeGeometry args={[packW + 0.1, packH + 0.1]} />
-          <meshBasicMaterial
-            color="#88ccff"
-            transparent
-            opacity={0.15}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      )}
+
+
+
 
       {/* Opened grayscale overlay */}
       {isOpened && (
-        <mesh position={[0, 0, thickness / 2 + 0.01]}>
+        <mesh position={[0, 0, thickness / 2 + 0.002]}>
           <planeGeometry args={[packW, packH]} />
           <meshBasicMaterial
-            color="#333344"
+            map={frontTexture}
+            color="#1a1824"
             transparent
-            opacity={0.5}
+            opacity={0.65}
             side={THREE.FrontSide}
             depthWrite={false}
           />
