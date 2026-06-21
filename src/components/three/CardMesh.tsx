@@ -78,13 +78,23 @@ export function CardMesh({
   const targetRotZ = isCarouselLayout ? 0 : fRotZ;
 
   // Settle directly into the reveal row with a short upward entrance.
+  // `from` is required so react-spring animates from 0 → 1 on mount instead
+  // of jumping straight to the target.
   const { entry, layoutX, layoutY, layoutZ, layoutRotZ, scl } = useSpring({
     entry: isEntered ? 1 : 0,
     layoutX: targetX,
     layoutY: targetY,
     layoutZ: targetZ,
     layoutRotZ: targetRotZ,
-    scl: isEntered ? rowScale : rowScale * 0.72,
+    scl: rowScale,
+    from: {
+      entry: 0,
+      layoutX: targetX,
+      layoutY: targetY,
+      layoutZ: targetZ,
+      layoutRotZ: targetRotZ,
+      scl: rowScale,
+    },
     config: {
       tension: 190,
       friction: 21,
@@ -110,22 +120,9 @@ export function CardMesh({
   return (
     <animated.group
       ref={groupRef}
-      position-x={to(
-        [entry, layoutX],
-        (progress, x) => x * progress,
-      )}
-      position-y={to(
-        [entry, layoutY],
-        (progress, y) =>
-          y * progress - (1 - progress) * 3.2 +
-          Math.sin(progress * Math.PI) * 0.35,
-      )}
-      position-z={to(
-        [entry, layoutZ],
-        (progress, z) =>
-          z * progress - (1 - progress) * 1.2 +
-          Math.sin(progress * Math.PI) * 0.24,
-      )}
+      position-x={layoutX}
+      position-y={layoutY}
+      position-z={layoutZ}
     >
       <Html
         center
@@ -153,10 +150,11 @@ export function CardMesh({
             justifyContent: "center",
             transformStyle: "preserve-3d",
             backfaceVisibility: "hidden",
+            opacity: entry,
             transform: to(
               [entry, layoutRotZ, scl],
               (progress, rotation, scale) =>
-                `perspective(900px) rotateY(${(1 - progress) * -18}deg) rotateZ(${rotation * progress}rad) scale(${scale})`,
+                `perspective(900px) rotateY(0deg) rotateZ(${rotation * progress}rad) scale(${scale})`,
             ),
           }}
           className={isSpecial && isRevealed ? "magnificent-wrapper" : ""}

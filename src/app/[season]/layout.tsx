@@ -67,7 +67,9 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
         onLogoutClick={() => setShowLogout(true)}
       />
 
-      {children}
+      <div className="route-content" key={pathname}>
+        {children}
+      </div>
 
       {/* --- SHARED MODALS --- */}
       <LogoutDialog

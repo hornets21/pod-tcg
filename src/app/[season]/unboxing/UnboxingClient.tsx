@@ -89,7 +89,7 @@ export default function UnboxingClient() {
       if (openedPacks.has(index) || tempSelectedPackIndex !== null || selectedPackIndex !== null) return;
       
       setTempSelectedPackIndex(index);
-      playSFX(AUDIO_URLS.TEAR_PACK, 0.2);
+      playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.15);
       startBGM(AUDIO_URLS.BGM_GOD, 0.02);
 
       const { pack, isGod } = openPack();
@@ -101,7 +101,7 @@ export default function UnboxingClient() {
 
       const timer = setTimeout(() => {
         setSelectedPackIndex(index);
-      }, 350);
+      }, 1150);
       timersRef.current.push(timer);
     },
     [openedPacks, openPack, setGodPackIndices, setIsGodPackEffectActive, playSFX, setPackContents, startBGM, tempSelectedPackIndex, selectedPackIndex],
@@ -161,8 +161,17 @@ export default function UnboxingClient() {
   }, [selectedPackIndex, packContents, addToCollection, setOpenedPacksArr, setOpenedPackOrder]);
 
   const closeRipOverlay = useCallback(() => {
-    setSelectedPackIndex(null);
-    setTempSelectedPackIndex(null);
+    // Start zoom-out in background after 200ms once overlay is partially transparent
+    const zoomOutTimer = setTimeout(() => {
+      setTempSelectedPackIndex(null);
+    }, 200);
+    timersRef.current.push(zoomOutTimer);
+
+    // Unmount overlay after it completes its 400ms fade-out (200ms + 400ms = 600ms)
+    const timer = setTimeout(() => {
+      setSelectedPackIndex(null);
+    }, 600);
+    timersRef.current.push(timer);
   }, []);
 
   const handleReset = useCallback(() => {
@@ -199,7 +208,7 @@ export default function UnboxingClient() {
   }
 
   return (
-    <div className={`unboxing-3d-page ${isGodPackEffectActive ? "god-pack-effect" : ""}`}>
+    <div className={`unboxing-3d-page ${isGodPackEffectActive ? "god-pack-effect" : ""} ${tempSelectedPackIndex !== null ? "is-zooming-pack" : ""}`}>
 
 
       {/* ─── THREE.JS SCENE ─── */}
@@ -228,6 +237,7 @@ export default function UnboxingClient() {
                 isOpened={openedPacks.has(i)}
                 isFadingOut={isFadingOut}
                 isZooming={tempSelectedPackIndex === i}
+                isReceding={tempSelectedPackIndex !== null && tempSelectedPackIndex !== i}
                 onClick={() => handlePackClick(i)}
                 shouldAnimate={mounted}
               />
@@ -268,13 +278,15 @@ export default function UnboxingClient() {
 
       {/* ─── PACK RIP 3D OVERLAY ─── */}
       <PackRipOverlay3D
-        key={selectedPackIndex ?? "closed"}
+        key="rip-overlay"
         isOpen={selectedPackIndex !== null}
+        isClosing={selectedPackIndex !== null && tempSelectedPackIndex === null}
         season={season}
         cards={selectedPackIndex !== null ? (packContents[selectedPackIndex] || []) : []}
         onClose={closeRipOverlay}
         onRipComplete={handleRipComplete}
         mode="box"
+        autoOpen
       />
 
       {/* ─── SUMMARY MODAL ─── */}
@@ -342,13 +354,21 @@ export default function UnboxingClient() {
           position: absolute;
           bottom: 14%;
           left: 50%;
-          transform: translateX(-50%);
+          transform: translateX(-50%) scale(1);
           z-index: 10;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 1rem;
           pointer-events: none;
+          transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+          opacity: 1;
+        }
+
+        .unboxing-3d-page.is-zooming-pack .unboxing-hud {
+          transform: translateX(-50%) scale(0.82) translateY(30px);
+          opacity: 0;
+          transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.45s ease-out;
         }
 
         .unboxing-actions {
@@ -515,6 +535,15 @@ export default function UnboxingClient() {
             min-width: 220px;
             text-align: center;
           }
+        }
+
+        /* ─── 3D Portal Transition & Zooming styles ─── */
+        :global(.three-scene-container) {
+          transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .unboxing-3d-page.is-zooming-pack :global(.three-scene-container) {
+          transform: scale(1.08);
+          filter: saturate(1.15) brightness(0.9);
         }
       `}</style>
     </div>

@@ -167,7 +167,11 @@ export default function CollectionClient() {
                 const owned = isOwned(card);
                 const CardComponent = season === "season2" ? FullArtCard : Card;
                 return (
-                  <div key={`${season}-${card.role_id}`} className="collection-card-item" style={{ animationDelay: `${idx * 0.02}s` }}>
+                  <div
+                    key={`${season}-${card.role_id}`}
+                    className="collection-card-item"
+                    style={{ animationDelay: `${Math.min(idx, 12) * 0.018}s` }}
+                  >
                     <CardComponent
                       card={card}
                       isRevealed={true}
@@ -256,11 +260,11 @@ export default function CollectionClient() {
         }
 
         .collection-card-item {
-          animation: card-appear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+          animation: card-appear var(--motion-layout) var(--ease-out-quart) both;
         }
 
         @keyframes card-appear {
-          from { opacity: 0; transform: translateY(20px) scale(0.9); }
+          from { opacity: 0; transform: translateY(10px) scale(0.97); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
 

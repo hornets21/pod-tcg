@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "Webdesign": {
+      "source": "danielmiessler/Personal_AI_Infrastructure",
+      "sourceType": "github",
+      "skillPath": "Packs/Webdesign/src/SKILL.md",
+      "computedHash": "fc1d0ca2e65954cd6823a8807cbc9d818695ee0737f5d6d2d9a6acbad93a71e0"
+    },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "cfe4a48d0adcacc98322038099d8e9cfb2859ceae730a480264cc70b76d3865b"
+    },
+    "modern-web-design": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/modern-web-design/SKILL.md",
+      "computedHash": "89af96893e4a67c5aa6d77791d077ce9af577a59ddc280e26e882d7c8b563dc6"
+    },
+    "spline-interactive": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/spline-interactive/SKILL.md",
+      "computedHash": "73c61d312b731d3e491cd635d19427767c80c4a1f4a9cc1cd18a3a530efa8aa6"
+    },
+    "three-js": {
+      "source": "Mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "three-js/SKILL.md",
+      "computedHash": "bcbf5c50607dd57ee32ed42218a88426b539e1c92bb2b896c67a1aca02f68596"
+    },
+    "threejs-animation": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-animation/SKILL.md",
+      "computedHash": "457900cae6babbe092e3226a2ac9ae5d09a84199c1b3d5050ed400d4f56a9d82"
+    }
+  }
+}

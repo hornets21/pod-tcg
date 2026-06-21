@@ -8,12 +8,32 @@ import * as THREE from "three";
 interface TearingPackThreeProps {
   season: string;
   mode?: "single" | "box";
+  // Callbacks kept for API compat with PackRipOverlay3D. The tear is always
+  // time-based (auto), so autoStart has no effect — the original always
+  // tears on its own.
+  prefersReducedMotion?: boolean;
+  onTearStart?: () => void;
+  onTearThreshold?: () => void;
+  onTearComplete?: () => void;
+  sharedProgressRef?: { current: number };
+  autoStart?: boolean;
 }
 
-export function TearingPackThree({ season, mode = "single" }: TearingPackThreeProps) {
+export function TearingPackThree({
+  season,
+  mode = "single",
+  prefersReducedMotion = false,
+  onTearStart,
+  onTearThreshold,
+  onTearComplete,
+  sharedProgressRef,
+  autoStart: _autoStart = true,
+}: TearingPackThreeProps) {
+  void _autoStart;
   const topGroupRef = useRef<THREE.Group>(null!);
   const bottomGroupRef = useRef<THREE.Group>(null!);
   const startTimeRef = useRef<number | null>(null);
+  const callbacksFiredRef = useRef({ start: false, threshold: false, complete: false });
 
   const isS2 = season === "season2";
   const heroScale = 1.35;
@@ -49,10 +69,25 @@ export function TearingPackThree({ season, mode = "single" }: TearingPackThreePr
 
     const elapsed = (state.clock.elapsedTime - startTimeRef.current) * 1000; // ms
 
-    if (elapsed < 300) {
+    // Fire tear-start callback once on the very first frame.
+    if (!callbacksFiredRef.current.start) {
+      callbacksFiredRef.current.start = true;
+      onTearStart?.();
+    }
+
+    // Reduced-motion: skip the shake anticipation but still play the tear
+    // so the player sees the pack rip open (core gameplay, not decorative).
+    const effectiveElapsed = prefersReducedMotion ? Math.max(elapsed, 300) : elapsed;
+
+    // Report tear progress (0–1) to the cinematic camera.
+    if (sharedProgressRef) {
+      sharedProgressRef.current = Math.min(1, effectiveElapsed / 1000);
+    }
+
+    if (effectiveElapsed < 300) {
       // 1. Shaking anticipation
-      const shakeX = Math.sin(elapsed * 0.08) * 0.035;
-      const shakeY = Math.cos(elapsed * 0.09) * 0.025;
+      const shakeX = Math.sin(effectiveElapsed * 0.08) * 0.035;
+      const shakeY = Math.cos(effectiveElapsed * 0.09) * 0.025;
 
       topGroupRef.current.position.set(shakeX, shakeY, 0);
       bottomGroupRef.current.position.set(shakeX, shakeY, 0);
@@ -62,9 +97,13 @@ export function TearingPackThree({ season, mode = "single" }: TearingPackThreePr
 
       setGroupOpacity(topGroupRef.current, 1);
       setGroupOpacity(bottomGroupRef.current, 1);
-    } else if (elapsed <= 1000) {
-      // 2. Tearing apart
-      const progress = (elapsed - 300) / 700; // 0 to 1
+    } else if (effectiveElapsed <= 1000) {
+      // 2. Tearing apart — fire threshold callback once when it begins.
+      if (!callbacksFiredRef.current.threshold) {
+        callbacksFiredRef.current.threshold = true;
+        onTearThreshold?.();
+      }
+      const progress = (effectiveElapsed - 300) / 700; // 0 to 1
       const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
       const opacity = 1 - Math.pow(progress, 3); // fade out at the end
 
@@ -79,9 +118,13 @@ export function TearingPackThree({ season, mode = "single" }: TearingPackThreePr
       setGroupOpacity(topGroupRef.current, opacity);
       setGroupOpacity(bottomGroupRef.current, opacity);
     } else {
-      // 3. Finished tearing, hide them
+      // 3. Finished tearing, hide them — fire complete callback once.
       topGroupRef.current.visible = false;
       bottomGroupRef.current.visible = false;
+      if (!callbacksFiredRef.current.complete) {
+        callbacksFiredRef.current.complete = true;
+        onTearComplete?.();
+      }
     }
   });
 

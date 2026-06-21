@@ -61,7 +61,7 @@ export function BurstParticles({
   // Use ref for mutable position array to avoid immutability lint errors
   const currentPositionsRef = useRef<Float32Array>(new Float32Array(positions));
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!meshRef.current) return;
 
     if (active && !prevActive.current) {
@@ -81,11 +81,13 @@ export function BurstParticles({
 
     const elapsed = state.clock.elapsedTime - startTime.current;
     const gravity = -0.002;
+    const frameScale = Math.min(delta * 60, 2);
 
     for (let i = 0; i < count; i++) {
-      currentPositionsRef.current[i * 3] += velocities[i * 3];
-      currentPositionsRef.current[i * 3 + 1] += velocities[i * 3 + 1] + gravity * elapsed;
-      currentPositionsRef.current[i * 3 + 2] += velocities[i * 3 + 2];
+      currentPositionsRef.current[i * 3] += velocities[i * 3] * frameScale;
+      currentPositionsRef.current[i * 3 + 1] +=
+        (velocities[i * 3 + 1] + gravity * elapsed) * frameScale;
+      currentPositionsRef.current[i * 3 + 2] += velocities[i * 3 + 2] * frameScale;
     }
 
     const posAttr = meshRef.current.geometry.attributes.position as THREE.BufferAttribute;
@@ -172,7 +174,7 @@ export function GodPackRing({ active }: { active: boolean }) {
     return data;
   }, []);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!active) {
       prevActive.current = false;
       return;
@@ -192,6 +194,7 @@ export function GodPackRing({ active }: { active: boolean }) {
     }
 
     const elapsed = state.clock.elapsedTime - startTime.current;
+    const frameScale = Math.min(delta * 60, 2);
 
     // 1. Animate expanding concentric rings
     if (ringsRef.current) {
@@ -220,9 +223,9 @@ export function GodPackRing({ active }: { active: boolean }) {
         
         // Damping movement
         const drag = Math.max(0.1, 1 - t * 0.8);
-        child.position.x += data.vel.x * drag + xSway;
-        child.position.y += data.vel.y * drag;
-        child.position.z += data.vel.z * drag;
+        child.position.x += (data.vel.x * drag + xSway) * frameScale;
+        child.position.y += data.vel.y * drag * frameScale;
+        child.position.z += data.vel.z * drag * frameScale;
 
         // Bouncy scale pop
         let scale = 0;
@@ -234,9 +237,9 @@ export function GodPackRing({ active }: { active: boolean }) {
         child.scale.set(scale, scale, scale);
 
         // Continuous spin
-        child.rotation.x += data.rotSpeed.x * 0.016;
-        child.rotation.y += data.rotSpeed.y * 0.016;
-        child.rotation.z += data.rotSpeed.z * 0.016;
+        child.rotation.x += data.rotSpeed.x * delta;
+        child.rotation.y += data.rotSpeed.y * delta;
+        child.rotation.z += data.rotSpeed.z * delta;
       });
     }
   });
@@ -323,7 +326,7 @@ export function StandardPackRing({ active }: { active: boolean }) {
     return data;
   }, []);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!active) {
       prevActive.current = false;
       return;
@@ -343,6 +346,7 @@ export function StandardPackRing({ active }: { active: boolean }) {
     }
 
     const elapsed = state.clock.elapsedTime - startTime.current;
+    const frameScale = Math.min(delta * 60, 2);
 
     // 1. Animate expanding concentric rings
     if (ringsRef.current) {
@@ -371,9 +375,9 @@ export function StandardPackRing({ active }: { active: boolean }) {
         
         // Damping movement
         const drag = Math.max(0.1, 1 - t * 0.9);
-        child.position.x += data.vel.x * drag + xSway;
-        child.position.y += data.vel.y * drag;
-        child.position.z += data.vel.z * drag;
+        child.position.x += (data.vel.x * drag + xSway) * frameScale;
+        child.position.y += data.vel.y * drag * frameScale;
+        child.position.z += data.vel.z * drag * frameScale;
 
         // Bouncy scale pop
         let scale = 0;
@@ -385,9 +389,9 @@ export function StandardPackRing({ active }: { active: boolean }) {
         child.scale.set(scale, scale, scale);
 
         // Continuous spin
-        child.rotation.x += data.rotSpeed.x * 0.016;
-        child.rotation.y += data.rotSpeed.y * 0.016;
-        child.rotation.z += data.rotSpeed.z * 0.016;
+        child.rotation.x += data.rotSpeed.x * delta;
+        child.rotation.y += data.rotSpeed.y * delta;
+        child.rotation.z += data.rotSpeed.z * delta;
       });
     }
   });
