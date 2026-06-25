@@ -56,14 +56,7 @@ export default function UnboxingClient() {
   useEffect(() => () => clearAllTimers(), [clearAllTimers]);
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const t1 = setTimeout(() => setMounted(true), 0);
-    timersRef.current.push(t1);
-    if (isBoxOpen) {
-      const t2 = setTimeout(() => setPacksReady(true), 100);
-      timersRef.current.push(t2);
-    }
-  }, [isBoxOpen]);
+  const isInitiallyOpenRef = useRef<boolean | null>(null);
 
   const isUnboxingLoaded =
     isBoxOpenLoaded &&
@@ -73,6 +66,19 @@ export default function UnboxingClient() {
     isGodPackEffectLoaded &&
     isGodPackIndicesLoaded;
 
+  useEffect(() => {
+    const t1 = setTimeout(() => setMounted(true), 0);
+    timersRef.current.push(t1);
+
+    if (isUnboxingLoaded && isInitiallyOpenRef.current === null) {
+      isInitiallyOpenRef.current = isBoxOpen;
+      if (isBoxOpen) {
+        const t2 = setTimeout(() => setPacksReady(true), 0);
+        timersRef.current.push(t2);
+      }
+    }
+  }, [isBoxOpen, isUnboxingLoaded]);
+
   const TOTAL_PACKS = 6;
   const openedPacks = useMemo(() => new Set(openedPacksArr), [openedPacksArr]);
   const allOpenedCards = useMemo(() => Object.values(packContents).flat(), [packContents]);
@@ -80,8 +86,20 @@ export default function UnboxingClient() {
   // --- Actions ---
   const handleBoxClick = useCallback(() => {
     setIsBoxOpen(true);
-    playSFX(AUDIO_URLS.BOX_OPEN, 0.15);
-    setTimeout(() => setPacksReady(true), 600);
+    // Play shonen whoosh/aura flare at the start of spin
+    playSFX(AUDIO_URLS.HEAVENLY, 0.15);
+
+    // Play box pop-open impact sound when the lid snaps open (450ms)
+    const tLid = setTimeout(() => {
+      playSFX(AUDIO_URLS.BOX_OPEN, 0.2);
+    }, 450);
+    timersRef.current.push(tLid);
+
+    // Once box fades out (1300ms), eject booster packs
+    const tPacks = setTimeout(() => {
+      setPacksReady(true);
+    }, 1300);
+    timersRef.current.push(tPacks);
   }, [playSFX, setIsBoxOpen]);
 
   const handlePackClick = useCallback(
@@ -191,6 +209,7 @@ export default function UnboxingClient() {
       setIsFadingOut(false);
       setPacksReady(false);
       clearAllTimers();
+      isInitiallyOpenRef.current = false;
     }, 600);
     timersRef.current.push(t);
   }, [
@@ -213,8 +232,8 @@ export default function UnboxingClient() {
 
       {/* ─── THREE.JS SCENE ─── */}
       <ThreeScene cameraPosition={[0, 0.5, 7.5]} fogColor="#07060a">
-        {/* Box — visible when not yet open */}
-        {!isBoxOpen && (
+        {/* Box — visible when not yet open or during transition */}
+        {(!isBoxOpen || !packsReady) && (
           <Suspense fallback={null}>
             <Box3DThree
               isOpen={isBoxOpen}
@@ -447,7 +466,7 @@ export default function UnboxingClient() {
         .reset-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.85);
+          background: rgba(4, 3, 6, 0.75);
           z-index: 4000;
           display: flex;
           align-items: center;
@@ -457,27 +476,31 @@ export default function UnboxingClient() {
         }
 
         .reset-dialog {
-          background: rgba(12, 10, 35, 0.95);
-          border: 1px solid rgba(100, 120, 255, 0.2);
+          background: linear-gradient(135deg, rgba(16, 12, 30, 0.95), rgba(7, 6, 11, 0.98));
+          border: 1px solid rgba(0, 210, 255, 0.25);
           border-radius: 24px;
-          padding: 3rem;
+          padding: 2.5rem 2rem 2.25rem;
           text-align: center;
-          max-width: 420px;
+          max-width: 400px;
           width: 90%;
-          box-shadow: 0 20px 60px rgba(0, 0, 80, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85), 0 0 35px rgba(0, 210, 255, 0.15);
         }
 
         .reset-dialog h3 {
-          font-size: 1.8rem;
-          margin-bottom: 0.8rem;
+          font-size: 1.6rem;
+          margin-bottom: 0.6rem;
           color: #fff;
+          font-weight: 600;
           font-family: "Kanit", sans-serif;
+          text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
         }
 
         .reset-dialog p {
-          opacity: 0.6;
-          margin-bottom: 2rem;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.95rem;
+          margin-bottom: 1.75rem;
           font-family: "Kanit", sans-serif;
+          line-height: 1.5;
         }
 
         .reset-dialog-actions {
@@ -487,37 +510,40 @@ export default function UnboxingClient() {
         }
 
         .reset-confirm-btn {
-          background: linear-gradient(135deg, #ff3355, #ff6644);
+          background: linear-gradient(to right, #ff416c, #ff4b2b);
           color: white;
           border: none;
-          padding: 12px 40px;
-          border-radius: 30px;
+          padding: 10px 35px;
+          border-radius: 50px;
           font-weight: bold;
           cursor: pointer;
           font-family: "Kanit", sans-serif;
-          transition: all 0.2s;
-          box-shadow: 0 4px 15px rgba(255,50,80,0.4);
+          transition: all 0.25s ease;
+          box-shadow: 0 4px 15px rgba(255,65,108,0.4);
         }
 
         .reset-confirm-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(255,50,80,0.6);
+          box-shadow: 0 6px 20px rgba(255,65,108,0.6);
+          filter: brightness(1.1);
         }
 
         .reset-cancel-btn {
-          background: rgba(255, 255, 255, 0.08);
-          color: rgba(255,255,255,0.8);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          padding: 12px 40px;
-          border-radius: 30px;
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 10px 35px;
+          border-radius: 50px;
           font-weight: bold;
           cursor: pointer;
           font-family: "Kanit", sans-serif;
-          transition: all 0.2s;
+          transition: all 0.25s ease;
         }
 
         .reset-cancel-btn:hover {
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-1px);
         }
 
         @keyframes fadeIn {
