@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "../hooks/useAuth";
@@ -11,8 +13,10 @@ const NavIcon = ({ section }: { section: NavSection }) => {
     opening: <><path d="M4 9.5h16v10H4z" /><path d="M7 9.5V7a5 5 0 0 1 9.7-1.7" /><path d="M12 13v3" /></>,
     unboxing: <><path d="m4 7 8-4 8 4-8 4z" /><path d="M4 7v10l8 4 8-4V7M12 11v10" /></>,
     lot: <><path d="M5 6h14v14H5zM8 3h8v3" /><path d="M8 10h8M8 14h5" /></>,
+    vote: <><path d="M6 5h12v14H6z" /><path d="m9 9 2 2 4-4" /><path d="M9 15h6" /></>,
     collection: <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22z" /></>,
     "hall-of-fame": <><path d="M8 4h8v4a4 4 0 0 1-8 0z" /><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 12v5M8 21h8M9 17h6" /></>,
+    wheel: <><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" /><path d="M12 12V4M12 12l5.66 5.66M12 12H4M12 12l5.66-5.66M12 12l-5.66 5.66M12 12l-5.66-5.66" /></>,
   };
 
   return (
@@ -24,7 +28,7 @@ const NavIcon = ({ section }: { section: NavSection }) => {
 
 interface HeaderProps {
   currentSeason?: "season1" | "season2";
-  currentSection: "opening" | "unboxing" | "lot" | "collection" | "hall-of-fame";
+  currentSection: "opening" | "unboxing" | "lot" | "vote" | "collection" | "hall-of-fame" | "wheel";
   onShowPolicy?: () => void;
   onLogoutClick?: () => void;
 }
@@ -50,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (currentSection === "opening" || currentSection === "unboxing") {
+    if (currentSection === "opening" || currentSection === "unboxing" || currentSection === "wheel") {
       return;
     }
 
@@ -122,11 +126,13 @@ const navLinks = [
     { href: `/${playableSeason}`, label: "เปิดซอง", section: "opening" },
     { href: `/${playableSeason}/unboxing`, label: "แกะกล่อง", section: "unboxing" },
     { href: `/${playableSeason}/lot`, label: "จัดการล็อต", section: "lot" },
+    { href: `/${playableSeason}/wheel`, label: "วงล้อสุ่ม", section: "wheel" },
+    { href: `/${playableSeason}/vote`, label: "โหวต", section: "vote" },
     { href: `/${collectionSeason}/collection`, label: "สมุดการ์ด", section: "collection" },
     { href: "/hall-of-fame", label: "Hall of Fame", section: "hall-of-fame" },
   ] satisfies Array<{ href: string; label: string; section: NavSection }>;
 
-  const finalIsCollapsed = (currentSection === "opening" || currentSection === "unboxing") ? true : isCollapsed;
+  const finalIsCollapsed = (currentSection === "opening" || currentSection === "unboxing" || currentSection === "wheel") ? true : isCollapsed;
 
   return (
     <>

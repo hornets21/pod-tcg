@@ -52,6 +52,10 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
     ? "unboxing"
     : pathname.includes("/lot")
     ? "lot"
+    : pathname.includes("/wheel")
+    ? "wheel"
+    : pathname.includes("/vote")
+    ? "vote"
     : pathname.includes("/collection")
     ? "collection"
     : pathname.includes("/hall-of-fame")
