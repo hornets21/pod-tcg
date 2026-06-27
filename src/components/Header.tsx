@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
 const navLinks = [
     { href: `/${playableSeason}`, label: "เปิดซอง", section: "opening" },
     { href: `/${playableSeason}/unboxing`, label: "แกะกล่อง", section: "unboxing" },
-    { href: `/${playableSeason}/lot`, label: "จัดการล็อต", section: "lot" },
+    // { href: `/${playableSeason}/lot`, label: "จัดการล็อต", section: "lot" },
     { href: `/${playableSeason}/wheel`, label: "วงล้อสุ่ม", section: "wheel" },
     { href: `/${playableSeason}/vote`, label: "โหวต", section: "vote" },
     { href: `/${collectionSeason}/collection`, label: "สมุดการ์ด", section: "collection" },

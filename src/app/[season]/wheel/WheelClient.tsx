@@ -28,14 +28,39 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: "2rem", color: "#f43f5e", background: "#0f172a", minHeight: "100vh", fontFamily: "monospace" }}>
+        <div
+          style={{
+            padding: "2rem",
+            color: "#f43f5e",
+            background: "#0f172a",
+            minHeight: "100vh",
+            fontFamily: "monospace",
+          }}
+        >
           <h2>พบข้อผิดพลาดขณะรันไทม์:</h2>
-          <pre style={{ background: "rgba(255,255,255,0.05)", padding: "1rem", borderRadius: "8px", overflowX: "auto", whiteSpace: "pre-wrap" }}>
+          <pre
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              padding: "1rem",
+              borderRadius: "8px",
+              overflowX: "auto",
+              whiteSpace: "pre-wrap",
+            }}
+          >
             {this.state.error?.stack || this.state.error?.message}
           </pre>
           <button
             onClick={() => window.location.reload()}
-            style={{ marginTop: "1rem", padding: "0.5rem 1rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer", fontFamily: "Kanit, sans-serif" }}
+            style={{
+              marginTop: "1rem",
+              padding: "0.5rem 1rem",
+              background: "#fbbf24",
+              color: "#000",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontFamily: "Kanit, sans-serif",
+            }}
           >
             โหลดหน้าใหม่ (Reload)
           </button>
@@ -65,7 +90,7 @@ function WheelClientContent() {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
-  
+
   // Phase state: "select" | "spin"
   const [phase, setPhase] = useState<"select" | "spin">("select");
 
@@ -105,7 +130,9 @@ function WheelClientContent() {
   }, []);
 
   // Presets
-  const handleSelectPreset = (type: "random8" | "random12" | "srPlus" | "clear") => {
+  const handleSelectPreset = (
+    type: "random8" | "random12" | "srPlus" | "clear",
+  ) => {
     if (type === "clear") {
       setSelectedIds([]);
       setSpinHistory([]);
@@ -113,8 +140,8 @@ function WheelClientContent() {
     }
 
     if (type === "srPlus") {
-      const highRarityCards = gachaPool.filter(
-        (c) => ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity)
+      const highRarityCards = gachaPool.filter((c) =>
+        ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity),
       );
       const selected = highRarityCards.slice(0, 16).map((c) => c.role_id);
       setSelectedIds(selected);
@@ -140,15 +167,15 @@ function WheelClientContent() {
     const segmentAngle = 360 / selectedCards.length;
     // Calculate center angle of the winner segment
     const targetSectorCenter = randIdx * segmentAngle + segmentAngle / 2;
-    
+
     // Calculate target angle based on cumulative rotation (counter-clockwise)
-    const targetAngleMod = ((targetSectorCenter - 270) % 360 + 360) % 360;
+    const targetAngleMod = (((targetSectorCenter - 270) % 360) + 360) % 360;
     const currentRotationMod = wheelRotation % 360;
     let diff = targetAngleMod - currentRotationMod;
     if (diff <= 0) diff += 360;
-    
+
     const nextRotation = wheelRotation + diff + 360 * 5;
-    
+
     setStartRotation(wheelRotation);
     setWheelRotation(nextRotation);
     playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.12);
@@ -156,7 +183,8 @@ function WheelClientContent() {
 
   // Ticking sound simulation matching CSS transition speed (easeOutQuart)
   useEffect(() => {
-    if (!isSpinning || winnerIndex === null || selectedCards.length === 0) return;
+    if (!isSpinning || winnerIndex === null || selectedCards.length === 0)
+      return;
 
     const duration = 5000;
     const startTime = performance.now();
@@ -178,8 +206,14 @@ function WheelClientContent() {
       const currentAngle = startAngle + (endAngle - startAngle) * ease;
 
       // Top pointer is at 270 degrees relative to screen (which is 270 + currentAngle on wheel)
-      const sector = Math.floor(((currentAngle + 270) % 360 + 360) % 360 / segmentAngle);
-      if (sector !== lastSector && sector >= 0 && sector < selectedCards.length) {
+      const sector = Math.floor(
+        ((((currentAngle + 270) % 360) + 360) % 360) / segmentAngle,
+      );
+      if (
+        sector !== lastSector &&
+        sector >= 0 &&
+        sector < selectedCards.length
+      ) {
         lastSector = sector;
         tickAudio.currentTime = 0;
         tickAudio.play().catch(() => {});
@@ -193,7 +227,13 @@ function WheelClientContent() {
       cancelAnimationFrame(animId);
       tickAudio.pause();
     };
-  }, [isSpinning, wheelRotation, startRotation, selectedCards.length, winnerIndex]);
+  }, [
+    isSpinning,
+    wheelRotation,
+    startRotation,
+    selectedCards.length,
+    winnerIndex,
+  ]);
 
   const handleTransitionEnd = () => {
     setIsSpinning(false);
@@ -227,18 +267,27 @@ function WheelClientContent() {
   const conicGradientStyle = useMemo(() => {
     if (selectedCards.length === 0) return {};
     const segmentAngle = 360 / selectedCards.length;
-    
+
     const getRarityColor = (rarity: string) => {
       switch (rarity) {
-        case "LEG": return "#dc2626";
-        case "SEC": return "#4f46e5";
-        case "UR": return "#ea580c";
-        case "SSR": return "#ca8a04";
-        case "SR": return "#9333ea";
-        case "R": return "#2563eb";
-        case "C": return "#4b5563";
-        case "EVENT": return "#db2777";
-        default: return "#334155";
+        case "LEG":
+          return "#dc2626";
+        case "SEC":
+          return "#4f46e5";
+        case "UR":
+          return "#ea580c";
+        case "SSR":
+          return "#ca8a04";
+        case "SR":
+          return "#9333ea";
+        case "R":
+          return "#2563eb";
+        case "C":
+          return "#4b5563";
+        case "EVENT":
+          return "#db2777";
+        default:
+          return "#334155";
       }
     };
 
@@ -249,7 +298,7 @@ function WheelClientContent() {
     });
 
     return {
-      background: `conic-gradient(from 90deg, ${gradientParts.join(", ")})`
+      background: `conic-gradient(from 90deg, ${gradientParts.join(", ")})`,
     };
   }, [selectedCards]);
 
@@ -278,15 +327,24 @@ function WheelClientContent() {
 
   const getRarityBadgeColor = (rarity: string) => {
     switch (rarity) {
-      case "LEG": return "#dc2626";
-      case "SEC": return "#4f46e5";
-      case "UR": return "#ea580c";
-      case "SSR": return "#ca8a04";
-      case "SR": return "#9333ea";
-      case "R": return "#2563eb";
-      case "C": return "#4b5563";
-      case "EVENT": return "#db2777";
-      default: return "#334155";
+      case "LEG":
+        return "#dc2626";
+      case "SEC":
+        return "#4f46e5";
+      case "UR":
+        return "#ea580c";
+      case "SSR":
+        return "#ca8a04";
+      case "SR":
+        return "#9333ea";
+      case "R":
+        return "#2563eb";
+      case "C":
+        return "#4b5563";
+      case "EVENT":
+        return "#db2777";
+      default:
+        return "#334155";
     }
   };
 
@@ -298,7 +356,8 @@ function WheelClientContent() {
         <section className="select-view active">
           <div className="collection-header">
             <h2>
-              สร้างวงล้อสุ่มการ์ด (<span className="neon-text">{selectedIds.length}</span>/16)
+              สร้างวงล้อสุ่มการ์ด (
+              <span className="neon-text">{selectedIds.length}</span>/16)
             </h2>
             <div className="lot-actions">
               <button
@@ -306,7 +365,7 @@ function WheelClientContent() {
                 onClick={() => setPhase("spin")}
                 disabled={selectedIds.length < 2 || selectedIds.length > 16}
               >
-                เข้าสู่วงล้อสุ่ม 3D
+                เข้าสู่วงล้อ
               </button>
               <button
                 className="btn-secondary"
@@ -321,20 +380,31 @@ function WheelClientContent() {
             <div className="presets-group">
               <span className="control-label">ทางเลือกด่วน:</span>
               <div className="presets-buttons">
-                <button className="preset-btn" onClick={() => handleSelectPreset("random8")}>
+                <button
+                  className="preset-btn"
+                  onClick={() => handleSelectPreset("random8")}
+                >
                   สุ่ม 8 ใบ
                 </button>
-                <button className="preset-btn" onClick={() => handleSelectPreset("random12")}>
+                <button
+                  className="preset-btn"
+                  onClick={() => handleSelectPreset("random12")}
+                >
                   สุ่ม 12 ใบ
                 </button>
-                <button className="preset-btn" onClick={() => handleSelectPreset("srPlus")}>
+                <button
+                  className="preset-btn"
+                  onClick={() => handleSelectPreset("srPlus")}
+                >
                   ระดับ SR ขึ้นไป
                 </button>
               </div>
             </div>
 
             <div className="rarity-select-group">
-              <label htmlFor="rarity-select" className="control-label">เลือกระดับการ์ดเพื่อแสดงรายการ:</label>
+              <label htmlFor="rarity-select" className="control-label">
+                เลือกระดับการ์ดเพื่อแสดงรายการ:
+              </label>
               <select
                 id="rarity-select"
                 value={selectedRarity || ""}
@@ -343,7 +413,8 @@ function WheelClientContent() {
                 <option value="">-- กรุณาเลือกระดับ --</option>
                 {rarityFilters.map((rarity) => (
                   <option key={rarity} value={rarity}>
-                    {rarity} ({gachaPool.filter(c => c.rarity === rarity).length} ใบ)
+                    {rarity} (
+                    {gachaPool.filter((c) => c.rarity === rarity).length} ใบ)
                   </option>
                 ))}
               </select>
@@ -381,7 +452,11 @@ function WheelClientContent() {
       ) : (
         <section className="spin-view active">
           <div className="spin-header">
-            <button className="btn-back" onClick={() => setPhase("select")} disabled={isSpinning}>
+            <button
+              className="btn-back"
+              onClick={() => setPhase("select")}
+              disabled={isSpinning}
+            >
               ← กลับไปแก้ไข
             </button>
             <h2>วงล้อสุ่มการ์ด</h2>
@@ -393,10 +468,15 @@ function WheelClientContent() {
               <h3>การ์ดในวงล้อ ({selectedCards.length} ใบ)</h3>
               <div className="sidebar-list">
                 {selectedCards.map((card, idx) => (
-                  <div key={`${card.role_id}-${idx}`} className="sidebar-card-item">
+                  <div
+                    key={`${card.role_id}-${idx}`}
+                    className="sidebar-card-item"
+                  >
                     <span
                       className="rarity-badge"
-                      style={{ backgroundColor: getRarityBadgeColor(card.rarity) }}
+                      style={{
+                        backgroundColor: getRarityBadgeColor(card.rarity),
+                      }}
                     >
                       {card.rarity}
                     </span>
@@ -410,14 +490,25 @@ function WheelClientContent() {
                   <h3>ประวัติที่สุ่มได้ ({spinHistory.length} ใบ)</h3>
                   <div className="sidebar-list">
                     {spinHistory.map((card, idx) => (
-                      <div key={`history-${card.role_id}-${idx}`} className="sidebar-card-item history-item" style={{ opacity: 0.65 }}>
+                      <div
+                        key={`history-${card.role_id}-${idx}`}
+                        className="sidebar-card-item history-item"
+                        style={{ opacity: 0.65 }}
+                      >
                         <span
                           className="rarity-badge"
-                          style={{ backgroundColor: getRarityBadgeColor(card.rarity) }}
+                          style={{
+                            backgroundColor: getRarityBadgeColor(card.rarity),
+                          }}
                         >
                           {card.rarity}
                         </span>
-                        <span className="card-name" style={{ textDecoration: "line-through" }}>{card.name}</span>
+                        <span
+                          className="card-name"
+                          style={{ textDecoration: "line-through" }}
+                        >
+                          {card.name}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -484,22 +575,31 @@ function WheelClientContent() {
       {winnerCard && showWinnerModal && (
         <div className="winner-overlay">
           <div className="winner-modal">
-            <h3 className="winner-title animate-bounce">🎉 ได้รับการ์ดแล้ว! 🎉</h3>
-            
+            <h3 className="winner-title animate-bounce">
+              🎉 ได้รับการ์ดแล้ว! 🎉
+            </h3>
+
             <div className="winner-card-box">
-              <CardComponent card={winnerCard} isRevealed={true} enableHolo={true} />
+              <CardComponent
+                card={winnerCard}
+                isRevealed={true}
+                enableHolo={true}
+              />
             </div>
 
             <div className="winner-card-details">
               <span
                 className="winner-rarity"
-                style={{ backgroundColor: getRarityBadgeColor(winnerCard.rarity) }}
+                style={{
+                  backgroundColor: getRarityBadgeColor(winnerCard.rarity),
+                }}
               >
                 {winnerCard.rarity}
               </span>
               <h4 className="winner-name">{winnerCard.name}</h4>
               <p className="winner-ability">
-                <strong>ความสามารถ:</strong> {winnerCard.ability || "ไม่มีความสามารถพิเศษ"}
+                <strong>ความสามารถ:</strong>{" "}
+                {winnerCard.ability || "ไม่มีความสามารถพิเศษ"}
               </p>
             </div>
 
@@ -508,11 +608,18 @@ function WheelClientContent() {
                 className="btn-modal-spin"
                 onClick={handleSpinAgain}
                 disabled={selectedIds.length < 2}
-                style={selectedIds.length < 2 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                style={
+                  selectedIds.length < 2
+                    ? { opacity: 0.5, cursor: "not-allowed" }
+                    : {}
+                }
               >
                 หมุนอีกครั้ง
               </button>
-              <button className="btn-modal-close" onClick={() => setShowWinnerModal(false)}>
+              <button
+                className="btn-modal-close"
+                onClick={() => setShowWinnerModal(false)}
+              >
                 ตกลง
               </button>
             </div>
@@ -857,7 +964,7 @@ function WheelClientContent() {
           height: 100%;
           border-radius: 50%;
           border: 12px solid #1e293b;
-          box-shadow: 
+          box-shadow:
             0 12px 40px rgba(0, 0, 0, 0.5),
             0 0 0 4px #38bdf8,
             inset 0 0 25px rgba(0,0,0,0.8);

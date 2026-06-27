@@ -12,9 +12,11 @@ import { Card } from "@/components/Card";
 import { FullArtCard } from "@/components/FullArtCard";
 import { ThreeScene } from "@/components/three/ThreeScene";
 import { useGacha } from "@/hooks/useGacha";
+import { SelectionSearch } from "@/components/SelectionSearch";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { Card as CardType } from "@/data/types";
-import { CARDS_SEASON2 } from "@/data/cards-season2";
+import { CARDS_DELETE } from "@/data/cards-delete";
+import { useAudio, AUDIO_URLS } from "@/hooks/useAudio";
 
 interface VoteState {
   leftId: string | null;
@@ -33,7 +35,7 @@ interface VoteState {
 
 type TimerStatus = "idle" | "running" | "paused" | "ended";
 
-const DEFAULT_DURATION = 60;
+const DEFAULT_DURATION = 600;
 const initialVoteState: VoteState = {
   leftId: null,
   rightId: null,
@@ -68,17 +70,69 @@ function formatClock(totalSeconds: number) {
 }
 
 function getUniqueRandomWheelCards(): CardType[] {
-  const filtered = CARDS_SEASON2.filter(
-    (card) =>
-      card.isGacha === "Y" && ["SSR", "UR", "SEC", "LEG"].includes(card.rarity),
-  );
   const uniqueMap = new Map<string, CardType>();
-  filtered.forEach((card) => {
+  CARDS_DELETE.forEach((card) => {
     if (!uniqueMap.has(card.name)) {
       uniqueMap.set(card.name, card);
     }
   });
   return Array.from(uniqueMap.values()).sort(() => Math.random() - 0.5);
+}
+
+function VoteBackgroundThree({
+  sceneLightFlash,
+  isSacrificeMode,
+}: {
+  sceneLightFlash:
+    | "plus-left"
+    | "plus-right"
+    | "minus-left"
+    | "minus-right"
+    | null;
+  isSacrificeMode: boolean;
+}) {
+  return (
+    <>
+      <ambientLight
+        intensity={isSacrificeMode ? 0.35 : 0.65}
+        color={isSacrificeMode ? "#ff5555" : "#ffffff"}
+      />
+      <pointLight
+        position={[-3, 1, 2]}
+        intensity={
+          sceneLightFlash === "plus-left"
+            ? 15
+            : sceneLightFlash === "minus-left"
+              ? 0
+              : 3
+        }
+        color={
+          sceneLightFlash === "plus-left"
+            ? "#00ffcc"
+            : sceneLightFlash === "minus-left"
+              ? "#ff2200"
+              : "#00d2ff"
+        }
+      />
+      <pointLight
+        position={[3, 1, 2]}
+        intensity={
+          sceneLightFlash === "plus-right"
+            ? 15
+            : sceneLightFlash === "minus-right"
+              ? 0
+              : 3
+        }
+        color={
+          sceneLightFlash === "plus-right"
+            ? "#ffd700"
+            : sceneLightFlash === "minus-right"
+              ? "#ff2200"
+              : "#ffaa00"
+        }
+      />
+    </>
+  );
 }
 
 export default function VoteClient() {
@@ -90,8 +144,28 @@ export default function VoteClient() {
   const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
   const intervalRef = useRef<number | null>(null);
 
-  // Sacrifice Mode States
-  const [isSacrificeMode, setIsSacrificeMode] = useState(false);
+  const { playSFX } = useAudio();
+
+  // Floating text score popups
+  const [floatingTexts, setFloatingTexts] = useState<
+    Array<{
+      id: number;
+      text: string;
+      type: "plus" | "minus";
+      side: "left" | "right";
+    }>
+  >([]);
+
+  // Active effect triggers
+  const [leftPulse, setLeftPulse] = useState<"plus" | "minus" | null>(null);
+  const [rightPulse, setRightPulse] = useState<"plus" | "minus" | null>(null);
+
+  // Dynamic light flash color state
+  const [sceneLightFlash, setSceneLightFlash] = useState<
+    "plus-left" | "plus-right" | "minus-left" | "minus-right" | null
+  >(null);
+
+  const [isSacrificeMode] = useState(true);
 
   // Presentation Slider States
   const [slideIndex, setSlideIndex] = useState(0);
@@ -138,6 +212,34 @@ export default function VoteClient() {
 
   const setScores = useCallback(
     (side: "left" | "right", delta: number) => {
+      // Validate that cards are selected and timer is running
+      if (!leftCard || !rightCard || timerStatus !== "running") {
+        return;
+      }
+
+      // Play high energy sound effects (non-overlapping with opening, clean and not too loud)
+      if (delta > 0) {
+        playSFX(AUDIO_URLS.HEAVENLY, 0.12);
+      } else {
+        playSFX(AUDIO_URLS.SHONEN_SLASH, 0.12);
+      }
+
+      // Add floating score popups
+      const id = Date.now() + Math.random();
+      const text = delta > 0 ? `+${delta}` : `${delta}`;
+      const type = delta > 0 ? ("plus" as const) : ("minus" as const);
+      setFloatingTexts((prev) => [...prev, { id, text, type, side }]);
+      setTimeout(() => {
+        setFloatingTexts((prev) => prev.filter((t) => t.id !== id));
+      }, 1200);
+
+      // Trigger pulse animations
+      const setPulse = side === "left" ? setLeftPulse : setRightPulse;
+      setPulse(type);
+      setSceneLightFlash(`${type}-${side}` as const);
+      setTimeout(() => setPulse(null), 500);
+      setTimeout(() => setSceneLightFlash(null), 500);
+
       setStoredState((current) => {
         const key = side === "left" ? "leftScore" : "rightScore";
         return {
@@ -146,14 +248,22 @@ export default function VoteClient() {
         };
       });
     },
-    [setStoredState],
+    [setStoredState, playSFX, leftCard, rightCard, timerStatus],
   );
 
   const saveRecentRound = useCallback(() => {
     if (!leftCard || !rightCard) return;
-    setStoredState((current) => ({
-      ...current,
-      recent: [
+
+    // Pick two new competitor cards
+    const picked = pickTwoCards(playableCards);
+
+    // Stop the current timer
+    stopTimer();
+    setTimerStatus("idle");
+    setSlideIndex(0);
+
+    setStoredState((current) => {
+      const nextRecent = [
         {
           leftName: leftCard.name,
           rightName: rightCard.name,
@@ -161,9 +271,36 @@ export default function VoteClient() {
           rightScore: current.rightScore,
         },
         ...current.recent,
-      ].slice(0, 5),
+      ].slice(0, 20);
+
+      if (!picked) {
+        return {
+          ...current,
+          recent: nextRecent,
+        };
+      }
+
+      return {
+        ...current,
+        leftId: picked.left.role_id,
+        rightId: picked.right.role_id,
+        leftScore: 0,
+        rightScore: 0,
+        seconds: current.duration,
+        recent: nextRecent,
+      };
+    });
+
+    // Refresh wheel cards
+    setWheelCards(getUniqueRandomWheelCards());
+  }, [leftCard, rightCard, playableCards, stopTimer, setStoredState]);
+
+  const clearRecentHistory = useCallback(() => {
+    setStoredState((current) => ({
+      ...current,
+      recent: [],
     }));
-  }, [leftCard, rightCard, setStoredState]);
+  }, [setStoredState]);
 
   const randomizeMatch = useCallback(() => {
     const picked = pickTwoCards(playableCards);
@@ -298,6 +435,8 @@ export default function VoteClient() {
     setTimerStatus("idle");
     setStoredState({
       ...initialVoteState,
+      leftId: null,
+      rightId: null,
       duration: storedState.duration,
       seconds: storedState.duration,
       recent: storedState.recent,
@@ -321,274 +460,325 @@ export default function VoteClient() {
         showDefaultLighting={false}
         showAtmosphere={true}
       >
-        {null}
+        <VoteBackgroundThree
+          sceneLightFlash={sceneLightFlash}
+          isSacrificeMode={isSacrificeMode}
+        />
       </ThreeScene>
 
       <main className="vote-shell">
-        <section className="vote-hero active" aria-labelledby="vote-title">
-          <div className="vote-title-block">
-            <p className="vote-kicker">
-              {isSacrificeMode ? "🔥 DEATHMATCH ARENA" : "POD TCG ARENA"}
-            </p>
-            <h1 id="vote-title">
-              {isSacrificeMode ? "ศึกสังเวยการ์ด 1v1" : "บอร์ดโหวตการ์ด 1v1"}
-            </h1>
-            <p>
-              {isSacrificeMode
-                ? "คำเตือน: โหมดสังเวยการ์ดทำงาน! เมื่อหมดเวลา การ์ดที่ได้คะแนนน้อยกว่าจะถูกลบออกจากคอลเลกชันไอดีแขกจริงถาวร!"
-                : "สุ่มการ์ดสองใบ จับเวลา แล้วกดคะแนนระหว่างโหวตหน้างานหรือแชร์จอใน Discord"}
-            </p>
+        <div className="vote-layout-container">
+          <div className="vote-layout-left">
+            {!canPlay ? (
+              <div className="vote-empty">
+                <h2>ยังสุ่มแข่งไม่ได้</h2>
+                <p>ต้องมีการ์ดที่เปิดกาชาได้อย่างน้อย 2 ใบในซีซันนี้</p>
+              </div>
+            ) : (
+              <>
+                <section
+                  className="vote-controls active"
+                  aria-label="ตัวควบคุมรอบโหวต"
+                >
+                  <button
+                    type="button"
+                    className="vote-primary"
+                    onClick={randomizeMatch}
+                  >
+                    สุ่มคู่แข่ง
+                  </button>
+
+                  <label>
+                    เวลา (วินาที)
+                    <input
+                      type="number"
+                      min="10"
+                      max="7200"
+                      step="10"
+                      value={storedState.duration}
+                      onChange={(event) => updateDuration(event.target.value)}
+                    />
+                  </label>
+                  <div className={`vote-clock ${timerStatus}`}>
+                    <span>{formatClock(storedState.seconds)}</span>
+                    <small>
+                      {timerStatus === "running"
+                        ? "กำลังจับเวลา"
+                        : timerStatus === "ended"
+                          ? "หมดเวลา"
+                          : "พร้อมเริ่ม"}
+                    </small>
+                  </div>
+                  <div className="vote-timer-actions">
+                    {timerStatus === "running" ? (
+                      <button type="button" onClick={pauseTimer}>
+                        พัก
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={startTimer}
+                        disabled={
+                          !leftCard || !rightCard || storedState.seconds <= 0
+                        }
+                      >
+                        เริ่ม
+                      </button>
+                    )}
+                    <button type="button" onClick={resetTimer}>
+                      รีเซ็ตเวลา
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveRecentRound}
+                      disabled={!leftCard || !rightCard}
+                    >
+                      บันทึกรอบ
+                    </button>
+                    <button type="button" onClick={clearBoard}>
+                      ล้างบอร์ด
+                    </button>
+                  </div>
+                </section>
+
+                <section className="vote-board active" aria-label="บอร์ดคะแนน">
+                  {(["left", "right"] as const).map((side) => {
+                    const card = side === "left" ? leftCard : rightCard;
+                    const score =
+                      side === "left"
+                        ? storedState.leftScore
+                        : storedState.rightScore;
+
+                    // Determine if this side is the loser when timer ends
+                    const isLoser =
+                      timerStatus === "ended" &&
+                      ((side === "left" &&
+                        storedState.leftScore < storedState.rightScore) ||
+                        (side === "right" &&
+                          storedState.rightScore < storedState.leftScore));
+
+                    const pulseEffect =
+                      side === "left" ? leftPulse : rightPulse;
+
+                    return (
+                      <article key={side} className={`vote-lane ${side}`}>
+                        <SelectionSearch
+                          value={card?.role_id || ""}
+                          onChange={(val) => selectCard(side, val)}
+                          options={playableCards}
+                          placeholder="เลือกการ์ด"
+                          ariaLabel={
+                            side === "left"
+                              ? "เลือกการ์ดฝั่งซ้าย"
+                              : "เลือกการ์ดฝั่งขวา"
+                          }
+                          side={side}
+                        />
+
+                        <div
+                          className={`vote-card-stage ${pulseEffect ? `pulse-${pulseEffect}` : ""} ${isLoser && isSacrificeMode ? "card-obliterated" : ""}`}
+                        >
+                          {/* Floating indicators */}
+                          <div className="floating-scores-container">
+                            {floatingTexts
+                              .filter((t) => t.side === side)
+                              .map((t) => (
+                                <div
+                                  key={t.id}
+                                  className={`floating-score-pop ${t.type}`}
+                                >
+                                  {t.text}
+                                </div>
+                              ))}
+                          </div>
+
+                          {card ? (
+                            <>
+                              <CardComponent
+                                card={card}
+                                isRevealed={true}
+                                enableHolo={true}
+                              />
+                              {isLoser && isSacrificeMode && (
+                                <div className="obliterated-overlay">
+                                  <span className="obliterated-stamp">
+                                    DESTROYED
+                                  </span>
+                                  <span className="obliterated-sub">
+                                    การ์ดถูกทำลายแล้ว
+                                  </span>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="vote-card-placeholder">
+                              รอเลือกการ์ด
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="vote-score-row">
+                          <button
+                            type="button"
+                            aria-label="ลดคะแนน"
+                            onClick={() => setScores(side, -1)}
+                            disabled={
+                              !leftCard ||
+                              !rightCard ||
+                              timerStatus !== "running"
+                            }
+                          >
+                            -
+                          </button>
+                          <strong>{score}</strong>
+                          <button
+                            type="button"
+                            aria-label="เพิ่มคะแนน"
+                            onClick={() => setScores(side, 1)}
+                            disabled={
+                              !leftCard ||
+                              !rightCard ||
+                              timerStatus !== "running"
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
+              </>
+            )}
           </div>
 
-          <div
-            className="vote-wheel-panel"
-            aria-label="ส่วนแสดงการ์ดโหวต"
-            style={{ position: "relative" }}
-          >
-            <div className="vote-slider-container">
-              {wheelCards.length > 0 && (
-                <div className="vote-slider-wrapper">
-                  <div
-                    className="vote-slider-track"
-                    style={{ transform: `translateX(-${slideIndex * 100}%)` }}
-                  >
-                    {wheelCards.map((card, idx) => (
+          <div className="vote-layout-right">
+            <section className="vote-hero active" aria-labelledby="vote-title">
+              <div className="vote-title-block">
+                <p className="vote-kicker">
+                  {isSacrificeMode
+                    ? "🔥 POD DEATHMATCH ARENA"
+                    : "POD TCG ARENA"}
+                </p>
+                <h1 id="vote-title">
+                  {isSacrificeMode
+                    ? "ศึกสังเวยการ์ด 1v1"
+                    : "บอร์ดโหวตการ์ด 1v1"}
+                </h1>
+                <p>
+                  {isSacrificeMode
+                    ? "คำเตือน: โหมดสังเวยการ์ดทำงาน! เมื่อหมดเวลา การ์ดที่ได้คะแนนน้อยกว่าจะถูกลบ!"
+                    : ""}
+                </p>
+              </div>
+
+              <div
+                className="vote-wheel-panel"
+                aria-label="ส่วนแสดงการ์ดโหวต"
+                style={{ position: "relative" }}
+              >
+                <div className="vote-slider-container">
+                  {wheelCards.length > 0 && (
+                    <div className="vote-slider-wrapper">
                       <div
-                        key={`${card.role_id}-${idx}`}
-                        className="vote-slider-slide"
+                        className="vote-slider-track"
+                        style={{
+                          transform: `translateX(-${slideIndex * 100}%)`,
+                        }}
                       >
-                        <div className="slider-card-glow-wrapper">
-                          <CardComponent card={card} isRevealed={true} />
-                        </div>
+                        {wheelCards.map((card, idx) => (
+                          <div
+                            key={`${card.role_id}-${idx}`}
+                            className="vote-slider-slide"
+                          >
+                            <div className="slider-card-glow-wrapper">
+                              <CardComponent card={card} isRevealed={true} />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {timerStatus === "ended" &&
+              isSacrificeMode &&
+              sacrificedCardName && (
+                <div className="sacrifice-alert" role="alert">
+                  <span className="sacrifice-alert-icon">💀</span>
+                  <div className="sacrifice-alert-content">
+                    <h4>การสังเวยเสร็จสิ้น</h4>
+                    <p>
+                      การ์ด <strong>{sacrificedCardName}</strong>{" "}
+                      ได้รับคะแนนน้อยกว่าและถูกทำลายแล้ว!
+                      {isLoggedIn
+                        ? " (ระบบจำลองการทำลายการ์ดบนจอ เนื่องจากคุณล็อกอินผ่าน Discord)"
+                        : " (การ์ดถูกลบออกจากคอลเลกชันคลังของคุณแล้ว)"}
+                    </p>
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </section>
-
-        {timerStatus === "ended" && isSacrificeMode && sacrificedCardName && (
-          <div className="sacrifice-alert" role="alert">
-            <span className="sacrifice-alert-icon">💀</span>
-            <div className="sacrifice-alert-content">
-              <h4>การสังเวยเสร็จสิ้น</h4>
-              <p>
-                การ์ด <strong>{sacrificedCardName}</strong>{" "}
-                ได้รับคะแนนน้อยกว่าและถูกทำลายแล้ว!
-                {isLoggedIn
-                  ? " (ระบบจำลองการทำลายการ์ดบนจอ เนื่องจากคุณล็อกอินผ่าน Discord)"
-                  : " (การ์ดถูกลบออกจากคอลเลกชันคลังของคุณแล้ว)"}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {!canPlay ? (
-          <div className="vote-empty">
-            <h2>ยังสุ่มแข่งไม่ได้</h2>
-            <p>ต้องมีการ์ดที่เปิดกาชาได้อย่างน้อย 2 ใบในซีซันนี้</p>
-          </div>
-        ) : (
-          <>
-            <section
-              className="vote-controls active"
-              aria-label="ตัวควบคุมรอบโหวต"
-            >
-              <button
-                type="button"
-                className="vote-primary"
-                onClick={randomizeMatch}
-              >
-                สุ่มคู่แข่ง
-              </button>
-
-              {/* Mode Selector */}
-              <div className="vote-mode-selector">
-                <button
-                  type="button"
-                  className={`mode-btn normal ${!isSacrificeMode ? "active" : ""}`}
-                  onClick={() => setIsSacrificeMode(false)}
-                >
-                  โหมดปกติ
-                </button>
-                <button
-                  type="button"
-                  className={`mode-btn sacrifice ${isSacrificeMode ? "active" : ""}`}
-                  onClick={() => setIsSacrificeMode(true)}
-                >
-                  💀 โหมดสังเวย
-                </button>
-              </div>
-
-              <label>
-                เวลา (วินาที)
-                <input
-                  type="number"
-                  min="10"
-                  max="7200"
-                  step="10"
-                  value={storedState.duration}
-                  onChange={(event) => updateDuration(event.target.value)}
-                />
-              </label>
-              <div className={`vote-clock ${timerStatus}`}>
-                <span>{formatClock(storedState.seconds)}</span>
-                <small>
-                  {timerStatus === "running"
-                    ? "กำลังจับเวลา"
-                    : timerStatus === "ended"
-                      ? "หมดเวลา"
-                      : "พร้อมเริ่ม"}
-                </small>
-              </div>
-              <div className="vote-timer-actions">
-                {timerStatus === "running" ? (
-                  <button type="button" onClick={pauseTimer}>
-                    พัก
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={startTimer}
-                    disabled={
-                      !leftCard || !rightCard || storedState.seconds <= 0
-                    }
-                  >
-                    เริ่ม
-                  </button>
-                )}
-                <button type="button" onClick={resetTimer}>
-                  รีเซ็ตเวลา
-                </button>
-                <button
-                  type="button"
-                  onClick={saveRecentRound}
-                  disabled={!leftCard || !rightCard}
-                >
-                  บันทึกรอบ
-                </button>
-                <button type="button" onClick={clearBoard}>
-                  ล้างบอร์ด
-                </button>
-              </div>
-            </section>
-
-            <section className="vote-board active" aria-label="บอร์ดคะแนน">
-              {(["left", "right"] as const).map((side) => {
-                const card = side === "left" ? leftCard : rightCard;
-                const score =
-                  side === "left"
-                    ? storedState.leftScore
-                    : storedState.rightScore;
-
-                // Determine if this side is the loser when timer ends
-                const isLoser =
-                  timerStatus === "ended" &&
-                  ((side === "left" &&
-                    storedState.leftScore < storedState.rightScore) ||
-                    (side === "right" &&
-                      storedState.rightScore < storedState.leftScore));
-
-                return (
-                  <article key={side} className={`vote-lane ${side}`}>
-                    <select
-                      value={card?.role_id || ""}
-                      onChange={(event) => selectCard(side, event.target.value)}
-                      aria-label={
-                        side === "left"
-                          ? "เลือกการ์ดฝั่งซ้าย"
-                          : "เลือกการ์ดฝั่งขวา"
-                      }
-                    >
-                      <option value="">เลือกการ์ด</option>
-                      {playableCards.map((option) => (
-                        <option key={option.role_id} value={option.role_id}>
-                          {option.rarity} - {option.name}
-                        </option>
-                      ))}
-                    </select>
-
-                    <div
-                      className={`vote-card-stage ${isLoser && isSacrificeMode ? "card-obliterated" : ""}`}
-                    >
-                      {card ? (
-                        <>
-                          <CardComponent
-                            card={card}
-                            isRevealed={true}
-                            enableHolo={true}
-                          />
-                          {isLoser && isSacrificeMode && (
-                            <div className="obliterated-overlay">
-                              <span className="obliterated-stamp">
-                                DESTROYED
-                              </span>
-                              <span className="obliterated-sub">
-                                การ์ดถูกทำลายแล้ว
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="vote-card-placeholder">
-                          รอเลือกการ์ด
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="vote-score-row">
-                      <button
-                        type="button"
-                        aria-label="ลดคะแนน"
-                        onClick={() => setScores(side, -1)}
-                      >
-                        -
-                      </button>
-                      <strong>{score}</strong>
-                      <button
-                        type="button"
-                        aria-label="เพิ่มคะแนน"
-                        onClick={() => setScores(side, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                    {score < 0 && (
-                      <p className="vote-negative-note">
-                        คะแนนติดลบแล้วนะ ทรงนี้โดนโหวตให้กลับบ้าน
-                      </p>
-                    )}
-                  </article>
-                );
-              })}
-            </section>
 
             {storedState.recent.length > 0 && (
               <section
                 className="vote-recent active"
                 aria-label="ประวัติรอบล่าสุด"
               >
-                <h2>รอบล่าสุด</h2>
+                <div className="vote-recent-header">
+                  <h2>รอบล่าสุด</h2>
+                  <button
+                    type="button"
+                    className="clear-recent-btn"
+                    onClick={clearRecentHistory}
+                  >
+                    ล้างประวัติ
+                  </button>
+                </div>
                 <div className="vote-recent-list">
-                  {storedState.recent.map((round, index) => (
-                    <div
-                      key={`${round.leftName}-${round.rightName}-${index}`}
-                      className="vote-recent-item"
-                    >
-                      <span>{round.leftName}</span>
-                      <strong>
-                        {round.leftScore} - {round.rightScore}
-                      </strong>
-                      <span>{round.rightName}</span>
-                    </div>
-                  ))}
+                  {storedState.recent.map((round, index) => {
+                    const isLeftWinner = round.leftScore > round.rightScore;
+                    const isRightWinner = round.rightScore > round.leftScore;
+
+                    return (
+                      <div
+                        key={`${round.leftName}-${round.rightName}-${index}`}
+                        className="vote-recent-item"
+                      >
+                        <span className={isLeftWinner ? "recent-winner" : ""}>
+                          {isLeftWinner && "👑 "}
+                          {round.leftName}
+                        </span>
+                        <strong>
+                          {round.leftScore < 0 ? (
+                            <span className="negative-highlight">
+                              {round.leftScore}
+                            </span>
+                          ) : (
+                            round.leftScore
+                          )}
+                          {" - "}
+                          {round.rightScore < 0 ? (
+                            <span className="negative-highlight">
+                              {round.rightScore}
+                            </span>
+                          ) : (
+                            round.rightScore
+                          )}
+                        </strong>
+                        <span className={isRightWinner ? "recent-winner" : ""}>
+                          {round.rightName}
+                          {isRightWinner && " 👑"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </main>
 
       <style jsx>{`
@@ -609,6 +799,89 @@ export default function VoteClient() {
           z-index: 1;
           width: min(100%, 1440px);
           padding: 6rem 1.25rem 4rem;
+          margin: 0 auto;
+        }
+
+        .vote-layout-container {
+          display: grid;
+          grid-template-columns: 1.2fr 1fr;
+          gap: 2rem;
+          align-items: start;
+        }
+
+        .vote-layout-left {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          min-width: 0;
+        }
+
+        .vote-layout-right {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          min-width: 0;
+          position: sticky;
+          top: 6rem;
+        }
+
+        @media (max-width: 1024px) {
+          .vote-layout-container {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+          .vote-layout-left {
+            order: 2;
+          }
+          .vote-layout-right {
+            order: 1;
+            position: static;
+          }
+        }
+
+        @media (min-width: 1025px) {
+          .vote-layout-left {
+            order: 1;
+          }
+
+          .vote-layout-right {
+            order: 2;
+          }
+
+          .vote-layout-right .vote-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1.5rem;
+            min-height: auto;
+          }
+
+          .vote-layout-right .vote-wheel-panel {
+            height: 280px;
+          }
+
+          .vote-layout-right .vote-slider-wrapper {
+            width: 100%;
+            max-width: 300px;
+            height: 240px;
+            margin: 0 auto;
+          }
+
+          .vote-layout-right .vote-slider-slide {
+            width: 100%;
+            max-width: 300px;
+            height: 240px;
+          }
+
+          .vote-layout-right .slider-card-glow-wrapper {
+            transform: scale(0.42);
+          }
+
+          .vote-layout-right
+            .vote-slider-container:hover
+            .slider-card-glow-wrapper {
+            transform: scale(0.45);
+          }
         }
 
         .vote-hero {
@@ -822,13 +1095,192 @@ export default function VoteClient() {
 
         .vote-lane select {
           width: 100%;
+          position: relative;
+          z-index: 10;
         }
 
+        /* 3D Floating Stages */
         .vote-card-stage {
           display: grid;
           place-items: center;
           min-height: 430px;
-          overflow: hidden;
+          position: relative;
+          perspective: 1200px;
+          transform-style: preserve-3d;
+        }
+
+        .vote-lane.left .vote-card-stage {
+          animation: floatLeft 6.5s ease-in-out infinite alternate;
+        }
+
+        .vote-lane.right .vote-card-stage {
+          animation: floatRight 7.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatLeft {
+          0% {
+            transform: translateY(0px) rotateY(0deg) rotateX(1deg);
+          }
+          100% {
+            transform: translateY(-10px) rotateY(1.5deg) rotateX(-1deg);
+          }
+        }
+
+        @keyframes floatRight {
+          0% {
+            transform: translateY(0px) rotateY(0deg) rotateX(-1deg);
+          }
+          100% {
+            transform: translateY(-12px) rotateY(-1.5deg) rotateX(1deg);
+          }
+        }
+
+        /* ─── PUNCHY HIT ANIMATIONS ─── */
+        .vote-card-stage.pulse-plus {
+          animation: pulsePlus 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+            forwards;
+        }
+
+        .vote-card-stage.pulse-plus::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.8) 0%,
+            transparent 70%
+          );
+          border-radius: 24px;
+          pointer-events: none;
+          z-index: 10;
+          animation: flashEffect 0.45s ease-out forwards;
+        }
+
+        @keyframes pulsePlus {
+          0% {
+            transform: scale(1);
+          }
+          20% {
+            transform: scale(1.08) translateY(-10px) rotateX(4deg);
+          }
+          50% {
+            transform: scale(0.97) translateY(1px);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+
+        @keyframes flashEffect {
+          0% {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          25% {
+            opacity: 1;
+            transform: scale(1.1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.4);
+          }
+        }
+
+        .vote-card-stage.pulse-minus {
+          animation: pulseMinus 0.45s ease-out forwards;
+        }
+
+        .vote-card-stage.pulse-minus::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: rgba(255, 30, 30, 0.35);
+          border-radius: 24px;
+          pointer-events: none;
+          z-index: 10;
+          animation: redFlashEffect 0.45s ease-out forwards;
+        }
+
+        @keyframes pulseMinus {
+          0% {
+            transform: scale(1) translate(0, 0);
+          }
+          15%,
+          45%,
+          75% {
+            transform: scale(0.96) translate(-5px, 2px) rotate(-1deg);
+          }
+          30%,
+          60%,
+          90% {
+            transform: scale(0.96) translate(5px, -2px) rotate(1deg);
+          }
+          100% {
+            transform: scale(1) translate(0, 0);
+          }
+        }
+
+        @keyframes redFlashEffect {
+          0% {
+            opacity: 0;
+          }
+          25% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+
+        /* ─── FLOATING SCORE POPUPS ─── */
+        .floating-scores-container {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          pointer-events: none;
+          z-index: 20;
+        }
+
+        .floating-score-pop {
+          position: absolute;
+          font-family: var(--font-chakra), sans-serif;
+          font-size: 3.25rem;
+          font-weight: 900;
+          letter-spacing: -0.05em;
+          text-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.8),
+            0 0 20px currentColor;
+          animation: scoreFloatUp 1s cubic-bezier(0.18, 0.89, 0.32, 1.28)
+            forwards;
+        }
+
+        .floating-score-pop.plus {
+          color: #00ffcc;
+        }
+
+        .floating-score-pop.minus {
+          color: #ff3c00;
+        }
+
+        @keyframes scoreFloatUp {
+          0% {
+            opacity: 0;
+            transform: translateY(30px) scale(0.5);
+          }
+          20% {
+            opacity: 1;
+            transform: translateY(-10px) scale(1.2);
+          }
+          80% {
+            opacity: 0.8;
+            transform: translateY(-60px) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-90px) scale(0.85);
+          }
         }
 
         .vote-card-placeholder {
@@ -866,6 +1318,26 @@ export default function VoteClient() {
           text-align: center;
         }
 
+        .negative-highlight {
+          display: inline-block;
+          vertical-align: middle;
+          background: rgba(255, 60, 0, 0.18);
+          border: 1px solid rgba(255, 60, 0, 0.35);
+          padding: 1px 6px;
+          border-radius: 6px;
+          color: #fff;
+          font-weight: 700;
+          text-shadow: 0 0 8px rgba(255, 60, 0, 0.6);
+          margin: 0 2px;
+          line-height: 1.2;
+        }
+
+        .vote-score-row button:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+
         .vote-score-row button {
           width: 64px;
           height: 54px;
@@ -881,6 +1353,39 @@ export default function VoteClient() {
         .vote-recent h2 {
           font-size: 1rem;
           font-weight: 600;
+          margin: 0;
+        }
+
+        .vote-recent-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+          margin-bottom: 0.75rem;
+        }
+
+        .clear-recent-btn {
+          border: 1px solid rgba(255, 60, 0, 0.25);
+          background: rgba(255, 60, 0, 0.08);
+          color: #ff9aa3;
+          border-radius: 8px;
+          padding: 4px 10px;
+          font-family: var(--font-kanit), sans-serif;
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .clear-recent-btn:hover {
+          background: rgba(255, 60, 0, 0.2);
+          border-color: rgba(255, 60, 0, 0.45);
+          color: #fff;
+          box-shadow: 0 0 8px rgba(255, 60, 0, 0.25);
+        }
+
+        .clear-recent-btn:active {
+          transform: scale(0.96);
         }
 
         .vote-recent-list {
@@ -900,6 +1405,14 @@ export default function VoteClient() {
           background: rgba(0, 0, 0, 0.18);
         }
 
+        .vote-recent-item strong {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          line-height: 1;
+        }
+
         .vote-recent-item span {
           min-width: 0;
           overflow: hidden;
@@ -910,6 +1423,12 @@ export default function VoteClient() {
 
         .vote-recent-item span:last-child {
           text-align: right;
+        }
+
+        .vote-recent-item span.recent-winner {
+          color: #ffb700;
+          font-weight: 700;
+          text-shadow: 0 0 8px rgba(255, 183, 0, 0.45);
         }
 
         .vote-empty,

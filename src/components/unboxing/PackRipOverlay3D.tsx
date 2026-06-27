@@ -99,8 +99,6 @@ function CinematicCamera({
   return null;
 }
 
-
-
 export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
   isOpen,
   isClosing = false,
@@ -187,14 +185,14 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
       clearTimers();
       stopBGM();
       // Defer state resets to avoid setting state synchronously in effect
-const t = setTimeout(() => {
-          setPhase("idle");
-          setShowStream(false);
-          setShowCards(false);
-          setCinematicMode("idle");
-          setShowHighRarityImpact(false);
-          tearProgressRef.current = 0;
-        }, 0);
+      const t = setTimeout(() => {
+        setPhase("idle");
+        setShowStream(false);
+        setShowCards(false);
+        setCinematicMode("idle");
+        setShowHighRarityImpact(false);
+        tearProgressRef.current = 0;
+      }, 0);
       return () => clearTimeout(t);
     }
   }, [isOpen, clearTimers, stopBGM]);
@@ -239,27 +237,27 @@ const t = setTimeout(() => {
 
     // …after the stream settles, the real cards fly into the row and start
     // their sequential flip reveal.
-    const cardsTimer = setTimeout(
-      () => {
-        setShowCards(true);
-        setPhase("cards");
-        setCinematicMode("reveal");
+    const cardsTimer = setTimeout(() => {
+      setShowCards(true);
+      setPhase("cards");
+      setCinematicMode("reveal");
 
-        // Defer hiding the CSS stream slightly so that it can fade out smoothly
-        // using the .card-stream.settling transition while the 3D cards mount.
-        const cleanupStreamTimer = setTimeout(() => {
-          setShowStream(false);
-        }, 400);
-        timersRef.current.push(cleanupStreamTimer);
-      },
-      220 + streamDuration,
-    );
+      // Defer hiding the CSS stream slightly so that it can fade out smoothly
+      // using the .card-stream.settling transition while the 3D cards mount.
+      const cleanupStreamTimer = setTimeout(() => {
+        setShowStream(false);
+      }, 400);
+      timersRef.current.push(cleanupStreamTimer);
+    }, 220 + streamDuration);
 
     timersRef.current.push(streamTimer, cardsTimer);
   }, [onRipComplete]);
 
   const handleHighRarityImpact = useCallback(() => {
-    console.log("[PackRipOverlay3D] handleHighRarityImpact triggered. isGodPack =", isGodPack);
+    console.log(
+      "[PackRipOverlay3D] handleHighRarityImpact triggered. isGodPack =",
+      isGodPack,
+    );
     if (impactTimerRef.current) clearTimeout(impactTimerRef.current);
     if (impactFrameRef.current !== null) {
       cancelAnimationFrame(impactFrameRef.current);
@@ -274,7 +272,9 @@ const t = setTimeout(() => {
       setShowHighRarityImpact(true);
       const duration = isGodPack ? 900 : 520;
       impactTimerRef.current = setTimeout(() => {
-        console.log("[PackRipOverlay3D] Resetting showHighRarityImpact = false");
+        console.log(
+          "[PackRipOverlay3D] Resetting showHighRarityImpact = false",
+        );
         setShowHighRarityImpact(false);
         impactTimerRef.current = null;
       }, duration);
@@ -342,13 +342,24 @@ const t = setTimeout(() => {
         cursor: phase === "done" ? "pointer" : "default",
       }}
     >
-      <div id="pack-rip-status" className="sr-only" role="status" aria-live="polite">
+      <div
+        id="pack-rip-status"
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+      >
         {phase === "done" ? "เปิดซองสำเร็จแล้ว" : "กำลังเปิดซองการ์ด"}
       </div>
 
       {/* Screen Shake Wrapper: shakes everything inside the overlay on high-rarity card reveal */}
       <div
-        className={showHighRarityImpact ? (isGodPack ? "god-rarity-impact-global" : "high-rarity-impact-global") : ""}
+        className={
+          showHighRarityImpact
+            ? isGodPack
+              ? "god-rarity-impact-global"
+              : "high-rarity-impact-global"
+            : ""
+        }
         style={{
           position: "absolute",
           inset: 0,
@@ -358,205 +369,227 @@ const t = setTimeout(() => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          overflow: "hidden"
+          overflow: "hidden",
         }}
       >
-        <div className={`modern-stage-background ${isGodPack ? "god-stage" : ""}`} aria-hidden="true">
-        {/* Cinematic Volumetric Nebula Glows */}
-        <div className="aurora-glow aurora-1" />
-        <div className="aurora-glow aurora-2" />
-
-        {/* Film Grain overlay */}
-        <div className="film-grain" />
-
-        {/* Silhouette stream: cards dash across left↔right during the burst/stream
-            phase. The last 5 land in a row to foreshadow the reveal. */}
-        {showStream && (
-          <div className={`card-stream ${phase === "cards" ? "settling" : ""}`}>
-            {Array.from({ length: STREAM_CARD_COUNT }, (_, index) => {
-              const isFinal = index >= STREAM_CARD_COUNT - 5;
-              const isLeftToRight = index % 2 === 1;
-
-              let cardClass = "";
-              if (isFinal) {
-                cardClass = isLeftToRight
-                  ? "stream-card-final-left"
-                  : "stream-card-final-right";
-              } else {
-                cardClass = isLeftToRight
-                  ? "stream-card-left-to-right"
-                  : "stream-card-right-to-left";
-              }
-
-              return (
-                <div
-                  key={index}
-                  className={`stream-card ${cardClass}`}
-                  style={
-                    {
-                      "--stream-y": "50%",
-                      "--stream-delay": `${index * STREAM_CARD_STAGGER}ms`,
-                      "--stream-tilt": `${(index % 3) * 1.5 - 1.5}deg`,
-                      "--stream-mid-tilt": `${((index % 3) * 1.5 - 1.5) * -0.25}deg`,
-                      "--stream-end-tilt": `${((index % 3) * 1.5 - 1.5) * -1}deg`,
-                      "--stream-final-x": isFinal
-                        ? FINAL_STREAM_OFFSETS[index - (STREAM_CARD_COUNT - 5)]
-                        : "0px",
-                    } as React.CSSProperties
-                  }
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Cinematic Vignette */}
-        <div className="modern-vignette" />
-      </div>
-
-      {/* ── 3D SCENE (burst + cards phases) ── */}
-      <div
-        className=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 3,
-          visibility: phase === "idle" ? "hidden" : "visible",
-          pointerEvents: phase === "idle" ? "none" : "auto"
-        }}
-      >
-        <Canvas
-          camera={{ position: [0, 0.08, 6.7], fov: 50 }}
-          gl={{
-            antialias: true,
-            alpha: true,
-            powerPreference: "high-performance",
-          }}
-          style={{ background: "transparent" }}
-          dpr={[1, 1.5]}
+        <div
+          className={`modern-stage-background ${isGodPack ? "god-stage" : ""}`}
+          aria-hidden="true"
         >
-          {phase !== "idle" && (
-            <>
-              <fog attach="fog" args={["#07060a", 12, 40]} />
-              <CinematicCamera
-                mode={cinematicMode}
-                prefersReducedMotion={prefersReducedMotion}
-                tearProgressRef={tearProgressRef}
-              />
-              <SceneLighting />
+          {/* Cinematic Volumetric Nebula Glows */}
+          <div className="aurora-glow aurora-1" />
+          <div className="aurora-glow aurora-2" />
 
-              {/* 3D Tearing pack */}
-              {phase === "tear" && (
-                <TearingPackThree
-                  season={season}
-                  mode={mode}
-                  prefersReducedMotion={prefersReducedMotion}
-                  onTearThreshold={handleTearThreshold}
-                  onTearComplete={handleTearComplete}
-                  sharedProgressRef={tearProgressRef}
-                  autoStart={autoOpen}
-                />
-              )}
+          {/* Film Grain overlay */}
+          <div className="film-grain" />
 
-              {/* 3D card row */}
-              {showCards && cards.length > 0 && (
-                <CardRevealThree
-                  cards={cards}
-                  season={season}
-                  isInteractive={phase === "cards" || phase === "done"}
-                  onHighRarityImpact={handleHighRarityImpact}
-                  onComplete={handleRevealComplete}
-                />
-              )}
-            </>
+          {/* Silhouette stream: cards dash across left↔right during the burst/stream
+            phase. The last 5 land in a row to foreshadow the reveal. */}
+          {showStream && (
+            <div
+              className={`card-stream ${phase === "cards" ? "settling" : ""}`}
+            >
+              {Array.from({ length: STREAM_CARD_COUNT }, (_, index) => {
+                const isFinal = index >= STREAM_CARD_COUNT - 5;
+                const isLeftToRight = index % 2 === 1;
+
+                let cardClass = "";
+                if (isFinal) {
+                  cardClass = isLeftToRight
+                    ? "stream-card-final-left"
+                    : "stream-card-final-right";
+                } else {
+                  cardClass = isLeftToRight
+                    ? "stream-card-left-to-right"
+                    : "stream-card-right-to-left";
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`stream-card ${cardClass}`}
+                    style={
+                      {
+                        "--stream-y": "50%",
+                        "--stream-delay": `${index * STREAM_CARD_STAGGER}ms`,
+                        "--stream-tilt": `${(index % 3) * 1.5 - 1.5}deg`,
+                        "--stream-mid-tilt": `${((index % 3) * 1.5 - 1.5) * -0.25}deg`,
+                        "--stream-end-tilt": `${((index % 3) * 1.5 - 1.5) * -1}deg`,
+                        "--stream-final-x": isFinal
+                          ? FINAL_STREAM_OFFSETS[
+                              index - (STREAM_CARD_COUNT - 5)
+                            ]
+                          : "0px",
+                      } as React.CSSProperties
+                    }
+                  />
+                );
+              })}
+            </div>
           )}
-        </Canvas>
-      </div>
 
-      {/* Cinematic overlay: letterbox bars + suspense scan lines + center
+          {/* Cinematic Vignette */}
+          <div className="modern-vignette" />
+        </div>
+
+        {/* ── 3D SCENE (burst + cards phases) ── */}
+        <div
+          className=""
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 3,
+            visibility: phase === "idle" ? "hidden" : "visible",
+            pointerEvents: phase === "idle" ? "none" : "auto",
+          }}
+        >
+          <Canvas
+            camera={{ position: [0, 0.08, 6.7], fov: 50 }}
+            gl={{
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance",
+            }}
+            style={{ background: "transparent" }}
+            dpr={[1, 1.5]}
+          >
+            {phase !== "idle" && (
+              <>
+                <fog attach="fog" args={["#07060a", 12, 40]} />
+                <CinematicCamera
+                  mode={cinematicMode}
+                  prefersReducedMotion={prefersReducedMotion}
+                  tearProgressRef={tearProgressRef}
+                />
+                <SceneLighting />
+
+                {/* 3D Tearing pack */}
+                {phase === "tear" && (
+                  <TearingPackThree
+                    season={season}
+                    mode={mode}
+                    prefersReducedMotion={prefersReducedMotion}
+                    onTearThreshold={handleTearThreshold}
+                    onTearComplete={handleTearComplete}
+                    sharedProgressRef={tearProgressRef}
+                    autoStart={autoOpen}
+                  />
+                )}
+
+                {/* 3D card row */}
+                {showCards && cards.length > 0 && (
+                  <CardRevealThree
+                    cards={cards}
+                    season={season}
+                    isInteractive={phase === "cards" || phase === "done"}
+                    onHighRarityImpact={handleHighRarityImpact}
+                    onComplete={handleRevealComplete}
+                  />
+                )}
+              </>
+            )}
+          </Canvas>
+        </div>
+
+        {/* Cinematic overlay: letterbox bars + suspense scan lines + center
           focus glow. Shown from the stream phase onward so the silhouette
           dash is framed as a build-up to the reveal, not just decoration
           that tunnels through and vanishes. */}
-      {(phase === "stream" || phase === "cards" || phase === "done") && (
+        {(phase === "stream" || phase === "cards" || phase === "done") && (
+          <div
+            className={`cinematic-overlay ${cinematicMode}`}
+            aria-hidden="true"
+          >
+            <div className="cinematic-vignette" />
+            <div className="suspense-lines" />
+            <div className="center-focus" />
+            <div className="cinematic-bar cinematic-bar-top" />
+            <div className="cinematic-bar cinematic-bar-bottom" />
+            <div className="brake-flash" />
+          </div>
+        )}
+
+        {showHighRarityImpact && (
+          <div
+            className={isGodPack ? "god-rarity-flash" : "high-rarity-flash"}
+            aria-hidden="true"
+          />
+        )}
+
+        {isGodPack && phase === "done" && (
+          <div className="god-pack-shonen">
+            {/* Manga Speed Lines radiating from center */}
+            <div className="manga-speed-lines" />
+
+            {/* Heavy comic brush impact borders */}
+            <div className="shonen-impact-vignette" />
+
+            {/* Jagged anime lightning sparks */}
+            <div className="shonen-lightning-container">
+              <div className="shonen-lightning bolt-1" />
+              <div className="shonen-lightning bolt-2" />
+              <div className="shonen-lightning bolt-3" />
+            </div>
+
+            {/* Hand-drawn action shockwaves */}
+            <div className="shonen-energy-burst">
+              <div className="energy-ring ring-1" />
+              <div className="energy-ring ring-2" />
+              <div className="energy-ring ring-3" />
+            </div>
+
+            {/* Diagonal Screen slash slice */}
+            <div className="shonen-slash" />
+
+            {/* Title Container */}
+            <div className="shonen-title-wrapper">
+              <div className="shonen-title" data-text="GOD PACK">
+                GOD PACK
+              </div>
+              <div className="shonen-subtitle">
+                🔥 LIMIT BREAK: ALL SSR+ UNLOCKED 🔥
+              </div>
+            </div>
+          </div>
+        )}
+
+        {phase === "cards" && (
+          <div className="reveal-gesture-hint" aria-hidden="true">
+            <span className="gesture-line" />
+            แตะหรือปัดการ์ดเพื่อเปิด
+          </div>
+        )}
+
+        {phase === "tear" && (
+          <div className="tear-gesture-hint" aria-hidden="true">
+            <span className="tear-direction">↔</span>
+            {prefersReducedMotion ? "แตะซองเพื่อเปิด" : "ลากผ่านขอบซองเพื่อฉีก"}
+          </div>
+        )}
+
+        {/* Tap to close hint */}
+        {phase === "done" && (
+          <button
+            className="close-hint"
+            type="button"
+            onClick={handleCloseButton}
+          >
+            แตะเพื่อปิด
+          </button>
+        )}
+
+        {/* Mute button */}
         <div
-          className={`cinematic-overlay ${cinematicMode}`}
-          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            zIndex: 30,
+          }}
+          onClick={(event) => event.stopPropagation()}
         >
-          <div className="cinematic-vignette" />
-          <div className="suspense-lines" />
-          <div className="center-focus" />
-          <div className="cinematic-bar cinematic-bar-top" />
-          <div className="cinematic-bar cinematic-bar-bottom" />
-          <div className="brake-flash" />
+          <MuteButton />
         </div>
-      )}
-
-      {showHighRarityImpact && (
-        <div className={isGodPack ? "god-rarity-flash" : "high-rarity-flash"} aria-hidden="true" />
-      )}
-
-
-      {isGodPack && phase === "done" && (
-        <div className="god-pack-shonen">
-          {/* Manga Speed Lines radiating from center */}
-          <div className="manga-speed-lines" />
-
-          {/* Heavy comic brush impact borders */}
-          <div className="shonen-impact-vignette" />
-
-          {/* Jagged anime lightning sparks */}
-          <div className="shonen-lightning-container">
-            <div className="shonen-lightning bolt-1" />
-            <div className="shonen-lightning bolt-2" />
-            <div className="shonen-lightning bolt-3" />
-          </div>
-
-          {/* Hand-drawn action shockwaves */}
-          <div className="shonen-energy-burst">
-            <div className="energy-ring ring-1" />
-            <div className="energy-ring ring-2" />
-            <div className="energy-ring ring-3" />
-          </div>
-
-          {/* Diagonal Screen slash slice */}
-          <div className="shonen-slash" />
-
-          {/* Title Container */}
-          <div className="shonen-title-wrapper">
-            <div className="shonen-title" data-text="GOD PACK">GOD PACK</div>
-            <div className="shonen-subtitle">🔥 LIMIT BREAK: ALL SR+ UNLOCKED 🔥</div>
-          </div>
-        </div>
-      )}
-
-      {phase === "cards" && (
-        <div className="reveal-gesture-hint" aria-hidden="true">
-          <span className="gesture-line" />
-          แตะหรือปัดการ์ดเพื่อเปิด
-        </div>
-      )}
-
-      {phase === "tear" && (
-        <div className="tear-gesture-hint" aria-hidden="true">
-          <span className="tear-direction">↔</span>
-          {prefersReducedMotion ? "แตะซองเพื่อเปิด" : "ลากผ่านขอบซองเพื่อฉีก"}
-        </div>
-      )}
-
-      {/* Tap to close hint */}
-      {phase === "done" && (
-        <button className="close-hint" type="button" onClick={handleCloseButton}>
-          แตะเพื่อปิด
-        </button>
-      )}
-
-      {/* Mute button */}
-      <div
-        style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 30 }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <MuteButton />
-      </div>
       </div>
 
       <style jsx>{`
@@ -579,7 +612,9 @@ const t = setTimeout(() => {
           isolation: isolate;
           overflow: hidden;
           animation: overlayFadeIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-          transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+          transition:
+            opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+            transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
           opacity: 1;
           transform: scale(1);
         }
@@ -594,7 +629,9 @@ const t = setTimeout(() => {
           align-items: center;
           gap: 0.65rem;
           color: rgba(255, 255, 255, 0.72);
-          font: 400 0.82rem var(--font-kanit), sans-serif;
+          font:
+            400 0.82rem var(--font-kanit),
+            sans-serif;
           transform: translateX(-50%);
           animation: gesture-hint-enter 240ms cubic-bezier(0.25, 1, 0.5, 1) both;
           pointer-events: none;
@@ -608,7 +645,9 @@ const t = setTimeout(() => {
         .tear-direction {
           min-width: 2.25rem;
           color: rgba(255, 255, 255, 0.92);
-          font: 500 1.2rem var(--font-chakra), sans-serif;
+          font:
+            500 1.2rem var(--font-chakra),
+            sans-serif;
           letter-spacing: 0.12em;
           text-align: center;
         }
@@ -618,17 +657,30 @@ const t = setTimeout(() => {
           height: 1px;
           background: rgba(255, 255, 255, 0.48);
           transform-origin: right center;
-          animation: gesture-line-draw 900ms cubic-bezier(0.25, 1, 0.5, 1) 180ms both;
+          animation: gesture-line-draw 900ms cubic-bezier(0.25, 1, 0.5, 1) 180ms
+            both;
         }
 
         @keyframes gesture-hint-enter {
-          from { opacity: 0; transform: translate(-50%, 6px); }
-          to { opacity: 1; transform: translate(-50%, 0); }
+          from {
+            opacity: 0;
+            transform: translate(-50%, 6px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
         }
 
         @keyframes gesture-line-draw {
-          from { transform: scaleX(0); opacity: 0; }
-          to { transform: scaleX(1); opacity: 1; }
+          from {
+            transform: scaleX(0);
+            opacity: 0;
+          }
+          to {
+            transform: scaleX(1);
+            opacity: 1;
+          }
         }
 
         .pack-rip-3d-overlay.is-exiting {
@@ -642,7 +694,10 @@ const t = setTimeout(() => {
           transform: scale(0.94);
           pointer-events: none;
           visibility: hidden;
-          transition: visibility 0s linear 0.4s, opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+          transition:
+            visibility 0s linear 0.4s,
+            opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+            transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .pack-rip-3d-overlay.is-god-pack {
@@ -705,8 +760,6 @@ const t = setTimeout(() => {
           outline: 3px solid #ffd54a;
           outline-offset: 4px;
         }
-
-
 
         .modern-stage-background {
           position: absolute;
@@ -786,27 +839,49 @@ const t = setTimeout(() => {
         }
 
         @keyframes aurora-drift-1 {
-          0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(8%, 12%) scale(1.1); }
-          100% { transform: translate(-5%, 5%) scale(0.95); }
+          0% {
+            transform: translate(0, 0) scale(1);
+          }
+          50% {
+            transform: translate(8%, 12%) scale(1.1);
+          }
+          100% {
+            transform: translate(-5%, 5%) scale(0.95);
+          }
         }
         @keyframes aurora-drift-2 {
-          0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-10%, -8%) scale(0.9); }
-          100% { transform: translate(6%, 10%) scale(1.15); }
+          0% {
+            transform: translate(0, 0) scale(1);
+          }
+          50% {
+            transform: translate(-10%, -8%) scale(0.9);
+          }
+          100% {
+            transform: translate(6%, 10%) scale(1.15);
+          }
         }
         @keyframes aurora-drift-3 {
-          0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(12%, -10%) scale(1.1); }
-          100% { transform: translate(-8%, 8%) scale(0.9); }
+          0% {
+            transform: translate(0, 0) scale(1);
+          }
+          50% {
+            transform: translate(12%, -10%) scale(1.1);
+          }
+          100% {
+            transform: translate(-8%, 8%) scale(0.9);
+          }
         }
         @keyframes aurora-drift-4 {
-          0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-6%, 15%) scale(1.05); }
-          100% { transform: translate(10%, -5%) scale(0.95); }
+          0% {
+            transform: translate(0, 0) scale(1);
+          }
+          50% {
+            transform: translate(-6%, 15%) scale(1.05);
+          }
+          100% {
+            transform: translate(10%, -5%) scale(0.95);
+          }
         }
-
-
 
         .film-grain {
           position: absolute;
@@ -826,7 +901,7 @@ const t = setTimeout(() => {
 
         .ambient-particle {
           position: absolute;
-          background: rgba(255, 255, 255, 0.20);
+          background: rgba(255, 255, 255, 0.2);
           border-radius: 50%;
           box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
           opacity: 0;
@@ -850,7 +925,12 @@ const t = setTimeout(() => {
             opacity: 0.8;
           }
           100% {
-            transform: translate3d(var(--particle-drift-x), var(--particle-drift-y), 0) scale(1.1);
+            transform: translate3d(
+                var(--particle-drift-x),
+                var(--particle-drift-y),
+                0
+              )
+              scale(1.1);
             opacity: 0;
           }
         }
@@ -876,8 +956,6 @@ const t = setTimeout(() => {
             rgba(8, 2, 0, 0.9) 100%
           );
         }
-
-
 
         /* Silhouette card stream — restored original animation. Cards fly across
            the stage left↔right with alternating directions; the last five
@@ -960,7 +1038,8 @@ const t = setTimeout(() => {
             opacity: 0;
             transform: translate3d(-180px, -50%, 0) rotate(var(--stream-tilt));
           }
-          10%, 90% {
+          10%,
+          90% {
             opacity: 1;
           }
           100% {
@@ -976,7 +1055,8 @@ const t = setTimeout(() => {
             transform: translate3d(calc(100vw + 150px), -50%, 0)
               rotate(var(--stream-tilt));
           }
-          10%, 90% {
+          10%,
+          90% {
             opacity: 1;
           }
           100% {
@@ -1026,8 +1106,12 @@ const t = setTimeout(() => {
         }
 
         @keyframes stream-crossfade {
-          from { opacity: 1; }
-          to { opacity: 0; }
+          from {
+            opacity: 1;
+          }
+          to {
+            opacity: 0;
+          }
         }
 
         .cinematic-overlay {
@@ -1220,8 +1304,6 @@ const t = setTimeout(() => {
           }
         }
 
-
-
         @keyframes focus-breathe {
           50% {
             opacity: 0.55;
@@ -1274,8 +1356,12 @@ const t = setTimeout(() => {
         }
 
         @keyframes speed-lines-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         .shonen-impact-vignette {
@@ -1283,14 +1369,26 @@ const t = setTimeout(() => {
           inset: 0;
           z-index: 2;
           pointer-events: none;
-          box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.95), inset 0 0 40px rgba(255, 60, 0, 0.35);
+          box-shadow:
+            inset 0 0 100px rgba(0, 0, 0, 0.95),
+            inset 0 0 40px rgba(255, 60, 0, 0.35);
           border: clamp(4px, 1.2vh, 10px) solid #000;
           animation: vignette-pulse 0.18s ease infinite alternate;
         }
 
         @keyframes vignette-pulse {
-          0% { border-color: #000; box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.95), inset 0 0 40px rgba(255, 60, 0, 0.3); }
-          100% { border-color: #ff3c00; box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.98), inset 0 0 60px rgba(255, 140, 0, 0.5); }
+          0% {
+            border-color: #000;
+            box-shadow:
+              inset 0 0 100px rgba(0, 0, 0, 0.95),
+              inset 0 0 40px rgba(255, 60, 0, 0.3);
+          }
+          100% {
+            border-color: #ff3c00;
+            box-shadow:
+              inset 0 0 120px rgba(0, 0, 0, 0.98),
+              inset 0 0 60px rgba(255, 140, 0, 0.5);
+          }
         }
 
         .shonen-lightning-container {
@@ -1305,7 +1403,9 @@ const t = setTimeout(() => {
           width: 4px;
           height: 140px;
           background: #fff;
-          box-shadow: 0 0 20px #ffd700, 0 0 6px #fff;
+          box-shadow:
+            0 0 20px #ffd700,
+            0 0 6px #fff;
           opacity: 0;
           will-change: transform, opacity;
         }
@@ -1332,8 +1432,15 @@ const t = setTimeout(() => {
         }
 
         @keyframes lightning-strike {
-          0%, 100% { opacity: 0; transform: scaleY(0.8); }
-          50% { opacity: 1; transform: scaleY(1.2); }
+          0%,
+          100% {
+            opacity: 0;
+            transform: scaleY(0.8);
+          }
+          50% {
+            opacity: 1;
+            transform: scaleY(1.2);
+          }
         }
 
         .shonen-energy-burst {
@@ -1354,7 +1461,18 @@ const t = setTimeout(() => {
           position: absolute;
           background: transparent;
           border: 4px solid #fff;
-          clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+          clip-path: polygon(
+            50% 0%,
+            61% 35%,
+            98% 35%,
+            68% 57%,
+            79% 91%,
+            50% 70%,
+            21% 91%,
+            32% 57%,
+            2% 35%,
+            39% 35%
+          );
           opacity: 0;
           will-change: transform, opacity;
         }
@@ -1364,7 +1482,8 @@ const t = setTimeout(() => {
           filter: drop-shadow(0 0 12px #ff3c00);
           width: 80px;
           height: 80px;
-          animation: shonen-ring-expand-1 1s cubic-bezier(0.1, 0.8, 0.3, 1) 0.25s both;
+          animation: shonen-ring-expand-1 1s cubic-bezier(0.1, 0.8, 0.3, 1)
+            0.25s both;
         }
 
         .ring-2 {
@@ -1372,7 +1491,8 @@ const t = setTimeout(() => {
           filter: drop-shadow(0 0 16px #ff8c00);
           width: 140px;
           height: 140px;
-          animation: shonen-ring-expand-2 1.1s cubic-bezier(0.1, 0.8, 0.3, 1) 0.3s both;
+          animation: shonen-ring-expand-2 1.1s cubic-bezier(0.1, 0.8, 0.3, 1)
+            0.3s both;
         }
 
         .ring-3 {
@@ -1380,22 +1500,41 @@ const t = setTimeout(() => {
           filter: drop-shadow(0 0 20px #ff3c00);
           width: 200px;
           height: 200px;
-          animation: shonen-ring-expand-3 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) 0.35s both;
+          animation: shonen-ring-expand-3 1.2s cubic-bezier(0.1, 0.8, 0.3, 1)
+            0.35s both;
         }
 
         @keyframes shonen-ring-expand-1 {
-          0% { transform: scale(0.1) rotate(0deg); opacity: 1; }
-          100% { transform: scale(4) rotate(120deg); opacity: 0; }
+          0% {
+            transform: scale(0.1) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(4) rotate(120deg);
+            opacity: 0;
+          }
         }
 
         @keyframes shonen-ring-expand-2 {
-          0% { transform: scale(0.1) rotate(0deg); opacity: 1; }
-          100% { transform: scale(3.2) rotate(-90deg); opacity: 0; }
+          0% {
+            transform: scale(0.1) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(3.2) rotate(-90deg);
+            opacity: 0;
+          }
         }
 
         @keyframes shonen-ring-expand-3 {
-          0% { transform: scale(0.1) rotate(0deg); opacity: 0.8; }
-          100% { transform: scale(2.6) rotate(180deg); opacity: 0; }
+          0% {
+            transform: scale(0.1) rotate(0deg);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(2.6) rotate(180deg);
+            opacity: 0;
+          }
         }
 
         .shonen-slash {
@@ -1405,18 +1544,32 @@ const t = setTimeout(() => {
           width: 140%;
           height: 16px;
           background: #fff;
-          box-shadow: 0 0 30px #ff3c00, 0 0 60px #fff;
+          box-shadow:
+            0 0 30px #ff3c00,
+            0 0 60px #fff;
           transform: translateY(-50%) rotate(-22deg) scaleX(0);
           transform-origin: left;
           z-index: 3;
           pointer-events: none;
-          animation: slash-slice 0.45s cubic-bezier(0.15, 0.85, 0.3, 1) 0.2s both;
+          animation: slash-slice 0.45s cubic-bezier(0.15, 0.85, 0.3, 1) 0.2s
+            both;
         }
 
         @keyframes slash-slice {
-          0% { transform: translateY(-50%) rotate(-22deg) scaleX(0); opacity: 1; }
-          40% { transform: translateY(-50%) rotate(-22deg) scaleX(1); opacity: 1; filter: brightness(3.5); }
-          100% { transform: translateY(-50%) rotate(-22deg) scaleX(1); opacity: 0; filter: brightness(1); }
+          0% {
+            transform: translateY(-50%) rotate(-22deg) scaleX(0);
+            opacity: 1;
+          }
+          40% {
+            transform: translateY(-50%) rotate(-22deg) scaleX(1);
+            opacity: 1;
+            filter: brightness(3.5);
+          }
+          100% {
+            transform: translateY(-50%) rotate(-22deg) scaleX(1);
+            opacity: 0;
+            filter: brightness(1);
+          }
         }
 
         .shonen-title-wrapper {
@@ -1441,11 +1594,20 @@ const t = setTimeout(() => {
           line-height: 1;
           text-transform: uppercase;
           text-align: center;
-          background: linear-gradient(180deg, #ffffff 10%, #ffd700 45%, #ff3c00 80%, #000000 100%);
+          background: linear-gradient(
+            180deg,
+            #ffffff 10%,
+            #ffd700 45%,
+            #ff3c00 80%,
+            #000000 100%
+          );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          filter: drop-shadow(4px 4px 0px #000) drop-shadow(-4px -4px 0px #000) drop-shadow(4px -4px 0px #000) drop-shadow(-4px 4px 0px #000) drop-shadow(0px 10px 20px rgba(255, 60, 0, 0.75));
-          animation: shonen-title-slam 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+          filter: drop-shadow(4px 4px 0px #000) drop-shadow(-4px -4px 0px #000)
+            drop-shadow(4px -4px 0px #000) drop-shadow(-4px 4px 0px #000)
+            drop-shadow(0px 10px 20px rgba(255, 60, 0, 0.75));
+          animation: shonen-title-slam 1.4s
+            cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
         }
 
         .shonen-subtitle {
@@ -1455,18 +1617,27 @@ const t = setTimeout(() => {
           letter-spacing: 0.2em;
           color: #fff;
           text-transform: uppercase;
-          filter: drop-shadow(2px 2px 0px #000) drop-shadow(-2px -2px 0px #000) drop-shadow(2px -2px 0px #000) drop-shadow(-2px 2px 0px #000);
+          filter: drop-shadow(2px 2px 0px #000) drop-shadow(-2px -2px 0px #000)
+            drop-shadow(2px -2px 0px #000) drop-shadow(-2px 2px 0px #000);
           opacity: 0;
-          animation: shonen-sub-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+          animation: shonen-sub-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s
+            both;
         }
 
         @keyframes shonen-sub-appear {
-          0% { opacity: 0; transform: translateY(15px) scale(0.8); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% {
+            opacity: 0;
+            transform: translateY(15px) scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
 
         .god-rarity-impact {
-          animation: shonen-earthquake 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+          animation: shonen-earthquake 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97)
+            both;
           will-change: transform;
         }
 
@@ -1476,17 +1647,26 @@ const t = setTimeout(() => {
           z-index: 18;
           pointer-events: none;
           background: #ffffff;
-          box-shadow: inset 0 0 120px #ff3c00, 0 0 100px #ffd700;
+          box-shadow:
+            inset 0 0 120px #ff3c00,
+            0 0 100px #ffd700;
           animation: shonen-flash-out 0.85s cubic-bezier(0.1, 0.8, 0.3, 1) both;
         }
 
         @keyframes shonen-flash-out {
-          0% { opacity: 1; filter: brightness(3.5); }
-          20% { opacity: 1; filter: brightness(2); }
-          100% { opacity: 0; filter: brightness(1); }
+          0% {
+            opacity: 1;
+            filter: brightness(3.5);
+          }
+          20% {
+            opacity: 1;
+            filter: brightness(2);
+          }
+          100% {
+            opacity: 0;
+            filter: brightness(1);
+          }
         }
-
-
 
         @keyframes shonen-title-slam {
           0% {
@@ -1523,17 +1703,39 @@ const t = setTimeout(() => {
         }
 
         @keyframes shonen-earthquake {
-          0% { transform: translate3d(0, 0, 0) scale(1.05) rotate(0deg); }
-          10% { transform: translate3d(-24px, 18px, 0) scale(1.15) rotate(-3.5deg); }
-          20% { transform: translate3d(20px, -18px, 0) scale(0.92) rotate(3.5deg); }
-          30% { transform: translate3d(-30px, -12px, 0) scale(1.18) rotate(-5deg); }
-          40% { transform: translate3d(30px, 12px, 0) scale(0.93) rotate(5deg); }
-          50% { transform: translate3d(-18px, 24px, 0) scale(1.12) rotate(-3deg); }
-          60% { transform: translate3d(18px, -18px, 0) scale(0.96) rotate(3deg); }
-          70% { transform: translate3d(-12px, 12px, 0) scale(1.08) rotate(-1.5deg); }
-          80% { transform: translate3d(12px, -8px, 0) scale(1.03) rotate(1.5deg); }
-          90% { transform: translate3d(-4px, 4px, 0) scale(1.01) rotate(-0.5deg); }
-          100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+          0% {
+            transform: translate3d(0, 0, 0) scale(1.05) rotate(0deg);
+          }
+          10% {
+            transform: translate3d(-24px, 18px, 0) scale(1.15) rotate(-3.5deg);
+          }
+          20% {
+            transform: translate3d(20px, -18px, 0) scale(0.92) rotate(3.5deg);
+          }
+          30% {
+            transform: translate3d(-30px, -12px, 0) scale(1.18) rotate(-5deg);
+          }
+          40% {
+            transform: translate3d(30px, 12px, 0) scale(0.93) rotate(5deg);
+          }
+          50% {
+            transform: translate3d(-18px, 24px, 0) scale(1.12) rotate(-3deg);
+          }
+          60% {
+            transform: translate3d(18px, -18px, 0) scale(0.96) rotate(3deg);
+          }
+          70% {
+            transform: translate3d(-12px, 12px, 0) scale(1.08) rotate(-1.5deg);
+          }
+          80% {
+            transform: translate3d(12px, -8px, 0) scale(1.03) rotate(1.5deg);
+          }
+          90% {
+            transform: translate3d(-4px, 4px, 0) scale(1.01) rotate(-0.5deg);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1567,7 +1769,6 @@ const t = setTimeout(() => {
           }
         }
       `}</style>
-
     </div>
   );
 };
