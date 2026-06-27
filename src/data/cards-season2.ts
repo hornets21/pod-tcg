@@ -338,14 +338,6 @@ export const CARDS_SEASON2: Card[] = [
     ability: "ร่วมเป็น 1 ในหลานอาปิแอร์",
   },
   {
-    role_id: "1356458345812459611",
-    name: "ลูกหาบ พี่ว่าน Craftbeer Hunter",
-    isGacha: "Y",
-    rarity: "C",
-    image: "https://img.lucky-pod.fun/op2/op-2-พี่ว่าน-v2.webp",
-    ability: "สะสมเพื่อซัมม่อน ลูกหาบ Exodia",
-  },
-  {
     role_id: "1337273801662136360",
     name: "ลูกหาบSARABEST",
     isGacha: "Y",
@@ -1264,6 +1256,23 @@ export const CARDS_SEASON2: Card[] = [
     isGacha: "Y",
     rarity: "UR",
     image: "https://img.lucky-pod.fun/op2/op-2-หมงหมง.webp",
+    ability: "",
+  },
+  {
+    role_id: "1517938172846280804",
+    name: "อัครวสาวกแห่งองค์พระผู้เป็นว่าน",
+    isGacha: "Y",
+    rarity: "LEG",
+    image:
+      "https://img.lucky-pod.fun/op2/op-2-อัครวสาวกแห่งองค์พระผู้เป็นว่าน.webp",
+    ability: "",
+  },
+  {
+    role_id: "1513261078321172833",
+    name: "สาวกแห่งองค์พระผู้เป็นว่าน",
+    isGacha: "Y",
+    rarity: "C",
+    image: "https://img.lucky-pod.fun/op2/op-2-สาวกแห่งองค์พระผู้เป็นว่าน.webp",
     ability: "",
   },
 ];

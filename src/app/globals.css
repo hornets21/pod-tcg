@@ -258,10 +258,11 @@ body::after {
 }
 
 .mobile-season-btn.active {
-    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    background: var(--accent);
     border-color: transparent;
-    color: #fff;
-    box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+    color: #07060a;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
 }
 
 .mobile-auth-section {
@@ -334,14 +335,14 @@ body::after {
 
 /* --- Modern Top Navigation Bar --- */
 #main-header {
-    background: rgba(8, 7, 11, 0.85);
+    background: rgba(7, 6, 10, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: none !important;
     position: sticky;
     top: 0;
     z-index: 1000;
-    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease, height 0.4s ease, opacity 0.3s ease, visibility 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 body.pack-rip-overlay-active #main-header {
@@ -356,9 +357,9 @@ body.pack-rip-overlay-active #main-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 75px;
+    height: 64px;
     padding: 0 2.5rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .nav-group-container {
@@ -421,17 +422,17 @@ body.pack-rip-overlay-active #main-header {
 
 /* Collapsed (Scrolled) State */
 #main-header.collapsed {
-    background: rgba(4, 3, 5, 0.96);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    border-bottom-color: rgba(0, 210, 255, 0.15);
+    background: rgba(7, 6, 10, 0.92);
+    box-shadow: 0 4px 20px rgba(0, 210, 255, 0.08), 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-bottom: none !important;
 }
 
 #main-header.collapsed .header-inner {
-    height: 60px;
+    height: 64px;
 }
 
 #main-header.collapsed #main-title {
-    font-size: 1.2rem;
+    font-size: 1.18rem;
 }
 
 /* --- Esports Stretching Tabs & Slanted Buttons --- */
@@ -918,24 +919,30 @@ section.active {
 }
 
 .btn-primary {
-    background: linear-gradient(to right, #00d2ff, #3a7bd5);
-    border: none;
-    color: white;
+    background: var(--accent);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #07060a;
     padding: 1rem 3rem;
     font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
-    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .btn-primary:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.25);
 }
 
 .btn-primary:hover {
-    box-shadow: 0 8px 25px rgba(0, 210, 255, 0.6);
-    filter: brightness(1.1);
+    background: #fff;
+    color: #07060a;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 /* Card Styles */
@@ -1163,8 +1170,8 @@ section.active {
     width: 55px;
     height: 55px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #3a7bd5);
-    color: white;
+    background: var(--accent);
+    color: #07060a;
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
@@ -1816,11 +1823,11 @@ section.active {
 }
 
 .filters button.active {
-    background: linear-gradient(to right, #00d2ff, #3a7bd5);
-    border-color: transparent;
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
-    font-weight: 600;
+    background: var(--accent);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #07060a;
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.35);
+    font-weight: 700;
 }
 
 /* Collection Grid Items - Not yet owned */
@@ -2355,19 +2362,22 @@ section.active {
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
     padding: 0.6rem 1.5rem;
     border-radius: 30px;
     cursor: pointer;
     font-family: 'Kanit', sans-serif;
-    transition: all 0.3s ease;
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(0, 210, 255, 0.3);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
+    transform: translateY(-1px);
 }
 
 .btn-secondary:disabled {
@@ -2743,43 +2753,37 @@ section.active {
         animation: none !important;
     }
 }
-
+
 
 /* --- Header refresh: compact arcade command bar --- */
 #main-header {
-    background: rgba(7, 6, 10, 0.78);
-    border-bottom-color: rgba(255, 255, 255, 0.07);
+    background: rgba(7, 6, 10, 0.75);
+    border-bottom: none !important;
     backdrop-filter: blur(18px) saturate(135%);
     -webkit-backdrop-filter: blur(18px) saturate(135%);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #main-header::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    bottom: -1px;
-    left: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(0, 210, 255, 0.6) 50%, transparent 100%);
-    opacity: 0.35;
-    pointer-events: none;
+    display: none !important;
 }
 
 #main-header.collapsed {
-    background: rgba(5, 4, 8, 0.93);
-    border-bottom-color: rgba(0, 210, 255, 0.12);
-    box-shadow: none;
+    background: rgba(7, 6, 10, 0.92);
+    border-bottom: none !important;
+    box-shadow: 0 4px 20px rgba(0, 210, 255, 0.08), 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .header-inner {
     width: min(100%, 1680px);
-    height: 72px;
+    height: 64px;
     padding: 0 clamp(1.25rem, 3vw, 3rem);
     gap: 1.5rem;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #main-header.collapsed .header-inner {
-    height: 60px;
+    height: 64px;
 }
 
 .nav-group-container {
@@ -2830,18 +2834,21 @@ section.active {
 }
 
 .nav-links {
+    height: 100%;
+    display: flex;
+    align-items: center;
     gap: 0.3rem;
-    padding: 0.55rem 0;
+    margin: 0;
+    padding: 0;
 }
 
 .nav-links a:not(.season-toggle-btn),
 .nav-links button:not(.season-toggle-btn) {
-    height: 100%;
-    min-height: 44px;
+    height: 40px;
     gap: 0.55rem;
     padding: 0 clamp(0.7rem, 1vw, 1.05rem);
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 8px;
     color: rgba(255, 255, 255, 0.62) !important;
     font-family: var(--font-kanit), sans-serif;
     font-size: 0.84rem;
@@ -2849,15 +2856,19 @@ section.active {
     letter-spacing: 0;
     text-transform: none;
     transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
 .nav-links a:not(.season-toggle-btn)::after,
 .nav-links button:not(.season-toggle-btn)::after {
     content: "";
     position: absolute;
-    right: 28%;
-    bottom: 2px;
-    left: 28%;
+    right: 25%;
+    bottom: 4px;
+    left: 25%;
     height: 2px;
     border-radius: 2px;
     background: var(--accent);
@@ -2910,14 +2921,18 @@ section.active {
 }
 
 .auth-btn-slanted {
-    min-height: 42px;
-    padding: 0.55rem 1.35rem;
+    min-height: auto;
+    height: 40px;
+    padding: 0 1.35rem;
     box-shadow: 0 0 18px rgba(0, 210, 255, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .info-btn-cyber {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     box-shadow: none;
     backdrop-filter: none;
 }
@@ -2928,11 +2943,11 @@ section.active {
 }
 
 .profile-trigger {
-    min-height: 44px;
+    height: 40px;
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    padding: 0.35rem 0.6rem 0.35rem 0.35rem;
+    padding: 0.25rem 0.6rem 0.25rem 0.25rem;
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.045);

@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -14,18 +15,162 @@ import { AUDIO_URLS, useAudio } from "../../hooks/useAudio";
 import { PackSingleThree } from "../../components/three/PackSingleThree";
 import { ThreeScene } from "../../components/three/ThreeScene";
 import { PackRipOverlay3D } from "../../components/unboxing/PackRipOverlay3D";
+import { FullArtCard } from "../../components/FullArtCard";
+import { Card } from "../../components/Card";
+
+const getRarityColor = (rarity: string) => {
+  switch (rarity) {
+    case "LEG": return "#dc2626";
+    case "SEC": return "#4f46e5";
+    case "UR": return "#ea580c";
+    case "SSR": return "#ca8a04";
+    case "SR": return "#9333ea";
+    case "R": return "#2563eb";
+    case "C": return "#4b5563";
+    case "EVENT": return "#db2777";
+    default: return "#334155";
+  }
+};
 
 export default function OpeningClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
-  const { openPack, isLoaded, addToCollection } = useGacha(season);
-  const { startBGM, stopBGM } = useAudio();
+  const { openPack, isLoaded, addToCollection, gachaPool } = useGacha(season);
+  const { startBGM, stopBGM, playSFX } = useAudio();
 
   const [isOpening, setIsOpening] = useState(false);
   const [packCards, setPackCards] = useState<CardType[]>([]);
+  const packCardsRef = useRef<CardType[]>([]);
   const [isGodPackEffectActive, setIsGodPackEffectActive] = useState(false);
   const [packClicked, setPackClicked] = useState(false);
   const [isClosingOverlay, setIsClosingOverlay] = useState(false);
+
+  // Free Wheel States
+  const [showFreeWheelModal, setShowFreeWheelModal] = useState(false);
+  const [freeWheelCards, setFreeWheelCards] = useState<CardType[]>([]);
+  const [isSpinningFreeWheel, setIsSpinningFreeWheel] = useState(false);
+  const [freeWheelRotation, setFreeWheelRotation] = useState(0);
+  const [freeWheelStartRotation, setFreeWheelStartRotation] = useState(0);
+  const [freeWheelWinnerIndex, setFreeWheelWinnerIndex] = useState<number | null>(null);
+  const [freeWheelWinnerCard, setFreeWheelWinnerCard] = useState<CardType | null>(null);
+  const [showWinnerFreeWheel, setShowWinnerFreeWheel] = useState(false);
+
+  const CardComponent = season === "season2" ? FullArtCard : Card;
+
+  const freeConicGradientStyle = useMemo(() => {
+    if (freeWheelCards.length === 0) return {};
+    const segmentAngle = 360 / freeWheelCards.length;
+
+    const gradientParts = freeWheelCards.map((card, idx) => {
+      const start = idx * segmentAngle;
+      const end = (idx + 1) * segmentAngle;
+      return `${getRarityColor(card.rarity)} ${start}deg ${end}deg`;
+    });
+
+    return {
+      background: `conic-gradient(from 90deg, ${gradientParts.join(", ")})`
+    };
+  }, [freeWheelCards]);
+
+  const prepareFreeWheel = useCallback(() => {
+    const srPlusCards = gachaPool.filter(c => 
+      ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity)
+    );
+    if (srPlusCards.length === 0) return;
+
+    const shuffled = [...srPlusCards].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, Math.min(8, shuffled.length));
+    
+    setFreeWheelCards(selected);
+    setIsSpinningFreeWheel(false);
+    setFreeWheelRotation(0);
+    setFreeWheelStartRotation(0);
+    setFreeWheelWinnerIndex(null);
+    setFreeWheelWinnerCard(null);
+    setShowWinnerFreeWheel(false);
+    setShowFreeWheelModal(true);
+  }, [gachaPool]);
+
+  const startFreeWheelSpin = useCallback(() => {
+    if (freeWheelCards.length === 0 || isSpinningFreeWheel) return;
+    setIsSpinningFreeWheel(true);
+    setShowWinnerFreeWheel(false);
+    setFreeWheelWinnerCard(null);
+
+    const randIdx = Math.floor(Math.random() * freeWheelCards.length);
+    setFreeWheelWinnerIndex(randIdx);
+
+    const segmentAngle = 360 / freeWheelCards.length;
+    const targetSectorCenter = randIdx * segmentAngle + segmentAngle / 2;
+    
+    const targetAngleMod = ((targetSectorCenter - 270) % 360 + 360) % 360;
+    const currentRotationMod = freeWheelRotation % 360;
+    let diff = targetAngleMod - currentRotationMod;
+    if (diff <= 0) diff += 360;
+    
+    const nextRotation = freeWheelRotation + diff + 360 * 5;
+    
+    setFreeWheelStartRotation(freeWheelRotation);
+    setFreeWheelRotation(nextRotation);
+    playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.12);
+  }, [freeWheelCards, isSpinningFreeWheel, freeWheelRotation, playSFX]);
+
+  // Ticking sound simulation matching CSS transition speed (easeOutQuart)
+  useEffect(() => {
+    if (!isSpinningFreeWheel || freeWheelWinnerIndex === null || freeWheelCards.length === 0) return;
+
+    const duration = 5000;
+    const startTime = performance.now();
+    const startAngle = freeWheelStartRotation;
+    const endAngle = freeWheelRotation;
+    const segmentAngle = 360 / freeWheelCards.length;
+    let lastSector = -1;
+    let animId: number;
+
+    const tickAudio = new Audio(AUDIO_URLS.CARD_REVEAL_NORMAL);
+    tickAudio.volume = 0.08;
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      if (elapsed >= duration) return;
+
+      const progress = elapsed / duration;
+      const ease = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+      const currentAngle = startAngle + (endAngle - startAngle) * ease;
+
+      const sector = Math.floor(((currentAngle + 270) % 360 + 360) % 360 / segmentAngle);
+      if (sector !== lastSector && sector >= 0 && sector < freeWheelCards.length) {
+        lastSector = sector;
+        tickAudio.currentTime = 0;
+        tickAudio.play().catch(() => {});
+      }
+
+      animId = requestAnimationFrame(tick);
+    };
+
+    animId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(animId);
+      tickAudio.pause();
+    };
+  }, [isSpinningFreeWheel, freeWheelRotation, freeWheelStartRotation, freeWheelCards.length, freeWheelWinnerIndex]);
+
+  const handleFreeWheelTransitionEnd = useCallback(() => {
+    setIsSpinningFreeWheel(false);
+    if (freeWheelWinnerIndex !== null && freeWheelCards[freeWheelWinnerIndex]) {
+      const card = freeWheelCards[freeWheelWinnerIndex];
+      setFreeWheelWinnerCard(card);
+      setShowWinnerFreeWheel(true);
+
+      addToCollection(card);
+
+      if (["LEG", "SEC", "UR"].includes(card.rarity)) {
+        playSFX(AUDIO_URLS.HEAVENLY, 0.25);
+      } else {
+        playSFX(AUDIO_URLS.CARD_REVEAL_GOLD, 0.18);
+      }
+    }
+  }, [freeWheelWinnerIndex, freeWheelCards, addToCollection, playSFX]);
 
   const timersRef = useRef<NodeJS.Timeout[]>([]);
 
@@ -43,16 +188,27 @@ export default function OpeningClient() {
     }, 200);
     timersRef.current.push(zoomOutTimer);
 
+    const openedCards = packCardsRef.current;
+    const allC = openedCards.length === 5 && openedCards.every(c => c.rarity === "C");
+    const allR = openedCards.length === 5 && openedCards.every(c => c.rarity === "R");
+    const earnedFreeSpin = allC || allR;
+
     const timer = setTimeout(() => {
       clearAllTimers();
       setIsOpening(false);
+
+      if (earnedFreeSpin) {
+        prepareFreeWheel();
+      }
+
       setPackCards([]);
+      packCardsRef.current = [];
       setIsGodPackEffectActive(false);
       setIsClosingOverlay(false);
       stopBGM();
     }, 600);
     timersRef.current.push(timer);
-  }, [clearAllTimers, stopBGM]);
+  }, [clearAllTimers, stopBGM, prepareFreeWheel]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -68,6 +224,7 @@ export default function OpeningClient() {
 
     const { pack, isGod } = openPack();
     setPackCards(pack);
+    packCardsRef.current = pack;
     if (isGod) setIsGodPackEffectActive(true);
 
     // Match Cut: รอให้ซอง zoom เข้ามาก่อน (~1150ms เหมือน unboxing) แล้วค่อยตัดไปหน้าฉีก
@@ -156,6 +313,81 @@ export default function OpeningClient() {
         mode="single"
         autoOpen
       />
+
+      {showFreeWheelModal && (
+        <div className="free-wheel-modal-overlay">
+          <div className="free-wheel-modal-content">
+            {!showWinnerFreeWheel ? (
+              <>
+                <div className="free-wheel-banner">🎉 JACKPOT BONUS! 🎉</div>
+                <h2>ยินดีด้วย! คุณเกลือจัดจนระบบเห็นใจ</h2>
+                <p className="free-wheel-desc">
+                  เนื่องจากคุณเปิดซองได้ระดับ C ทั้งหมด หรือ R ทั้งหมด <br />
+                  รับสิทธิ์หมุนวงล้อพิเศษ สุ่มการ์ดระดับ <strong>SR ขึ้นไป</strong> ฟรี 1 ใบ!
+                </p>
+
+                <div className="free-wheel-spin-area">
+                  <div className="free-wheel-pointer" />
+                  <div
+                    className="free-wheel-plate"
+                    style={{
+                      ...freeConicGradientStyle,
+                      transform: `rotate(${-freeWheelRotation}deg)`
+                    }}
+                    onTransitionEnd={handleFreeWheelTransitionEnd}
+                  >
+                    {freeWheelCards.map((card, idx) => {
+                      const angle = idx * (360 / freeWheelCards.length) + (360 / freeWheelCards.length) / 2;
+                      return (
+                        <div
+                          key={`${card.role_id}-sector-${idx}`}
+                          className="free-sector-text"
+                          style={{
+                            transform: `rotate(${angle}deg) translateZ(1px)`
+                          }}
+                        >
+                          {card.name}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="free-wheel-center" />
+                </div>
+
+                <button
+                  className="free-spin-btn"
+                  onClick={startFreeWheelSpin}
+                  disabled={isSpinningFreeWheel}
+                >
+                  {isSpinningFreeWheel ? "กำลังสุ่ม..." : "กดเพื่อหมุนวงล้อ!"}
+                </button>
+              </>
+            ) : (
+              <div className="free-wheel-winner-reveal">
+                <div className="free-wheel-winner-sparkle" />
+                <div className="winner-label-badge">ยินดีด้วย! คุณได้รับการ์ด</div>
+                <h3>{freeWheelWinnerCard?.name}</h3>
+                <div className="winner-rarity-badge" style={{ backgroundColor: getRarityColor(freeWheelWinnerCard?.rarity || "") }}>
+                  {freeWheelWinnerCard?.rarity}
+                </div>
+
+                <div className="winner-card-container">
+                  {freeWheelWinnerCard && (
+                    <CardComponent card={freeWheelWinnerCard} isRevealed={true} />
+                  )}
+                </div>
+
+                <button
+                  className="free-close-btn"
+                  onClick={() => setShowFreeWheelModal(false)}
+                >
+                  รับการ์ดและปิดหน้านี้
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .opening-loader,
@@ -415,6 +647,219 @@ export default function OpeningClient() {
           opacity: 0;
           pointer-events: none;
           transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.45s ease-out;
+        }
+
+        /* ─── Free Wheel Modal Styles ─── */
+        .free-wheel-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(4, 3, 6, 0.85);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          animation: free-fade-in 0.3s ease-out;
+        }
+        .free-wheel-modal-content {
+          position: relative;
+          width: 92%;
+          max-width: 460px;
+          background: linear-gradient(180deg, rgba(20, 18, 30, 0.95) 0%, rgba(10, 8, 16, 0.98) 100%);
+          border: 1.5px solid rgba(0, 210, 255, 0.3);
+          box-shadow: 0 0 40px rgba(0, 210, 255, 0.15), 0 20px 50px rgba(0, 0, 0, 0.5);
+          border-radius: 20px;
+          padding: 2.2rem;
+          text-align: center;
+          color: #fff;
+          font-family: var(--font-kanit), sans-serif;
+          animation: free-scale-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes free-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes free-scale-up {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .free-wheel-spin-area {
+          position: relative;
+          width: 290px;
+          height: 290px;
+          margin: 1.8rem auto;
+          border-radius: 50%;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 210, 255, 0.15);
+        }
+        .free-wheel-pointer {
+          position: absolute;
+          top: -12px;
+          left: 50%;
+          transform: translateX(-50%) translateZ(10px);
+          z-index: 10;
+          width: 0;
+          height: 0;
+          border-left: 12px solid transparent;
+          border-right: 12px solid transparent;
+          border-top: 24px solid #f43f5e;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+        }
+        .free-wheel-plate {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          border: 6px solid #1e293b;
+          box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(0, 210, 255, 0.5);
+          position: relative;
+          overflow: hidden;
+          transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1);
+        }
+        .free-wheel-center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) translateZ(5px);
+          z-index: 5;
+          width: 46px;
+          height: 46px;
+          border-radius: 50%;
+          background: radial-gradient(circle, #00d2ff 0%, #008cb3 60%, #0f172a 100%);
+          border: 3px solid #00d2ff;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 210, 255, 0.6);
+        }
+        .free-sector-text {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 130px;
+          margin-top: -10px;
+          text-align: right;
+          padding-right: 18px;
+          color: #fff;
+          font-weight: 700;
+          font-size: 0.72rem;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          transform-origin: 0 50%;
+          text-shadow: 0 1px 3px #000, 0 0 2px #000;
+          pointer-events: none;
+        }
+        .free-wheel-banner {
+          font-family: var(--font-chakra), sans-serif;
+          font-size: 1.35rem;
+          font-weight: 800;
+          color: #00d2ff;
+          text-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+          margin-bottom: 0.4rem;
+          letter-spacing: 0.1em;
+        }
+        .free-wheel-modal-content h2 {
+          font-size: 1.45rem;
+          font-weight: 700;
+          margin: 0.5rem 0;
+          color: #fff;
+        }
+        .free-wheel-desc {
+          font-size: 0.88rem;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.5;
+          margin: 0;
+        }
+        .free-spin-btn {
+          width: 100%;
+          background: var(--accent);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #07060a;
+          font-weight: 700;
+          font-size: 1.05rem;
+          padding: 0.85rem;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+          box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
+          font-family: var(--font-kanit), sans-serif;
+        }
+        .free-spin-btn:hover:not(:disabled) {
+          background: #fff;
+          border-color: #fff;
+          color: #07060a;
+          transform: translateY(-2px);
+          box-shadow: 0 0 25px rgba(255, 255, 255, 0.45);
+        }
+        .free-spin-btn:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
+        }
+        .free-spin-btn:disabled {
+          background: #334155;
+          border-color: #475569;
+          color: #64748b;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .free-wheel-winner-reveal {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: free-fade-in 0.5s ease-out;
+        }
+        .winner-label-badge {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.6);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.2rem;
+        }
+        .free-wheel-winner-reveal h3 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin: 0 0 0.5rem 0;
+          color: #fff;
+        }
+        .winner-rarity-badge {
+          font-size: 0.85rem;
+          font-weight: 800;
+          color: #fff;
+          padding: 0.2rem 0.8rem;
+          border-radius: 20px;
+          margin-bottom: 1.2rem;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .winner-card-container {
+          width: 200px;
+          height: 290px;
+          margin-bottom: 1.6rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          perspective: 1000px;
+          animation: winner-card-float 3s ease-in-out infinite;
+        }
+        @keyframes winner-card-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        .free-close-btn {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.85);
+          font-weight: 600;
+          font-size: 0.95rem;
+          padding: 0.75rem;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+          font-family: var(--font-kanit), sans-serif;
+        }
+        .free-close-btn:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(0, 210, 255, 0.3);
+          color: white;
+          box-shadow: 0 0 12px rgba(0, 210, 255, 0.1);
+          transform: translateY(-1px);
         }
       `}</style>
     </main>

@@ -18,7 +18,7 @@ interface CardRevealThreeProps {
   autoReveal?: boolean;
 }
 
-const SPECIAL_ROLE_ID = "1356458345812459611";
+const SPECIAL_ROLE_ID = "1513261078321172833";
 const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
 // First card flips 900ms after CardRevealThree mounts; each next card flips
 // 850ms later. Matches the pre-story-mode flow so the player gets a clear
@@ -39,7 +39,7 @@ export function CardRevealThree({
   void autoReveal;
 
   const [revealedStates, setRevealedStates] = useState<boolean[]>(() =>
-    new Array(cards.length).fill(false)
+    new Array(cards.length).fill(false),
   );
   const { playSFX } = useAudio();
 
@@ -51,18 +51,21 @@ export function CardRevealThree({
         return ALL_RARITIES[Math.floor(Math.random() * ALL_RARITIES.length)];
       }
       return card.rarity;
-    })
+    }),
   );
 
   // Stable callback to surface high-rarity impacts to the parent (used to
   // pulse the rarity flash + heavy SFX timing).
   const handleHighRarityImpact = useCallback(
     (card: CardType) => {
-      if (card.role_id === SPECIAL_ROLE_ID || HIGH_RARITY_TIERS.has(card.rarity)) {
+      if (
+        card.role_id === SPECIAL_ROLE_ID ||
+        HIGH_RARITY_TIERS.has(card.rarity)
+      ) {
         onHighRarityImpact?.();
       }
     },
-    [onHighRarityImpact]
+    [onHighRarityImpact],
   );
 
   useEffect(() => {

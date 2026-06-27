@@ -39,3 +39,8 @@ Packs contain five unique cards; exclude `isGacha='N'`; God Pack chance is 1%; `
 ## Security & Deployment
 
 Copy configuration from `.env.example`. Never commit secrets; expose only browser-safe `NEXT_PUBLIC_*` values. `next.config.ts` uses `output: "export"` and unoptimized images, so avoid server-only Next.js features unless the deployment model is intentionally changed.
+
+## Strict Execution Guardrails
+
+- **Strict Adherence to Instructions**: Do not make modifications, add styling properties (e.g., custom borders, lines, colors, padding), or implement extra code logic that is not explicitly requested by the user. Strictly limit execution to the approved design path without adding any unprompted visual or functional embellishments.
+

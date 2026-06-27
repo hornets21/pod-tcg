@@ -1,15 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams } from "next/navigation";
-import type { Group } from "three";
 import { Card } from "@/components/Card";
 import { FullArtCard } from "@/components/FullArtCard";
 import { ThreeScene } from "@/components/three/ThreeScene";
 import { useGacha } from "@/hooks/useGacha";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { Card as CardType } from "@/data/types";
+import { CARDS_SEASON2 } from "@/data/cards-season2";
 
 interface VoteState {
   leftId: string | null;
@@ -55,73 +60,60 @@ function pickTwoCards(cards: CardType[]) {
 }
 
 function formatClock(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
   const seconds = (totalSeconds % 60).toString().padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
 
-function CardWheel({
-  cards,
-  spinKey,
-}: {
-  cards: CardType[];
-  spinKey: number;
-}) {
-  const groupRef = useRef<Group>(null);
-  const sample = useMemo(() => cards.slice(0, 12), [cards]);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    const targetSpeed = spinKey > 0 ? 1.8 : 0.28;
-    groupRef.current.rotation.y += delta * targetSpeed;
-    groupRef.current.rotation.z = Math.sin(Date.now() * 0.001) * 0.035;
-  });
-
-  return (
-    <group ref={groupRef}>
-      {sample.map((card, index) => {
-        const angle = (index / sample.length) * Math.PI * 2;
-        const rarityBoost = ["LEG", "SEC", "UR", "SSR"].includes(card.rarity) ? 0.22 : 0;
-        return (
-          <mesh
-            key={card.role_id}
-            position={[Math.cos(angle) * 2.25, Math.sin(angle) * 1.08, Math.sin(angle) * 0.45]}
-            rotation={[0, -angle + Math.PI / 2, 0]}
-          >
-            <boxGeometry args={[0.46, 0.66, 0.035]} />
-            <meshStandardMaterial
-              color={card.rarity === "C" ? "#9ca3af" : card.rarity === "R" ? "#4caf50" : "#00d2ff"}
-              emissive={card.rarity === "C" ? "#111827" : "#00d2ff"}
-              emissiveIntensity={0.14 + rarityBoost}
-              roughness={0.34}
-              metalness={0.18}
-            />
-          </mesh>
-        );
-      })}
-      <mesh position={[0, 0, 0.05]}>
-        <torusGeometry args={[1.45, 0.025, 12, 96]} />
-        <meshStandardMaterial color="#00d2ff" emissive="#00d2ff" emissiveIntensity={0.42} />
-      </mesh>
-    </group>
+function getUniqueRandomWheelCards(): CardType[] {
+  const filtered = CARDS_SEASON2.filter(
+    (card) =>
+      card.isGacha === "Y" && ["SSR", "UR", "SEC", "LEG"].includes(card.rarity),
   );
+  const uniqueMap = new Map<string, CardType>();
+  filtered.forEach((card) => {
+    if (!uniqueMap.has(card.name)) {
+      uniqueMap.set(card.name, card);
+    }
+  });
+  return Array.from(uniqueMap.values()).sort(() => Math.random() - 0.5);
 }
 
 export default function VoteClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
-  const { gachaPool, isLoaded } = useGacha(season);
-  const [storedState, setStoredState, isVoteLoaded] = useLocalStorage<VoteState>(
-    `pod-tcg-vote-${season}`,
-    initialVoteState
-  );
+  const { gachaPool, isLoaded, isLoggedIn } = useGacha(season);
+  const [storedState, setStoredState, isVoteLoaded] =
+    useLocalStorage<VoteState>(`pod-tcg-vote-${season}`, initialVoteState);
   const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
-  const [spinKey, setSpinKey] = useState(0);
   const intervalRef = useRef<number | null>(null);
 
-  const playableCards = useMemo(() => gachaPool.filter((card) => card.isGacha === "Y"), [gachaPool]);
-  const leftCard = playableCards.find((card) => card.role_id === storedState.leftId) || null;
-  const rightCard = playableCards.find((card) => card.role_id === storedState.rightId) || null;
+  // Sacrifice Mode States
+  const [isSacrificeMode, setIsSacrificeMode] = useState(false);
+
+  // Presentation Slider States
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  // Guest Collection hook
+  const [, setCollection] = useLocalStorage<string[]>(
+    `pod_collection_${season}`,
+    [],
+  );
+
+  const playableCards = useMemo(
+    () => gachaPool.filter((card) => card.isGacha === "Y"),
+    [gachaPool],
+  );
+  const [wheelCards, setWheelCards] = useState<CardType[]>(() =>
+    getUniqueRandomWheelCards(),
+  );
+
+  const leftCard =
+    playableCards.find((card) => card.role_id === storedState.leftId) || null;
+  const rightCard =
+    playableCards.find((card) => card.role_id === storedState.rightId) || null;
   const CardComponent = season === "season2" ? FullArtCard : Card;
   const canPlay = playableCards.length >= 2;
 
@@ -135,15 +127,27 @@ export default function VoteClient() {
     return () => stopTimer();
   }, [stopTimer]);
 
-  const setScores = useCallback((side: "left" | "right", delta: number) => {
-    setStoredState((current) => {
-      const key = side === "left" ? "leftScore" : "rightScore";
-      return {
-        ...current,
-        [key]: current[key] + delta,
-      };
-    });
-  }, [setStoredState]);
+  // Autoplay for slide mode (moves slide to the left automatically)
+  useEffect(() => {
+    if (wheelCards.length === 0) return;
+    const timer = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % wheelCards.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [wheelCards.length]);
+
+  const setScores = useCallback(
+    (side: "left" | "right", delta: number) => {
+      setStoredState((current) => {
+        const key = side === "left" ? "leftScore" : "rightScore";
+        return {
+          ...current,
+          [key]: current[key] + delta,
+        };
+      });
+    },
+    [setStoredState],
+  );
 
   const saveRecentRound = useCallback(() => {
     if (!leftCard || !rightCard) return;
@@ -165,8 +169,8 @@ export default function VoteClient() {
     const picked = pickTwoCards(playableCards);
     if (!picked) return;
     stopTimer();
-    setSpinKey((current) => current + 1);
     setTimerStatus("idle");
+    setSlideIndex(0); // Reset slider to first card when pairing changes
     setStoredState((current) => ({
       ...current,
       leftId: picked.left.role_id,
@@ -175,10 +179,17 @@ export default function VoteClient() {
       rightScore: 0,
       seconds: current.duration,
     }));
+    setWheelCards(getUniqueRandomWheelCards());
   }, [playableCards, setStoredState, stopTimer]);
 
   const startTimer = useCallback(() => {
-    if (!leftCard || !rightCard || storedState.seconds <= 0 || intervalRef.current !== null) return;
+    if (
+      !leftCard ||
+      !rightCard ||
+      storedState.seconds <= 0 ||
+      intervalRef.current !== null
+    )
+      return;
     setTimerStatus("running");
     intervalRef.current = window.setInterval(() => {
       setStoredState((current) => {
@@ -186,6 +197,20 @@ export default function VoteClient() {
         if (nextSeconds === 0) {
           stopTimer();
           setTimerStatus("ended");
+
+          // Trigger deletion directly inside the interval callback
+          if (isSacrificeMode) {
+            let loserCardId: string | null = null;
+            if (current.leftScore > current.rightScore) {
+              loserCardId = current.rightId;
+            } else if (current.rightScore > current.leftScore) {
+              loserCardId = current.leftId;
+            }
+
+            if (loserCardId && !isLoggedIn) {
+              setCollection((prev) => prev.filter((id) => id !== loserCardId));
+            }
+          }
         }
         return {
           ...current,
@@ -193,7 +218,35 @@ export default function VoteClient() {
         };
       });
     }, 1000);
-  }, [leftCard, rightCard, setStoredState, stopTimer, storedState.seconds]);
+  }, [
+    leftCard,
+    rightCard,
+    storedState.seconds,
+    isSacrificeMode,
+    isLoggedIn,
+    setCollection,
+    stopTimer,
+    setStoredState,
+  ]);
+
+  // Compute sacrificed card name dynamically
+  const sacrificedCardName = useMemo(() => {
+    if (timerStatus !== "ended" || !isSacrificeMode) return null;
+    if (storedState.leftScore > storedState.rightScore) {
+      return rightCard?.name || "";
+    }
+    if (storedState.rightScore > storedState.leftScore) {
+      return leftCard?.name || "";
+    }
+    return null;
+  }, [
+    timerStatus,
+    isSacrificeMode,
+    storedState.leftScore,
+    storedState.rightScore,
+    leftCard,
+    rightCard,
+  ]);
 
   const pauseTimer = useCallback(() => {
     stopTimer();
@@ -209,27 +262,36 @@ export default function VoteClient() {
     }));
   }, [setStoredState, stopTimer]);
 
-  const updateDuration = useCallback((value: string) => {
-    const duration = Math.max(10, Math.min(600, Number(value) || DEFAULT_DURATION));
-    stopTimer();
-    setTimerStatus("idle");
-    setStoredState((current) => ({
-      ...current,
-      duration,
-      seconds: duration,
-    }));
-  }, [setStoredState, stopTimer]);
-
-  const selectCard = useCallback((side: "left" | "right", cardId: string) => {
-    setStoredState((current) => {
-      const otherId = side === "left" ? current.rightId : current.leftId;
-      if (cardId === otherId) return current;
-      return {
+  const updateDuration = useCallback(
+    (value: string) => {
+      const duration = Math.max(
+        10,
+        Math.min(7200, Number(value) || DEFAULT_DURATION),
+      );
+      stopTimer();
+      setTimerStatus("idle");
+      setStoredState((current) => ({
         ...current,
-        [side === "left" ? "leftId" : "rightId"]: cardId,
-      };
-    });
-  }, [setStoredState]);
+        duration,
+        seconds: duration,
+      }));
+    },
+    [setStoredState, stopTimer],
+  );
+
+  const selectCard = useCallback(
+    (side: "left" | "right", cardId: string) => {
+      setStoredState((current) => {
+        const otherId = side === "left" ? current.rightId : current.leftId;
+        if (cardId === otherId) return current;
+        return {
+          ...current,
+          [side === "left" ? "leftId" : "rightId"]: cardId,
+        };
+      });
+    },
+    [setStoredState],
+  );
 
   const clearBoard = useCallback(() => {
     stopTimer();
@@ -246,28 +308,82 @@ export default function VoteClient() {
     return <div className="vote-loading">กำลังโหลดบอร์ดโหวต...</div>;
   }
 
+  const isCriticalSeconds =
+    timerStatus === "running" && storedState.seconds <= 10;
+
   return (
-    <div className="vote-page">
-      <ThreeScene cameraPosition={[0, 0, 7]} fogColor="#07060a" showDefaultLighting={false} showAtmosphere={true}>
+    <div
+      className={`vote-page ${isSacrificeMode ? "sacrifice-theme" : ""} ${isCriticalSeconds ? "critical-warning" : ""}`}
+    >
+      <ThreeScene
+        cameraPosition={[0, 0, 7]}
+        fogColor={isSacrificeMode ? "#0d0202" : "#07060a"}
+        showDefaultLighting={false}
+        showAtmosphere={true}
+      >
         {null}
       </ThreeScene>
 
       <main className="vote-shell">
         <section className="vote-hero active" aria-labelledby="vote-title">
           <div className="vote-title-block">
-            <p className="vote-kicker">POD TCG ARENA</p>
-            <h1 id="vote-title">บอร์ดโหวตการ์ด 1v1</h1>
-            <p>สุ่มการ์ดสองใบ จับเวลา แล้วกดคะแนนระหว่างโหวตหน้างานหรือแชร์จอใน Discord</p>
+            <p className="vote-kicker">
+              {isSacrificeMode ? "🔥 DEATHMATCH ARENA" : "POD TCG ARENA"}
+            </p>
+            <h1 id="vote-title">
+              {isSacrificeMode ? "ศึกสังเวยการ์ด 1v1" : "บอร์ดโหวตการ์ด 1v1"}
+            </h1>
+            <p>
+              {isSacrificeMode
+                ? "คำเตือน: โหมดสังเวยการ์ดทำงาน! เมื่อหมดเวลา การ์ดที่ได้คะแนนน้อยกว่าจะถูกลบออกจากคอลเลกชันไอดีแขกจริงถาวร!"
+                : "สุ่มการ์ดสองใบ จับเวลา แล้วกดคะแนนระหว่างโหวตหน้างานหรือแชร์จอใน Discord"}
+            </p>
           </div>
 
-          <div className="vote-wheel-panel" aria-label="วงล้อสุ่มการ์ด">
-            <Canvas camera={{ position: [0, 0, 5.5], fov: 45 }} gl={{ antialias: true, alpha: true }} dpr={[1, 1.6]}>
-              <ambientLight intensity={0.8} />
-              <pointLight position={[2, 2, 4]} intensity={12} color="#00d2ff" />
-              <CardWheel cards={playableCards} spinKey={spinKey} />
-            </Canvas>
+          <div
+            className="vote-wheel-panel"
+            aria-label="ส่วนแสดงการ์ดโหวต"
+            style={{ position: "relative" }}
+          >
+            <div className="vote-slider-container">
+              {wheelCards.length > 0 && (
+                <div className="vote-slider-wrapper">
+                  <div
+                    className="vote-slider-track"
+                    style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+                  >
+                    {wheelCards.map((card, idx) => (
+                      <div
+                        key={`${card.role_id}-${idx}`}
+                        className="vote-slider-slide"
+                      >
+                        <div className="slider-card-glow-wrapper">
+                          <CardComponent card={card} isRevealed={true} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
+
+        {timerStatus === "ended" && isSacrificeMode && sacrificedCardName && (
+          <div className="sacrifice-alert" role="alert">
+            <span className="sacrifice-alert-icon">💀</span>
+            <div className="sacrifice-alert-content">
+              <h4>การสังเวยเสร็จสิ้น</h4>
+              <p>
+                การ์ด <strong>{sacrificedCardName}</strong>{" "}
+                ได้รับคะแนนน้อยกว่าและถูกทำลายแล้ว!
+                {isLoggedIn
+                  ? " (ระบบจำลองการทำลายการ์ดบนจอ เนื่องจากคุณล็อกอินผ่าน Discord)"
+                  : " (การ์ดถูกลบออกจากคอลเลกชันคลังของคุณแล้ว)"}
+              </p>
+            </div>
+          </div>
+        )}
 
         {!canPlay ? (
           <div className="vote-empty">
@@ -276,16 +392,42 @@ export default function VoteClient() {
           </div>
         ) : (
           <>
-            <section className="vote-controls active" aria-label="ตัวควบคุมรอบโหวต">
-              <button type="button" className="vote-primary" onClick={randomizeMatch}>
+            <section
+              className="vote-controls active"
+              aria-label="ตัวควบคุมรอบโหวต"
+            >
+              <button
+                type="button"
+                className="vote-primary"
+                onClick={randomizeMatch}
+              >
                 สุ่มคู่แข่ง
               </button>
+
+              {/* Mode Selector */}
+              <div className="vote-mode-selector">
+                <button
+                  type="button"
+                  className={`mode-btn normal ${!isSacrificeMode ? "active" : ""}`}
+                  onClick={() => setIsSacrificeMode(false)}
+                >
+                  โหมดปกติ
+                </button>
+                <button
+                  type="button"
+                  className={`mode-btn sacrifice ${isSacrificeMode ? "active" : ""}`}
+                  onClick={() => setIsSacrificeMode(true)}
+                >
+                  💀 โหมดสังเวย
+                </button>
+              </div>
+
               <label>
-                เวลา
+                เวลา (วินาที)
                 <input
                   type="number"
                   min="10"
-                  max="600"
+                  max="7200"
                   step="10"
                   value={storedState.duration}
                   onChange={(event) => updateDuration(event.target.value)}
@@ -293,30 +435,72 @@ export default function VoteClient() {
               </label>
               <div className={`vote-clock ${timerStatus}`}>
                 <span>{formatClock(storedState.seconds)}</span>
-                <small>{timerStatus === "running" ? "กำลังจับเวลา" : timerStatus === "ended" ? "หมดเวลา" : "พร้อมเริ่ม"}</small>
+                <small>
+                  {timerStatus === "running"
+                    ? "กำลังจับเวลา"
+                    : timerStatus === "ended"
+                      ? "หมดเวลา"
+                      : "พร้อมเริ่ม"}
+                </small>
               </div>
               <div className="vote-timer-actions">
                 {timerStatus === "running" ? (
-                  <button type="button" onClick={pauseTimer}>พัก</button>
+                  <button type="button" onClick={pauseTimer}>
+                    พัก
+                  </button>
                 ) : (
-                  <button type="button" onClick={startTimer} disabled={!leftCard || !rightCard || storedState.seconds <= 0}>เริ่ม</button>
+                  <button
+                    type="button"
+                    onClick={startTimer}
+                    disabled={
+                      !leftCard || !rightCard || storedState.seconds <= 0
+                    }
+                  >
+                    เริ่ม
+                  </button>
                 )}
-                <button type="button" onClick={resetTimer}>รีเซ็ตเวลา</button>
-                <button type="button" onClick={saveRecentRound} disabled={!leftCard || !rightCard}>บันทึกรอบ</button>
-                <button type="button" onClick={clearBoard}>ล้างบอร์ด</button>
+                <button type="button" onClick={resetTimer}>
+                  รีเซ็ตเวลา
+                </button>
+                <button
+                  type="button"
+                  onClick={saveRecentRound}
+                  disabled={!leftCard || !rightCard}
+                >
+                  บันทึกรอบ
+                </button>
+                <button type="button" onClick={clearBoard}>
+                  ล้างบอร์ด
+                </button>
               </div>
             </section>
 
             <section className="vote-board active" aria-label="บอร์ดคะแนน">
               {(["left", "right"] as const).map((side) => {
                 const card = side === "left" ? leftCard : rightCard;
-                const score = side === "left" ? storedState.leftScore : storedState.rightScore;
+                const score =
+                  side === "left"
+                    ? storedState.leftScore
+                    : storedState.rightScore;
+
+                // Determine if this side is the loser when timer ends
+                const isLoser =
+                  timerStatus === "ended" &&
+                  ((side === "left" &&
+                    storedState.leftScore < storedState.rightScore) ||
+                    (side === "right" &&
+                      storedState.rightScore < storedState.leftScore));
+
                 return (
                   <article key={side} className={`vote-lane ${side}`}>
                     <select
                       value={card?.role_id || ""}
                       onChange={(event) => selectCard(side, event.target.value)}
-                      aria-label={side === "left" ? "เลือกการ์ดฝั่งซ้าย" : "เลือกการ์ดฝั่งขวา"}
+                      aria-label={
+                        side === "left"
+                          ? "เลือกการ์ดฝั่งซ้าย"
+                          : "เลือกการ์ดฝั่งขวา"
+                      }
                     >
                       <option value="">เลือกการ์ด</option>
                       {playableCards.map((option) => (
@@ -326,21 +510,55 @@ export default function VoteClient() {
                       ))}
                     </select>
 
-                    <div className="vote-card-stage">
+                    <div
+                      className={`vote-card-stage ${isLoser && isSacrificeMode ? "card-obliterated" : ""}`}
+                    >
                       {card ? (
-                        <CardComponent card={card} isRevealed={true} enableHolo={true} />
+                        <>
+                          <CardComponent
+                            card={card}
+                            isRevealed={true}
+                            enableHolo={true}
+                          />
+                          {isLoser && isSacrificeMode && (
+                            <div className="obliterated-overlay">
+                              <span className="obliterated-stamp">
+                                DESTROYED
+                              </span>
+                              <span className="obliterated-sub">
+                                การ์ดถูกทำลายแล้ว
+                              </span>
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <div className="vote-card-placeholder">รอเลือกการ์ด</div>
+                        <div className="vote-card-placeholder">
+                          รอเลือกการ์ด
+                        </div>
                       )}
                     </div>
 
                     <div className="vote-score-row">
-                      <button type="button" aria-label="ลดคะแนน" onClick={() => setScores(side, -1)}>-</button>
+                      <button
+                        type="button"
+                        aria-label="ลดคะแนน"
+                        onClick={() => setScores(side, -1)}
+                      >
+                        -
+                      </button>
                       <strong>{score}</strong>
-                      <button type="button" aria-label="เพิ่มคะแนน" onClick={() => setScores(side, 1)}>+</button>
+                      <button
+                        type="button"
+                        aria-label="เพิ่มคะแนน"
+                        onClick={() => setScores(side, 1)}
+                      >
+                        +
+                      </button>
                     </div>
                     {score < 0 && (
-                      <p className="vote-negative-note">คะแนนติดลบแล้วนะ ทรงนี้โดนโหวตให้กลับบ้าน</p>
+                      <p className="vote-negative-note">
+                        คะแนนติดลบแล้วนะ ทรงนี้โดนโหวตให้กลับบ้าน
+                      </p>
                     )}
                   </article>
                 );
@@ -348,13 +566,21 @@ export default function VoteClient() {
             </section>
 
             {storedState.recent.length > 0 && (
-              <section className="vote-recent active" aria-label="ประวัติรอบล่าสุด">
+              <section
+                className="vote-recent active"
+                aria-label="ประวัติรอบล่าสุด"
+              >
                 <h2>รอบล่าสุด</h2>
                 <div className="vote-recent-list">
                   {storedState.recent.map((round, index) => (
-                    <div key={`${round.leftName}-${round.rightName}-${index}`} className="vote-recent-item">
+                    <div
+                      key={`${round.leftName}-${round.rightName}-${index}`}
+                      className="vote-recent-item"
+                    >
                       <span>{round.leftName}</span>
-                      <strong>{round.leftScore} - {round.rightScore}</strong>
+                      <strong>
+                        {round.leftScore} - {round.rightScore}
+                      </strong>
                       <span>{round.rightName}</span>
                     </div>
                   ))}
@@ -370,7 +596,12 @@ export default function VoteClient() {
           position: relative;
           min-height: 100vh;
           overflow: hidden;
-          background: linear-gradient(145deg, #07060a 0%, #11101a 54%, #040306 100%);
+          background: linear-gradient(
+            145deg,
+            #07060a 0%,
+            #11101a 54%,
+            #040306 100%
+          );
         }
 
         .vote-shell {
@@ -391,7 +622,9 @@ export default function VoteClient() {
 
         .vote-kicker {
           color: rgba(0, 210, 255, 0.78);
-          font: 600 0.8rem var(--font-chakra), sans-serif;
+          font:
+            600 0.8rem var(--font-chakra),
+            sans-serif;
           letter-spacing: 0.12em;
           margin-bottom: 0.75rem;
         }
@@ -399,7 +632,9 @@ export default function VoteClient() {
         .vote-title-block h1 {
           max-width: 720px;
           color: #fff;
-          font: 700 clamp(2rem, 4vw, 3.25rem) var(--font-chakra), sans-serif;
+          font:
+            700 clamp(2rem, 4vw, 3.25rem) var(--font-chakra),
+            sans-serif;
           letter-spacing: -0.035em;
           line-height: 1.05;
           margin-bottom: 0.85rem;
@@ -414,11 +649,30 @@ export default function VoteClient() {
         }
 
         .vote-wheel-panel {
-          height: 280px;
-          border: 1px solid rgba(0, 210, 255, 0.16);
-          border-radius: 14px;
-          background: radial-gradient(circle at 50% 45%, rgba(0, 210, 255, 0.12), rgba(255, 255, 255, 0.035) 45%, rgba(0, 0, 0, 0.16));
+          height: 380px;
           overflow: hidden;
+        }
+
+        .vote-wheel-panel :global(.card-back) {
+          display: none !important;
+        }
+
+        .vote-wheel-panel :global(.card-front) {
+          transform: none !important;
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          display: flex !important;
+        }
+
+        .vote-wheel-panel :global(.card-inner) {
+          transform: none !important;
+        }
+
+        .vote-wheel-panel :global(.card) {
+          transform: scale(1) !important;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
         }
 
         .vote-controls,
@@ -450,7 +704,9 @@ export default function VoteClient() {
           border-radius: 10px;
           background: rgba(5, 4, 8, 0.84);
           color: #fff;
-          font: 400 0.95rem var(--font-kanit), sans-serif;
+          font:
+            400 0.95rem var(--font-kanit),
+            sans-serif;
           padding: 0 0.8rem;
         }
 
@@ -467,8 +723,13 @@ export default function VoteClient() {
           background: rgba(255, 255, 255, 0.07);
           color: #fff;
           cursor: pointer;
-          font: 600 0.94rem var(--font-kanit), sans-serif;
-          transition: background var(--motion-fast) var(--ease-out-quart), border-color var(--motion-fast) var(--ease-out-quart), transform var(--motion-fast) var(--ease-out-quart);
+          font:
+            600 0.94rem var(--font-kanit),
+            sans-serif;
+          transition:
+            background var(--motion-fast) var(--ease-out-quart),
+            border-color var(--motion-fast) var(--ease-out-quart),
+            transform var(--motion-fast) var(--ease-out-quart);
         }
 
         .vote-primary {
@@ -518,7 +779,9 @@ export default function VoteClient() {
 
         .vote-clock span {
           color: #fff;
-          font: 700 1.35rem var(--font-chakra), sans-serif;
+          font:
+            700 1.35rem var(--font-chakra),
+            sans-serif;
           letter-spacing: 0;
         }
 
@@ -588,7 +851,9 @@ export default function VoteClient() {
 
         .vote-score-row strong {
           color: #fff;
-          font: 700 3rem var(--font-chakra), sans-serif;
+          font:
+            700 3rem var(--font-chakra),
+            sans-serif;
           line-height: 1;
           text-align: center;
         }
@@ -678,7 +943,7 @@ export default function VoteClient() {
 
         @media (max-width: 640px) {
           .vote-wheel-panel {
-            height: 220px;
+            height: 360px;
           }
 
           .vote-lane {
@@ -704,6 +969,280 @@ export default function VoteClient() {
           .vote-timer-actions button,
           .vote-score-row button {
             transition: none;
+          }
+        }
+
+        /* ─── SACRIFICE THEME STYLES ─── */
+        .vote-page.sacrifice-theme {
+          background: linear-gradient(
+            145deg,
+            #0c0202 0%,
+            #1c0505 54%,
+            #040000 100%
+          );
+        }
+
+        .vote-page.sacrifice-theme .vote-lane.left {
+          border-color: rgba(255, 60, 0, 0.25);
+          box-shadow: 0 0 15px rgba(255, 60, 0, 0.05);
+        }
+
+        .vote-page.sacrifice-theme .vote-lane.right {
+          border-color: rgba(255, 120, 0, 0.25);
+          box-shadow: 0 0 15px rgba(255, 120, 0, 0.05);
+        }
+
+        .vote-page.sacrifice-theme .vote-clock {
+          border-color: rgba(255, 60, 0, 0.35);
+          background: rgba(20, 5, 5, 0.45);
+        }
+
+        .vote-page.sacrifice-theme .vote-clock span {
+          color: #ff6060;
+          text-shadow: 0 0 8px rgba(255, 60, 60, 0.4);
+        }
+
+        .vote-page.sacrifice-theme .vote-controls,
+        .vote-page.sacrifice-theme .vote-recent {
+          border-color: rgba(255, 60, 0, 0.15);
+          background: rgba(255, 60, 0, 0.035);
+        }
+
+        /* ─── CRITICAL PULSE BORDER ─── */
+        .vote-page.critical-warning {
+          animation: criticalPulse 1s infinite alternate;
+        }
+
+        @keyframes criticalPulse {
+          0% {
+            box-shadow: inset 0 0 0px transparent;
+          }
+          100% {
+            box-shadow: inset 0 0 40px rgba(255, 0, 0, 0.4);
+          }
+        }
+
+        /* ─── MODE SELECTOR STYLES ─── */
+        .vote-mode-selector {
+          display: flex;
+          background: rgba(0, 0, 0, 0.24);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          padding: 3px;
+          margin-right: 0.5rem;
+        }
+
+        .mode-btn {
+          border: none;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.6);
+          padding: 8px 16px;
+          border-radius: 17px;
+          font-family: var(--font-kanit), sans-serif;
+          font-size: 0.88rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .mode-btn.normal.active {
+          background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+          color: white;
+          box-shadow: 0 2px 10px rgba(0, 210, 255, 0.3);
+        }
+
+        .mode-btn.sacrifice.active {
+          background: linear-gradient(135deg, #ff416c, #ff4b2b);
+          color: white;
+          box-shadow: 0 2px 10px rgba(255, 65, 108, 0.4);
+          animation: buttonPulse 1.5s infinite alternate;
+        }
+
+        @keyframes buttonPulse {
+          0% {
+            box-shadow: 0 2px 10px rgba(255, 65, 108, 0.4);
+          }
+          100% {
+            box-shadow: 0 2px 18px rgba(255, 65, 108, 0.7);
+          }
+        }
+
+        /* ─── CARD OBLITERATION STYLES ─── */
+        .vote-card-stage.card-obliterated {
+          position: relative;
+          filter: grayscale(1) contrast(1.2) brightness(0.4) blur(1px);
+          animation: cardBurn 1.5s ease-out forwards;
+        }
+
+        .obliterated-overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.4);
+          z-index: 5;
+          pointer-events: none;
+        }
+
+        .obliterated-stamp {
+          color: #ff3c00;
+          border: 4px solid #ff3c00;
+          font-family: var(--font-chakra), sans-serif;
+          font-size: 2rem;
+          font-weight: 900;
+          padding: 0.5rem 1rem;
+          text-transform: uppercase;
+          transform: rotate(-15deg) scale(1);
+          letter-spacing: 0.1em;
+          text-shadow: 0 0 10px rgba(255, 60, 0, 0.6);
+          box-shadow: 0 0 15px rgba(255, 60, 0, 0.4);
+          animation: stampAppear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+            forwards;
+        }
+
+        .obliterated-sub {
+          color: #ff9aa3;
+          font-family: var(--font-kanit), sans-serif;
+          font-size: 0.9rem;
+          margin-top: 0.8rem;
+          text-shadow: 0 0 4px #000;
+        }
+
+        @keyframes cardBurn {
+          0% {
+            box-shadow: 0 0 0px transparent;
+          }
+          50% {
+            box-shadow:
+              0 0 30px #ff3c00,
+              0 0 10px #ff8c00;
+          }
+          100% {
+            box-shadow: 0 0 15px rgba(255, 60, 0, 0.3);
+          }
+        }
+
+        @keyframes stampAppear {
+          0% {
+            transform: rotate(-45deg) scale(4);
+            opacity: 0;
+          }
+          100% {
+            transform: rotate(-15deg) scale(1);
+            opacity: 1;
+          }
+        }
+
+        /* ─── SACRIFICE ALERT DIALOG ─── */
+        .sacrifice-alert {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          background: rgba(255, 60, 0, 0.12);
+          border: 1px solid rgba(255, 60, 0, 0.3);
+          border-radius: 14px;
+          padding: 1rem 1.5rem;
+          margin-bottom: 1.5rem;
+          color: #fff;
+          font-family: var(--font-kanit), sans-serif;
+          animation: slideDown 0.4s ease-out forwards;
+        }
+
+        .sacrifice-alert-icon {
+          font-size: 2rem;
+          animation: pulse 1s infinite alternate;
+        }
+
+        .sacrifice-alert-content h4 {
+          color: #ff6070;
+          font-size: 1.1rem;
+          font-weight: bold;
+          margin: 0 0 0.25rem 0;
+        }
+
+        .sacrifice-alert-content p {
+          margin: 0;
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* ─── CARD PRESENTATION SLIDER ─── */
+        .vote-slider-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .vote-slider-wrapper {
+          width: 300px;
+          height: 350px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .vote-slider-track {
+          display: flex;
+          height: 100%;
+          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .vote-slider-slide {
+          flex: 0 0 300px;
+          width: 300px;
+          height: 350px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+        }
+
+        .slider-card-glow-wrapper {
+          width: 230px;
+          height: 330px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          transform: scale(0.5);
+          transform-origin: center center;
+          transition: transform 0.3s ease;
+        }
+
+        .vote-slider-container:hover .slider-card-glow-wrapper {
+          transform: scale(0.55);
+        }
+
+        @media (max-width: 640px) {
+          .vote-slider-wrapper {
+            width: 260px;
+            height: 300px;
+          }
+          .vote-slider-slide {
+            flex: 0 0 260px;
+            width: 260px;
+            height: 300px;
+          }
+          .slider-card-glow-wrapper {
+            transform: scale(0.8);
+          }
+          .vote-slider-container:hover .slider-card-glow-wrapper {
+            transform: scale(0.84);
           }
         }
       `}</style>

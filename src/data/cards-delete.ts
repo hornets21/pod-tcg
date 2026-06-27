@@ -393,4 +393,12 @@ export const CARDS_DELETE: Card[] = [
     image: "https://img.lucky-pod.fun/op2/op-2-neo.webp",
     ability: "",
   },
+  {
+    role_id: "1356458345812459611",
+    name: "ลูกหาบ พี่ว่าน Craftbeer Hunter",
+    isGacha: "N",
+    rarity: "C",
+    image: "https://img.lucky-pod.fun/op2/op-2-พี่ว่าน-v2.webp",
+    ability: "สะสมเพื่อซัมม่อน ลูกหาบ Exodia",
+  },
 ];

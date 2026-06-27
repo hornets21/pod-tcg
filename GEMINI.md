@@ -52,7 +52,7 @@ pod-tcg/
   - **Visuals**: Pink gradient theme (`#e91e63`).
   - **Behavior**: Fast reveal (0ms delay), same as Common cards.
   - **Logic**: Shares the drop pool with `C` rarity.
-- **Role ID `1356458345812459611` (ลูกหาบ พี่ว่าน)**: 
+- **Role ID `1513261078321172833` (ลูกหาบ พี่ว่าน)**: 
   - Magnificent "Rainbow Aura & Sparkles" reveal effect (soft pulsing, not rotating).
   - Fake random rarity (C to LEG) assigned visually upon reveal.
   - Must NOT be changed or reverted unless explicitly requested.

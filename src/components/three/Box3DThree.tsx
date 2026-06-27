@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, ComponentType } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useSpring, animated } from "@react-spring/three";
-import { useTexture } from "@react-three/drei";
+import { useTexture, Text } from "@react-three/drei";
 import * as THREE from "three";
 
 interface Box3DThreeProps {
@@ -24,6 +24,10 @@ const AnimatedBasicMaterial = animated.meshBasicMaterial as ComponentType<{
 }>;
 
 const AnimatedStandardMaterial = animated.meshStandardMaterial as ComponentType<{
+  [key: string]: unknown;
+}>;
+
+const AnimatedText = animated(Text) as unknown as ComponentType<{
   [key: string]: unknown;
 }>;
 
@@ -91,8 +95,8 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
 
   const frontTexture = useTexture("/front-box.png");
 
-  // Premium light slate gray/silver color for the box body
-  const boxColor = "#8e8e98";
+  // Premium clean white color for the box body
+  const boxColor = "#ffffff";
 
   // Track the multi-stage animation sequence when isOpen becomes true
   useEffect(() => {
@@ -235,6 +239,7 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
           opacity={opacity}
           roughness={0.25}
           metalness={0.2}
+          unlit
         />
 
         {/* Right face */}
@@ -246,7 +251,22 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
           opacity={opacity}
           roughness={0.25}
           metalness={0.2}
+          unlit
         />
+        {/* Right face text */}
+        <AnimatedText
+          position={[BOX_W / 2 + 0.002, 0, 0]}
+          rotation={[0, Math.PI / 2, -Math.PI / 2]}
+          fontSize={0.16}
+          color="#1a1a24"
+          letterSpacing={0.15}
+          anchorX="center"
+          anchorY="middle"
+          transparent
+          opacity={opacity}
+        >
+          POD TALK
+        </AnimatedText>
 
         {/* Left face */}
         <BoxFace
@@ -257,7 +277,22 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
           opacity={opacity}
           roughness={0.25}
           metalness={0.2}
+          unlit
         />
+        {/* Left face text */}
+        <AnimatedText
+          position={[-BOX_W / 2 - 0.002, 0, 0]}
+          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+          fontSize={0.16}
+          color="#1a1a24"
+          letterSpacing={0.15}
+          anchorX="center"
+          anchorY="middle"
+          transparent
+          opacity={opacity}
+        >
+          POD TALK
+        </AnimatedText>
 
         {/* Bottom face */}
         <BoxFace
@@ -268,6 +303,7 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
           opacity={opacity}
           roughness={0.3}
           metalness={0.1}
+          unlit
         />
 
         {/* Lid group - pivots from top-back edge of box */}
@@ -285,6 +321,7 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
           />
           {/* Lid front panel (flap) */}
           <BoxFace
@@ -295,6 +332,7 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
           />
           {/* Lid left panel (flap) */}
           <BoxFace
@@ -305,6 +343,7 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
           />
           {/* Lid right panel (flap) */}
           <BoxFace
@@ -315,6 +354,7 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
           />
         </animated.group>
 

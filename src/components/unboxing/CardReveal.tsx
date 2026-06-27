@@ -12,24 +12,24 @@ interface CardRevealProps {
 }
 
 export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
-  const [revealedStates, setRevealedStates] = useState<boolean[]>(() => 
-    new Array(cards.length).fill(false)
+  const [revealedStates, setRevealedStates] = useState<boolean[]>(() =>
+    new Array(cards.length).fill(false),
   );
   const [showHighRarityFlash, setShowHighRarityFlash] = useState(false);
   const [showSpecialImpact, setShowSpecialImpact] = useState(false);
   const { playSFX } = useAudio();
 
-  const SPECIAL_ROLE_ID = "1356458345812459611";
+  const SPECIAL_ROLE_ID = "1513261078321172833";
   const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
 
   // Pre-calculate fake rarities for the special card
-  const [fakeRarities] = useState<Rarity[]>(() => 
-    cards.map(card => {
+  const [fakeRarities] = useState<Rarity[]>(() =>
+    cards.map((card) => {
       if (card.role_id === SPECIAL_ROLE_ID) {
         return ALL_RARITIES[Math.floor(Math.random() * ALL_RARITIES.length)];
       }
       return card.rarity;
-    })
+    }),
   );
 
   const cardDelays = [200, 600, 1100, 1700, 2400];
@@ -49,7 +49,9 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           });
 
           // Play SFX based on rarity or special role_id
-          const isHighRarity = ["LEG", "SEC", "UR", "SSR"].includes(card.rarity);
+          const isHighRarity = ["LEG", "SEC", "UR", "SSR"].includes(
+            card.rarity,
+          );
           const isSpecialCard = card.role_id === SPECIAL_ROLE_ID;
 
           if (isSpecialCard) {
@@ -80,9 +82,11 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
   return (
     <div className={containerClassName}>
       {(showHighRarityFlash || showSpecialImpact) && (
-        <div className={`flash-overlay ${showSpecialImpact ? "special-flash" : "gold-flash"}`} />
+        <div
+          className={`flash-overlay ${showSpecialImpact ? "special-flash" : "gold-flash"}`}
+        />
       )}
-      
+
       <div className="pack-glow"></div>
 
       {cards.map((card, index) => {
@@ -109,12 +113,18 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
                 <div className="magnificent-aura"></div>
                 <div className="sparkles-container">
                   {[...Array(12)].map((_, i) => (
-                    <div key={i} className="magnificent-sparkle" style={{
-                      "--tx": `${(Math.random() - 0.5) * 200}px`,
-                      "--ty": `${-150 - Math.random() * 200}px`,
-                      "--delay": `${Math.random() * 2}s`,
-                      "--size": `${2 + Math.random() * 4}px`
-                    } as React.CSSProperties}></div>
+                    <div
+                      key={i}
+                      className="magnificent-sparkle"
+                      style={
+                        {
+                          "--tx": `${(Math.random() - 0.5) * 200}px`,
+                          "--ty": `${-150 - Math.random() * 200}px`,
+                          "--delay": `${Math.random() * 2}s`,
+                          "--size": `${2 + Math.random() * 4}px`,
+                        } as React.CSSProperties
+                      }
+                    ></div>
                   ))}
                 </div>
               </>
@@ -142,11 +152,11 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
         }
 
         .high-rarity-shake {
-          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+          animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
 
         .special-impact-shake {
-          animation: slam 0.8s cubic-bezier(.36,.07,.19,.97) both;
+          animation: slam 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
 
         .flash-overlay {
@@ -168,26 +178,59 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
         }
 
         @keyframes flash-out {
-          0% { opacity: 1; }
-          100% { opacity: 0; }
+          0% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
         }
 
         @keyframes shake {
-          10%, 90% { transform: translate3d(-1px, 0, 0); }
-          20%, 80% { transform: translate3d(2px, 0, 0); }
-          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-          40%, 60% { transform: translate3d(4px, 0, 0); }
+          10%,
+          90% {
+            transform: translate3d(-1px, 0, 0);
+          }
+          20%,
+          80% {
+            transform: translate3d(2px, 0, 0);
+          }
+          30%,
+          50%,
+          70% {
+            transform: translate3d(-4px, 0, 0);
+          }
+          40%,
+          60% {
+            transform: translate3d(4px, 0, 0);
+          }
         }
 
         @keyframes slam {
-          0% { transform: scale(1); }
-          20% { transform: scale(1.1) translate3d(0, -10px, 0); }
-          40% { transform: scale(0.95) translate3d(0, 5px, 0); }
-          50% { transform: translate3d(-8px, 0, 0); }
-          60% { transform: translate3d(8px, 0, 0); }
-          70% { transform: translate3d(-8px, 0, 0); }
-          80% { transform: translate3d(8px, 0, 0); }
-          100% { transform: scale(1) translate3d(0, 0, 0); }
+          0% {
+            transform: scale(1);
+          }
+          20% {
+            transform: scale(1.1) translate3d(0, -10px, 0);
+          }
+          40% {
+            transform: scale(0.95) translate3d(0, 5px, 0);
+          }
+          50% {
+            transform: translate3d(-8px, 0, 0);
+          }
+          60% {
+            transform: translate3d(8px, 0, 0);
+          }
+          70% {
+            transform: translate3d(-8px, 0, 0);
+          }
+          80% {
+            transform: translate3d(8px, 0, 0);
+          }
+          100% {
+            transform: scale(1) translate3d(0, 0, 0);
+          }
         }
 
         @media (max-width: 768px) {
@@ -316,7 +359,14 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           inset: -10px;
           background: conic-gradient(
             from 0deg,
-            #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000
+            #ff0000,
+            #ff7f00,
+            #ffff00,
+            #00ff00,
+            #0000ff,
+            #4b0082,
+            #8b00ff,
+            #ff0000
           );
           border-radius: 12px;
           filter: blur(15px);
@@ -326,8 +376,14 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
         }
 
         @keyframes aura-pulse {
-          from { opacity: 0.4; transform: scale(0.98); }
-          to { opacity: 0.8; transform: scale(1.02); }
+          from {
+            opacity: 0.4;
+            transform: scale(0.98);
+          }
+          to {
+            opacity: 0.8;
+            transform: scale(1.02);
+          }
         }
 
         .sparkles-container {
@@ -345,15 +401,25 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           height: var(--size);
           background: #fff;
           border-radius: 50%;
-          box-shadow: 0 0 10px #fff, 0 0 20px #ff00ff;
+          box-shadow:
+            0 0 10px #fff,
+            0 0 20px #ff00ff;
           opacity: 0;
           animation: sparkle-fly 2s ease-out var(--delay) infinite;
         }
 
         @keyframes sparkle-fly {
-          0% { transform: translate(0, 0) scale(0); opacity: 0; }
-          20% { opacity: 1; }
-          100% { transform: translate(var(--tx), var(--ty)) scale(1.5); opacity: 0; }
+          0% {
+            transform: translate(0, 0) scale(0);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          100% {
+            transform: translate(var(--tx), var(--ty)) scale(1.5);
+            opacity: 0;
+          }
         }
       `}</style>
     </div>

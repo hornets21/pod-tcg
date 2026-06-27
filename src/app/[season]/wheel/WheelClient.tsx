@@ -73,8 +73,10 @@ function WheelClientContent() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState<number | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
+  const [startRotation, setStartRotation] = useState(0);
   const [winnerCard, setWinnerCard] = useState<CardType | null>(null);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [spinHistory, setSpinHistory] = useState<CardType[]>([]);
 
   // Filter cards by selected rarity
   const filteredSelectionCards = useMemo(() => {
@@ -106,6 +108,7 @@ function WheelClientContent() {
   const handleSelectPreset = (type: "random8" | "random12" | "srPlus" | "clear") => {
     if (type === "clear") {
       setSelectedIds([]);
+      setSpinHistory([]);
       return;
     }
 
@@ -138,24 +141,33 @@ function WheelClientContent() {
     // Calculate center angle of the winner segment
     const targetSectorCenter = randIdx * segmentAngle + segmentAngle / 2;
     
-    // targetAngle = 5 full rotations + offset to top pointer (270 degrees)
-    const targetAngle = 360 * 5 + 270 - targetSectorCenter;
+    // Calculate target angle based on cumulative rotation (counter-clockwise)
+    const targetAngleMod = ((targetSectorCenter - 270) % 360 + 360) % 360;
+    const currentRotationMod = wheelRotation % 360;
+    let diff = targetAngleMod - currentRotationMod;
+    if (diff <= 0) diff += 360;
     
-    setWheelRotation(targetAngle);
+    const nextRotation = wheelRotation + diff + 360 * 5;
+    
+    setStartRotation(wheelRotation);
+    setWheelRotation(nextRotation);
     playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.12);
   };
 
   // Ticking sound simulation matching CSS transition speed (easeOutQuart)
   useEffect(() => {
-    if (!isSpinning || winnerIndex === null) return;
+    if (!isSpinning || winnerIndex === null || selectedCards.length === 0) return;
 
     const duration = 5000;
     const startTime = performance.now();
-    const startAngle = wheelRotation - 360 * 5;
+    const startAngle = startRotation;
     const endAngle = wheelRotation;
     const segmentAngle = 360 / selectedCards.length;
     let lastSector = -1;
     let animId: number;
+
+    const tickAudio = new Audio(AUDIO_URLS.CARD_REVEAL_NORMAL);
+    tickAudio.volume = 0.08;
 
     const tick = (now: number) => {
       const elapsed = now - startTime;
@@ -165,19 +177,23 @@ function WheelClientContent() {
       const ease = 1 - Math.pow(1 - progress, 4); // easeOutQuart
       const currentAngle = startAngle + (endAngle - startAngle) * ease;
 
-      // Top pointer is at 270 degrees relative to 0 degree canvas rotation
-      const sector = Math.floor(((270 - currentAngle) % 360 + 360) % 360 / segmentAngle);
+      // Top pointer is at 270 degrees relative to screen (which is 270 + currentAngle on wheel)
+      const sector = Math.floor(((currentAngle + 270) % 360 + 360) % 360 / segmentAngle);
       if (sector !== lastSector && sector >= 0 && sector < selectedCards.length) {
         lastSector = sector;
-        playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.08);
+        tickAudio.currentTime = 0;
+        tickAudio.play().catch(() => {});
       }
 
       animId = requestAnimationFrame(tick);
     };
 
     animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, [isSpinning, wheelRotation, selectedCards.length, winnerIndex, playSFX]);
+    return () => {
+      cancelAnimationFrame(animId);
+      tickAudio.pause();
+    };
+  }, [isSpinning, wheelRotation, startRotation, selectedCards.length, winnerIndex]);
 
   const handleTransitionEnd = () => {
     setIsSpinning(false);
@@ -187,6 +203,12 @@ function WheelClientContent() {
       setShowWinnerModal(true);
 
       addToCollection(card);
+
+      // Save to spin history
+      setSpinHistory((prev) => [...prev, card]);
+
+      // Remove the won card from the wheel selection
+      setSelectedIds((prev) => prev.filter((id) => id !== card.role_id));
 
       if (["LEG", "SEC", "UR"].includes(card.rarity)) {
         playSFX(AUDIO_URLS.HEAVENLY, 0.25);
@@ -198,13 +220,7 @@ function WheelClientContent() {
 
   const handleSpinAgain = () => {
     setShowWinnerModal(false);
-    // Reset wheel rotation back to normalized angle so it can spin again smoothly
-    const normalized = wheelRotation % 360;
-    setWheelRotation(normalized);
-    
-    setTimeout(() => {
-      handleStartSpin();
-    }, 150);
+    handleStartSpin();
   };
 
   // Generate conic gradient string for wheel sectors
@@ -233,7 +249,7 @@ function WheelClientContent() {
     });
 
     return {
-      background: `conic-gradient(${gradientParts.join(", ")})`
+      background: `conic-gradient(from 90deg, ${gradientParts.join(", ")})`
     };
   }, [selectedCards]);
 
@@ -301,33 +317,37 @@ function WheelClientContent() {
             </div>
           </div>
 
-          <div className="presets-bar">
-            <span>ทางเลือกด่วน:</span>
-            <button className="preset-btn" onClick={() => handleSelectPreset("random8")}>
-              สุ่ม 8 ใบ
-            </button>
-            <button className="preset-btn" onClick={() => handleSelectPreset("random12")}>
-              สุ่ม 12 ใบ
-            </button>
-            <button className="preset-btn" onClick={() => handleSelectPreset("srPlus")}>
-              ระดับ SR ขึ้นไป
-            </button>
-          </div>
+          <div className="wheel-control-panel">
+            <div className="presets-group">
+              <span className="control-label">ทางเลือกด่วน:</span>
+              <div className="presets-buttons">
+                <button className="preset-btn" onClick={() => handleSelectPreset("random8")}>
+                  สุ่ม 8 ใบ
+                </button>
+                <button className="preset-btn" onClick={() => handleSelectPreset("random12")}>
+                  สุ่ม 12 ใบ
+                </button>
+                <button className="preset-btn" onClick={() => handleSelectPreset("srPlus")}>
+                  ระดับ SR ขึ้นไป
+                </button>
+              </div>
+            </div>
 
-          <div className="quick-select-container">
-            <label htmlFor="rarity-select">เลือกระดับการ์ดเพื่อแสดงรายการ:</label>
-            <select
-              id="rarity-select"
-              value={selectedRarity || ""}
-              onChange={(e) => setSelectedRarity(e.target.value || null)}
-            >
-              <option value="">-- กรุณาเลือกระดับ --</option>
-              {rarityFilters.map((rarity) => (
-                <option key={rarity} value={rarity}>
-                  {rarity} ({gachaPool.filter(c => c.rarity === rarity).length} ใบ)
-                </option>
-              ))}
-            </select>
+            <div className="rarity-select-group">
+              <label htmlFor="rarity-select" className="control-label">เลือกระดับการ์ดเพื่อแสดงรายการ:</label>
+              <select
+                id="rarity-select"
+                value={selectedRarity || ""}
+                onChange={(e) => setSelectedRarity(e.target.value || null)}
+              >
+                <option value="">-- กรุณาเลือกระดับ --</option>
+                {rarityFilters.map((rarity) => (
+                  <option key={rarity} value={rarity}>
+                    {rarity} ({gachaPool.filter(c => c.rarity === rarity).length} ใบ)
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {selectedRarity === null ? (
@@ -364,7 +384,7 @@ function WheelClientContent() {
             <button className="btn-back" onClick={() => setPhase("select")} disabled={isSpinning}>
               ← กลับไปแก้ไข
             </button>
-            <h2>วงล้อสุ่มการ์ด 3D</h2>
+            <h2>วงล้อสุ่มการ์ด</h2>
             <div style={{ width: 100 }} />
           </div>
 
@@ -384,10 +404,29 @@ function WheelClientContent() {
                   </div>
                 ))}
               </div>
+
+              {spinHistory.length > 0 && (
+                <div className="history-section" style={{ marginTop: "2rem" }}>
+                  <h3>ประวัติที่สุ่มได้ ({spinHistory.length} ใบ)</h3>
+                  <div className="sidebar-list">
+                    {spinHistory.map((card, idx) => (
+                      <div key={`history-${card.role_id}-${idx}`} className="sidebar-card-item history-item" style={{ opacity: 0.65 }}>
+                        <span
+                          className="rarity-badge"
+                          style={{ backgroundColor: getRarityBadgeColor(card.rarity) }}
+                        >
+                          {card.rarity}
+                        </span>
+                        <span className="card-name" style={{ textDecoration: "line-through" }}>{card.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="spin-area-container">
-              {/* Pseudo-3D CSS Tilted Wheel */}
+              {/* Clean 2D Wheel Spinner */}
               <div className="wheel-container-3d">
                 <div className="wheel-shadow" />
                 <div className="wheel-pointer" />
@@ -395,7 +434,7 @@ function WheelClientContent() {
                   className="wheel-plate"
                   style={{
                     ...conicGradientStyle,
-                    transform: `rotateX(25deg) rotate(${-wheelRotation}deg)`,
+                    transform: `rotate(${-wheelRotation}deg)`,
                   }}
                   onTransitionEnd={handleTransitionEnd}
                 >
@@ -404,12 +443,22 @@ function WheelClientContent() {
                     return (
                       <div
                         key={idx}
-                        className="wheel-sector-text"
+                        className="wheel-sector-content"
                         style={{
                           transform: `rotate(${angle}deg)`,
                         }}
                       >
-                        {card.name}
+                        <span className="wheel-sector-name">{card.name}</span>
+                        <img
+                          src={card.image}
+                          alt={card.name}
+                          className="wheel-sector-img"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://via.placeholder.com/80x120?text=Card";
+                          }}
+                        />
                       </div>
                     );
                   })}
@@ -455,7 +504,12 @@ function WheelClientContent() {
             </div>
 
             <div className="winner-actions">
-              <button className="btn-modal-spin" onClick={handleSpinAgain}>
+              <button
+                className="btn-modal-spin"
+                onClick={handleSpinAgain}
+                disabled={selectedIds.length < 2}
+                style={selectedIds.length < 2 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+              >
                 หมุนอีกครั้ง
               </button>
               <button className="btn-modal-close" onClick={() => setShowWinnerModal(false)}>
@@ -499,39 +553,124 @@ function WheelClientContent() {
           text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
 
-        .presets-bar {
+        .wheel-control-panel {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1.5rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          margin-bottom: 2rem;
+        }
+
+        .presets-group {
           display: flex;
           align-items: center;
           gap: 0.8rem;
-          margin-top: 1rem;
-          margin-bottom: 1.5rem;
-          background: rgba(255, 255, 255, 0.03);
-          padding: 0.8rem 1.2rem;
-          border-radius: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .presets-bar span {
-          font-size: 0.9rem;
-          color: #94a3b8;
+        .presets-buttons {
+          display: flex;
+          gap: 0.5rem;
         }
 
         .preset-btn {
-          background: rgba(56, 189, 248, 0.1);
-          color: #38bdf8;
-          border: 1px solid rgba(56, 189, 248, 0.2);
+          background: rgba(0, 210, 255, 0.08);
+          color: var(--accent);
+          border: 1px solid rgba(0, 210, 255, 0.2);
           padding: 0.4rem 1rem;
           border-radius: 6px;
           font-size: 0.85rem;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .preset-btn:hover {
-          background: #38bdf8;
-          color: #0f172a;
-          box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+          background: var(--accent);
+          color: #07060a;
+          box-shadow: 0 0 12px var(--accent-glow);
         }
+
+        .rarity-select-group {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          flex: 0 0 350px;
+        }
+
+        .control-label {
+          font-size: 0.9rem;
+          color: #94a3b8;
+          font-weight: 500;
+          white-space: nowrap;
+        }
+
+        .empty-lot-msg {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 4rem 2rem;
+          text-align: center;
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px dashed rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          color: #64748b;
+          font-size: 0.95rem;
+          gap: 0.75rem;
+          margin-top: 1rem;
+          backdrop-filter: blur(4px);
+        }
+
+        .empty-lot-msg::before {
+          content: "🎴";
+          font-size: 2.2rem;
+          opacity: 0.65;
+          margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 900px) {
+          .wheel-control-panel {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1.25rem;
+            padding: 1.25rem;
+          }
+
+          .presets-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.6rem;
+          }
+
+          .presets-buttons {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+          }
+
+          .preset-btn {
+            width: 100%;
+            text-align: center;
+            padding: 0.5rem 0.25rem;
+          }
+
+          .rarity-select-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.6rem;
+            flex: 1 1 auto;
+          }
+
+          #rarity-select {
+            width: 100%;
+            box-sizing: border-box;
+          }
+        }
+
 
         .card-selection-item {
           transition: transform 0.2s ease;
@@ -601,6 +740,25 @@ function WheelClientContent() {
           flex-direction: column;
           overflow-y: auto;
           z-index: 5;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 210, 255, 0.25) transparent;
+        }
+
+        .wheel-cards-sidebar::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .wheel-cards-sidebar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .wheel-cards-sidebar::-webkit-scrollbar-thumb {
+          background: rgba(0, 210, 255, 0.25);
+          border-radius: 3px;
+        }
+
+        .wheel-cards-sidebar::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 210, 255, 0.55);
         }
 
         .wheel-cards-sidebar h3 {
@@ -656,13 +814,12 @@ function WheelClientContent() {
           padding: 2rem;
         }
 
-        /* 3D CSS WHEEL SPINNER */
+        /* 2D CSS WHEEL SPINNER */
         .wheel-container-3d {
           position: relative;
-          width: 340px;
-          height: 340px;
-          perspective: 1000px;
-          margin-bottom: 3rem;
+          width: 500px;
+          height: 500px;
+          margin-bottom: 3.5rem;
         }
 
         .wheel-shadow {
@@ -670,25 +827,25 @@ function WheelClientContent() {
           width: 90%;
           height: 90%;
           left: 5%;
-          top: 8%;
-          background: rgba(0, 0, 0, 0.65);
+          top: 5%;
+          background: rgba(0, 0, 0, 0.45);
           border-radius: 50%;
-          filter: blur(15px);
-          transform: translateY(24px) rotateX(45deg) scale(0.95);
+          filter: blur(25px);
+          transform: translateY(20px) scale(0.96);
           z-index: 1;
           pointer-events: none;
         }
 
         .wheel-pointer {
           position: absolute;
-          top: -15px;
+          top: -20px;
           left: 50%;
-          transform: translateX(-50%) translateZ(25px);
+          transform: translateX(-50%);
           width: 0;
           height: 0;
-          border-left: 12px solid transparent;
-          border-right: 12px solid transparent;
-          border-top: 24px solid #f43f5e;
+          border-left: 15px solid transparent;
+          border-right: 15px solid transparent;
+          border-top: 30px solid #f43f5e;
           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
           z-index: 10;
           pointer-events: none;
@@ -699,48 +856,65 @@ function WheelClientContent() {
           width: 100%;
           height: 100%;
           border-radius: 50%;
-          border: 10px solid #1e293b;
+          border: 12px solid #1e293b;
           box-shadow: 
-            0 10px 30px rgba(0, 0, 0, 0.7),
-            0 0 0 3px #38bdf8,
-            inset 0 0 20px rgba(0,0,0,0.8);
-          transform-style: preserve-3d;
-          transform: rotateX(45deg) rotate(0deg);
+            0 12px 40px rgba(0, 0, 0, 0.5),
+            0 0 0 4px #38bdf8,
+            inset 0 0 25px rgba(0,0,0,0.8);
+          transform: rotate(0deg);
           transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1);
           z-index: 2;
           overflow: hidden;
         }
 
-        .wheel-sector-text {
+        .wheel-sector-content {
           position: absolute;
           left: 50%;
           top: 50%;
           transform-origin: 0 50%;
-          width: 145px;
-          text-align: right;
-          margin-top: -10px;
-          padding-right: 25px;
-          font-size: 0.82rem;
+          width: 230px;
+          height: 64px;
+          margin-top: -32px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+          padding-right: 16px;
+          pointer-events: none;
+        }
+
+        .wheel-sector-name {
+          font-size: 0.85rem;
           font-weight: 700;
           color: white;
           text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0,0,0,0.8);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          pointer-events: none;
+          max-width: 130px;
+        }
+
+        .wheel-sector-img {
+          width: 42px;
+          height: 60px;
+          object-fit: cover;
+          border-radius: 4px;
+          border: 1.5px solid rgba(255, 255, 255, 0.35);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          background: #1e293b;
         }
 
         .wheel-center-cap {
           position: absolute;
-          width: 54px;
-          height: 54px;
-          background: radial-gradient(circle, #38bdf8 0%, #0284c7 50%, #0f172a 100%);
-          border: 3.5px solid #38bdf8;
+          width: 72px;
+          height: 72px;
+          background: radial-gradient(circle, var(--accent) 0%, #0066ff 50%, #0f172a 100%);
+          border: 4.5px solid var(--accent);
           border-radius: 50%;
           left: 50%;
           top: 50%;
-          transform: translate(-50%, -50%) translateZ(20px);
-          box-shadow: 0 3px 8px rgba(0,0,0,0.6), 0 0 10px rgba(56, 189, 248, 0.5);
+          transform: translate(-50%, -50%);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.6), 0 0 12px var(--accent-glow);
           z-index: 5;
           pointer-events: none;
         }
@@ -750,22 +924,24 @@ function WheelClientContent() {
         }
 
         .spin-trigger-btn {
-          background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-          color: white;
-          border: 2px solid #38bdf8;
+          background: var(--accent);
+          color: #07060a;
+          border: 2px solid var(--accent);
           font-size: 1.2rem;
-          font-weight: bold;
+          font-weight: 800;
           padding: 0.9rem 2.8rem;
           border-radius: 50px;
           cursor: pointer;
-          box-shadow: 0 0 20px rgba(56, 189, 248, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.25);
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+          box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
+          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .spin-trigger-btn:hover:not(:disabled) {
+          background: #fff;
+          border-color: #fff;
+          color: #07060a;
           transform: scale(1.06);
-          box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+          box-shadow: 0 0 35px rgba(255, 255, 255, 0.5);
         }
 
         .spin-trigger-btn:active:not(:disabled) {
@@ -795,8 +971,8 @@ function WheelClientContent() {
 
         .winner-modal {
           background: linear-gradient(185deg, #111827 0%, #030712 100%);
-          border: 1.5px solid rgba(56, 189, 248, 0.25);
-          box-shadow: 0 0 45px rgba(56, 189, 248, 0.15), 0 10px 30px rgba(0, 0, 0, 0.6);
+          border: 1.5px solid rgba(0, 210, 255, 0.25);
+          box-shadow: 0 0 45px rgba(0, 210, 255, 0.15), 0 10px 30px rgba(0, 0, 0, 0.6);
           padding: 2.2rem;
           border-radius: 16px;
           display: flex;
@@ -866,26 +1042,28 @@ function WheelClientContent() {
 
         .btn-modal-spin {
           flex: 1;
-          background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-          color: white;
-          border: 1px solid #38bdf8;
+          background: var(--accent);
+          color: #07060a;
+          border: 1px solid var(--accent);
           padding: 0.75rem;
           border-radius: 8px;
           font-size: 0.95rem;
-          font-weight: 600;
+          font-weight: 700;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .btn-modal-spin:hover {
-          background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+          background: #fff;
+          border-color: #fff;
+          color: #07060a;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+          box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
         }
 
         .btn-modal-close {
           flex: 1;
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.03);
           color: #cbd5e1;
           border: 1px solid rgba(255, 255, 255, 0.1);
           padding: 0.75rem;
@@ -893,12 +1071,15 @@ function WheelClientContent() {
           font-size: 0.95rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .btn-modal-close:hover {
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(0, 210, 255, 0.3);
           color: white;
+          box-shadow: 0 0 12px rgba(0, 210, 255, 0.1);
+          transform: translateY(-1px);
         }
 
         @keyframes fade-in {
