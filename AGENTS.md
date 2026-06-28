@@ -31,6 +31,12 @@ Packs contain five unique cards by default, but also support a 1-card pack mode;
 ### Conic-Gradient Segment Alternating Colors (Jackpot Wheel)
 - **Segment Alternation**: When building wheels of fortune (such as the Free Wheel jackpot), do not map segment colors directly to card rarity or category as adjacent segments will share identical colors and appear solid/unsegmented. Always use alternating colors from a static palette (e.g. `WHEEL_COLORS[idx % WHEEL_COLORS.length]`) to ensure adjacent segments are distinct.
 
+### Custom Dialog Confirms vs Native Popups
+- **Visual Dialogs**: Avoid using browser-native popups (`window.confirm`, `window.alert`) for confirmation dialogs. Always build beautiful custom glassmorphic modals with warning-colored highlights (e.g., crimson border shadows) matching the game's vault theme.
+
+### Event-based Grouping in Collection History
+- **Chronological Pack Grouping**: When displaying opening logs or history states, group cards by their specific opening events (pack-by-pack rows with timestamps and opening counts, similar to `SummaryModal.tsx`) rather than a flat card stream.
+
 ### 3D Texture Aspect Ratio and Proportions
 - **Proportional Rendering**: When loading textures on 3D meshes (such as `/pack_tcg_op_2_one_per_pack.webp` with native `420 x 594` resolution), configure mesh width/height ratios to match the source file's aspect ratio (e.g. `1.7 x 2.4` for vertical rectangular assets) to prevent horizontal stretching or vertical squishing. Do not stretch vertical assets onto default square shapes.
 
