@@ -23,6 +23,7 @@ interface PackRipOverlay3DProps {
   // reveals automatically. Useful when gestures are inconvenient/awkward on
   // the device or for accessibility.
   autoOpen?: boolean;
+  isGod?: boolean;
 }
 
 type Phase = "idle" | "tear" | "burst" | "stream" | "cards" | "done";
@@ -108,6 +109,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
   onRipComplete,
   mode = "single",
   autoOpen = false,
+  isGod,
 }) => {
   const [phase, setPhase] = useState<Phase>(isOpen ? "tear" : "idle");
   const [showStream, setShowStream] = useState(false);
@@ -137,8 +139,10 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
   }, []);
 
   const isGodPack =
-    cards.length === 5 &&
-    cards.every((c) => ["SSR", "UR", "SEC", "LEG"].includes(c.rarity));
+    isGod !== undefined
+      ? isGod
+      : cards.length === 5 &&
+        cards.every((c) => ["SSR", "UR", "SEC", "LEG"].includes(c.rarity));
 
   // Escape key
   useEffect(() => {
@@ -384,13 +388,13 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           <div className="film-grain" />
 
           {/* Silhouette stream: cards dash across left↔right during the burst/stream
-            phase. The last 5 land in a row to foreshadow the reveal. */}
+             phase. The last cards.length land in a row to foreshadow the reveal. */}
           {showStream && (
             <div
               className={`card-stream ${phase === "cards" ? "settling" : ""}`}
             >
               {Array.from({ length: STREAM_CARD_COUNT }, (_, index) => {
-                const isFinal = index >= STREAM_CARD_COUNT - 5;
+                const isFinal = index >= STREAM_CARD_COUNT - cards.length;
                 const isLeftToRight = index % 2 === 1;
 
                 let cardClass = "";
@@ -416,9 +420,11 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
                         "--stream-mid-tilt": `${((index % 3) * 1.5 - 1.5) * -0.25}deg`,
                         "--stream-end-tilt": `${((index % 3) * 1.5 - 1.5) * -1}deg`,
                         "--stream-final-x": isFinal
-                          ? FINAL_STREAM_OFFSETS[
-                              index - (STREAM_CARD_COUNT - 5)
-                            ]
+                          ? cards.length === 1
+                            ? "0px"
+                            : FINAL_STREAM_OFFSETS[
+                                index - (STREAM_CARD_COUNT - cards.length)
+                              ]
                           : "0px",
                       } as React.CSSProperties
                     }
@@ -473,6 +479,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
                     onTearComplete={handleTearComplete}
                     sharedProgressRef={tearProgressRef}
                     autoStart={autoOpen}
+                    packSize={cards.length}
                   />
                 )}
 

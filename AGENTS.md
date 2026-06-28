@@ -26,7 +26,13 @@ History uses short imperative subjects such as `add new card`, `fix version`, an
 
 ## Gameplay, Visual, and Audio Constraints
 
-Packs contain five unique cards; exclude `isGacha='N'`; God Pack chance is 1%; `EVENT` shares the Common pool. Do not change role ID `1356458345812459611` rainbow aura behavior unless explicitly requested. The current single-pack tear animation in `OpeningClient.tsx` and `PackSingleThree.tsx` is approved: preserve its timing, projected size, lower-pack visibility, and non-rotating motion unless directly instructed otherwise. Keep BGM near `0.02`, SFX near `0.15`, and heavy impacts at or below `0.2`–`0.25`.
+Packs contain five unique cards by default, but also support a 1-card pack mode; exclude `isGacha='N'`; God Pack chance is 1% for 5-card packs but is completely disabled (0% chance) for 1-card packs; `EVENT` shares the Common pool. Do not change role ID `1356458345812459611` rainbow aura behavior unless explicitly requested. The current single-pack tear animation in `OpeningClient.tsx` and `PackSingleThree.tsx` is approved: preserve its timing, projected size, lower-pack visibility, and non-rotating motion unless directly instructed otherwise. Keep BGM near `0.02`, SFX near `0.15`, and heavy impacts at or below `0.2`–`0.25`.
+
+### Conic-Gradient Segment Alternating Colors (Jackpot Wheel)
+- **Segment Alternation**: When building wheels of fortune (such as the Free Wheel jackpot), do not map segment colors directly to card rarity or category as adjacent segments will share identical colors and appear solid/unsegmented. Always use alternating colors from a static palette (e.g. `WHEEL_COLORS[idx % WHEEL_COLORS.length]`) to ensure adjacent segments are distinct.
+
+### 3D Texture Aspect Ratio and Proportions
+- **Proportional Rendering**: When loading textures on 3D meshes (such as `/pack_tcg_op_2_one_per_pack.webp` with native `420 x 594` resolution), configure mesh width/height ratios to match the source file's aspect ratio (e.g. `1.7 x 2.4` for vertical rectangular assets) to prevent horizontal stretching or vertical squishing. Do not stretch vertical assets onto default square shapes.
 
 ### Pack Tearing & Silhouette Card Stream Transitions
 - **Reduced Motion Constraints**: Core gameplay animations (such as the pack tearing, silhouette card streams, and cinematic suspense overlays) must never be disabled or skipped by `prefers-reduced-motion` settings in CSS or JS. Only purely decorative components (like anticipation shakes) may be skipped or mitigated.
@@ -39,6 +45,11 @@ Packs contain five unique cards; exclude `isGacha='N'`; God Pack chance is 1%; `
 ## Security & Deployment
 
 Copy configuration from `.env.example`. Never commit secrets; expose only browser-safe `NEXT_PUBLIC_*` values. `next.config.ts` uses `output: "export"` and unoptimized images, so avoid server-only Next.js features unless the deployment model is intentionally changed.
+
+## React Lifecycle & Linter Safety (state in useEffect)
+
+- **Safe State Clearance**: When resetting states or synchronizing layouts on mount or parameter shifts (such as season changes), do not call complex interactive callbacks (like `resetToIdle()`) directly inside `useEffect` if those callbacks depend on highly dynamic states, as this causes infinite render/state update loops.
+- **Asynchronous State Updates in Effects**: To comply with strict React linter rules (`react-hooks/set-state-in-effect`) and prevent synchronous cascading renders, always wrap synchronous multiple `setState` calls inside a `useEffect` inside a `setTimeout(..., 0)` or requestAnimationFrame to defer their execution to the next frame/macrotask.
 
 ## Strict Execution Guardrails
 

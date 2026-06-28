@@ -17,6 +17,7 @@ import { ThreeScene } from "../../components/three/ThreeScene";
 import { PackRipOverlay3D } from "../../components/unboxing/PackRipOverlay3D";
 import { FullArtCard } from "../../components/FullArtCard";
 import { Card } from "../../components/Card";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 const getRarityColor = (rarity: string) => {
   switch (rarity) {
@@ -32,6 +33,24 @@ const getRarityColor = (rarity: string) => {
   }
 };
 
+const WHEEL_COLORS = [
+  "#2563eb", // Royal Blue
+  "#db2777", // Deep Pink
+  "#059669", // Emerald Green
+  "#d97706", // Amber Orange
+  "#7c3aed", // Violet Purple
+  "#dc2626", // Crimson Red
+  "#0891b2", // Cyan Teal
+  "#9333ea"  // Bright Purple
+];
+
+interface HistoryPack {
+  id: string;
+  timestamp: string;
+  packSize: number;
+  cards: CardType[];
+}
+
 export default function OpeningClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
@@ -44,6 +63,17 @@ export default function OpeningClient() {
   const [isGodPackEffectActive, setIsGodPackEffectActive] = useState(false);
   const [packClicked, setPackClicked] = useState(false);
   const [isClosingOverlay, setIsClosingOverlay] = useState(false);
+  const [packSize, setPackSize] = useState<number>(5);
+  const [singleSaltCount, setSingleSaltCount] = useLocalStorage<number>(
+    `pod_single_salt_count_${season}`,
+    0
+  );
+  const [historyPacks, setHistoryPacks] = useLocalStorage<HistoryPack[]>(
+    `pod_opening_history_packs_${season}`,
+    []
+  );
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Free Wheel States
   const [showFreeWheelModal, setShowFreeWheelModal] = useState(false);
@@ -64,7 +94,8 @@ export default function OpeningClient() {
     const gradientParts = freeWheelCards.map((card, idx) => {
       const start = idx * segmentAngle;
       const end = (idx + 1) * segmentAngle;
-      return `${getRarityColor(card.rarity)} ${start}deg ${end}deg`;
+      const color = WHEEL_COLORS[idx % WHEEL_COLORS.length];
+      return `${color} ${start}deg ${end}deg`;
     });
 
     return {
@@ -189,9 +220,28 @@ export default function OpeningClient() {
     timersRef.current.push(zoomOutTimer);
 
     const openedCards = packCardsRef.current;
-    const allC = openedCards.length === 5 && openedCards.every(c => c.rarity === "C");
-    const allR = openedCards.length === 5 && openedCards.every(c => c.rarity === "R");
-    const earnedFreeSpin = allC || allR;
+    let earnedFreeSpin = false;
+
+    if (openedCards.length === 5) {
+      const allC = openedCards.every(c => c.rarity === "C");
+      const allR = openedCards.every(c => c.rarity === "R");
+      earnedFreeSpin = allC || allR;
+    } else if (openedCards.length === 1) {
+      const card = openedCards[0];
+      const isSalt = ["C", "R", "EVENT"].includes(card.rarity);
+      if (isSalt) {
+        const nextCount = singleSaltCount + 1;
+        if (nextCount >= 10) {
+          earnedFreeSpin = true;
+          setSingleSaltCount(0);
+        } else {
+          setSingleSaltCount(nextCount);
+        }
+      } else {
+        // Reset counter if they pull a good card (SR+)
+        setSingleSaltCount(0);
+      }
+    }
 
     const timer = setTimeout(() => {
       clearAllTimers();
@@ -208,21 +258,27 @@ export default function OpeningClient() {
       stopBGM();
     }, 600);
     timersRef.current.push(timer);
-  }, [clearAllTimers, stopBGM, prepareFreeWheel]);
+  }, [clearAllTimers, stopBGM, prepareFreeWheel, singleSaltCount, setSingleSaltCount]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      resetToIdle();
+      clearAllTimers();
+      setIsOpening(false);
+      setPackClicked(false);
+      setIsGodPackEffectActive(false);
+      setIsClosingOverlay(false);
+      setPackCards([]);
+      packCardsRef.current = [];
     }, 0);
     return () => clearTimeout(timer);
-  }, [season, resetToIdle]);
+  }, [season, clearAllTimers]);
 
   const startOpening = useCallback(() => {
     if (packClicked || isOpening) return;
     setPackClicked(true);
     startBGM(AUDIO_URLS.BGM_GOD, 0.02);
 
-    const { pack, isGod } = openPack();
+    const { pack, isGod } = openPack(packSize);
     setPackCards(pack);
     packCardsRef.current = pack;
     if (isGod) setIsGodPackEffectActive(true);
@@ -232,11 +288,26 @@ export default function OpeningClient() {
       setIsOpening(true);
     }, 1150);
     timersRef.current.push(timer);
-  }, [packClicked, isOpening, openPack, startBGM]);
+  }, [packClicked, isOpening, openPack, startBGM, packSize]);
 
   const handleRipComplete = useCallback(() => {
     packCards.forEach((card) => addToCollection(card));
-  }, [packCards, addToCollection]);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const newPackEntry: HistoryPack = {
+      id: Math.random().toString(36).substring(2, 11),
+      timestamp: timeStr,
+      packSize: packCards.length,
+      cards: packCards,
+    };
+    setHistoryPacks((prev) => {
+      return [newPackEntry, ...prev].slice(0, 20);
+    });
+  }, [packCards, addToCollection, setHistoryPacks]);
+
+  const handleClearHistory = useCallback(() => {
+    setShowClearConfirm(true);
+  }, []);
 
   if (!isLoaded) {
     return <div className="opening-loader">กำลังโหลด...</div>;
@@ -262,24 +333,74 @@ export default function OpeningClient() {
           </div>
           <h1>เลือกชะตา<br />จากในซอง</h1>
           <p>
-            การ์ด 5 ใบไม่ซ้ำ ลุ้นใบหายากและ<br className="desktop-break" />
-            God Pack ในทุกการเปิด
+            {packSize === 5 ? (
+              <>
+                การ์ด 5 ใบไม่ซ้ำ ลุ้นใบหายากและ<br className="desktop-break" />
+                God Pack ในทุกการเปิด
+              </>
+            ) : (
+              <>
+                การ์ด 1 ใบ ลุ้นใบหายากและ<br className="desktop-break" />
+                ในทุกการเปิด
+              </>
+            )}
           </p>
         </div>
 
         <div className="opening-meta" aria-label="ข้อมูลแพ็ก">
           <div className="meta-item">
-            <span className="meta-value">05</span>
+            <span className="meta-value">{packSize === 5 ? "05" : "01"}</span>
             <span className="meta-label">การ์ดต่อซอง</span>
           </div>
-          <div className="meta-divider" />
-          <div className="meta-item">
-            <span className="meta-value">1%</span>
-            <span className="meta-label">God Pack</span>
-          </div>
+          {packSize === 5 && (
+            <>
+              <div className="meta-divider" />
+              <div className="meta-item">
+                <span className="meta-value">1%</span>
+                <span className="meta-label">God Pack</span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="opening-action">
+          {packSize === 1 && !packClicked && (
+            <div className="salt-pity-container">
+              <div className="salt-pity-text">
+                เกลือสะสม: {singleSaltCount}/10 (ได้ C, R ติดกันการันตีวงล้อ)
+              </div>
+              <div className="salt-pity-bar-bg">
+                <div
+                  className="salt-pity-bar-fill"
+                  style={{ width: `${singleSaltCount * 10}%` }}
+                />
+              </div>
+            </div>
+          )}
+          <div className="pack-selector-container">
+            <button
+              className={`pack-selector-btn ${packSize === 5 ? "active" : ""}`}
+              onClick={() => setPackSize(5)}
+              disabled={packClicked}
+            >
+              5 ใบ
+            </button>
+            <button
+              className={`pack-selector-btn ${packSize === 1 ? "active" : ""}`}
+              onClick={() => setPackSize(1)}
+              disabled={packClicked}
+            >
+              1 ใบ
+            </button>
+          </div>
+          {!packClicked && (
+            <button
+              className="history-btn"
+              onClick={() => setIsHistoryOpen(true)}
+            >
+              📜 ประวัติการเปิดล่าสุด
+            </button>
+          )}
           <span className="action-hint">แตะซองเพื่อเริ่ม</span>
         </div>
       </div>
@@ -296,6 +417,7 @@ export default function OpeningClient() {
             season={season}
             onClick={startOpening}
             isClicked={packClicked}
+            packSize={packSize}
           />
         </Suspense>
       </ThreeScene>
@@ -312,6 +434,7 @@ export default function OpeningClient() {
         onRipComplete={handleRipComplete}
         mode="single"
         autoOpen
+        isGod={isGodPackEffectActive}
       />
 
       {showFreeWheelModal && (
@@ -385,6 +508,87 @@ export default function OpeningClient() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {isHistoryOpen && (
+        <div className="history-modal-overlay" onClick={() => setIsHistoryOpen(false)}>
+          <div className="history-modal-content" onClick={(e) => e.stopPropagation()}>
+            <header className="history-modal-header">
+              <h2>ประวัติการเปิดการ์ด (ล่าสุด 20 ครั้ง)</h2>
+              <button className="history-close-x" onClick={() => setIsHistoryOpen(false)}>×</button>
+            </header>
+
+            <div className="history-modal-body">
+              {historyPacks.length === 0 ? (
+                <div className="history-empty">
+                  <div className="history-empty-icon">🎴</div>
+                  <p>ยังไม่มีประวัติการเปิดการ์ด</p>
+                </div>
+              ) : (
+                <div className="history-pack-list">
+                  {historyPacks.map((packEntry, packIdx) => (
+                    <div key={packEntry.id} className="history-pack-row">
+                      <div className="history-pack-label">
+                        <span className="history-pack-index">การเปิดครั้งที่ {historyPacks.length - packIdx}</span>
+                        <span className="history-pack-meta">
+                          {packEntry.packSize} ใบ · {packEntry.timestamp}
+                        </span>
+                      </div>
+                      <div className="history-grid">
+                        {packEntry.cards.map((card, cardIdx) => (
+                          <div key={`${card.role_id}-history-${packEntry.id}-${cardIdx}`} className="history-card-wrapper">
+                            <CardComponent card={card} isRevealed={true} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <footer className="history-modal-footer">
+              {historyPacks.length > 0 && (
+                <button className="history-clear-btn" onClick={handleClearHistory}>
+                  ล้างประวัติ
+                </button>
+              )}
+              <button className="history-close-btn" onClick={() => setIsHistoryOpen(false)}>
+                ปิดหน้าต่าง
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {showClearConfirm && (
+        <div className="confirm-modal-overlay" onClick={() => setShowClearConfirm(false)}>
+          <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
+            <header className="confirm-modal-header">
+              <h3>ยืนยันการทำรายการ</h3>
+            </header>
+            <div className="confirm-modal-body">
+              <p>คุณต้องการล้างประวัติการเปิดการ์ดทั้งหมดใช่หรือไม่?</p>
+              <p className="confirm-modal-warn">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+            </div>
+            <footer className="confirm-modal-footer">
+              <button
+                className="confirm-btn confirm-cancel-btn"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                ยกเลิก
+              </button>
+              <button
+                className="confirm-btn confirm-ok-btn"
+                onClick={() => {
+                  setHistoryPacks([]);
+                  setShowClearConfirm(false);
+                }}
+              >
+                ยืนยันล้างประวัติ
+              </button>
+            </footer>
           </div>
         </div>
       )}
@@ -546,14 +750,377 @@ export default function OpeningClient() {
           right: clamp(2rem, 5vw, 5.5rem);
           bottom: clamp(2rem, 5vw, 5.5rem);
           display: flex;
-          align-items: center;
-          gap: 1rem;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.75rem;
           animation: interface-enter 700ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .action-hint {
           color: rgba(255, 255, 255, 0.5);
           font: 300 0.8rem var(--font-kanit), sans-serif;
+        }
+
+        .salt-pity-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+          width: 210px;
+          pointer-events: auto;
+        }
+
+        .salt-pity-text {
+          color: rgba(255, 255, 255, 0.55);
+          font: 400 0.72rem var(--font-kanit), sans-serif;
+          letter-spacing: 0.02em;
+        }
+
+        .salt-pity-bar-bg {
+          width: 100%;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .salt-pity-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #ea580c, #db2777);
+          box-shadow: 0 0 8px rgba(219, 39, 119, 0.5);
+          border-radius: 999px;
+          transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .history-btn {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 9999px;
+          color: rgba(255, 255, 255, 0.6);
+          padding: 8px 20px;
+          font: 500 0.8rem var(--font-kanit), sans-serif;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+          backdrop-filter: blur(12px);
+          pointer-events: auto;
+          margin-top: 0.25rem;
+        }
+
+        .history-btn:hover {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .history-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(5, 3, 8, 0.85);
+          z-index: 3000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(16px);
+          animation: fade-in 0.3s ease-out;
+        }
+
+        .history-modal-content {
+          width: 90%;
+          max-width: 960px;
+          max-height: 80vh;
+          background: rgba(20, 18, 30, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(25px);
+          overflow: hidden;
+          animation: scale-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .history-modal-header {
+          padding: 1.25rem 1.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .history-modal-header h2 {
+          margin: 0;
+          color: #fff;
+          font: 600 1.1rem var(--font-kanit), sans-serif;
+        }
+
+        .history-close-x {
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+
+        .history-close-x:hover {
+          color: #fff;
+        }
+
+        .history-modal-body {
+          flex: 1;
+          padding: 1.5rem;
+          overflow-y: auto;
+        }
+
+        .history-empty {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 3rem 0;
+          color: rgba(255, 255, 255, 0.4);
+          font-family: var(--font-kanit), sans-serif;
+        }
+
+        .history-empty-icon {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+          opacity: 0.6;
+        }
+
+        .history-empty p {
+          margin: 0;
+          font-size: 0.95rem;
+        }
+
+        .history-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1.25rem;
+        }
+
+        .history-pack-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .history-pack-row {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 14px;
+          padding: 1.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .history-pack-label {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding-bottom: 0.5rem;
+          font-family: var(--font-kanit), sans-serif;
+        }
+
+        .history-pack-index {
+          color: #ffcb05;
+          font-weight: 600;
+          font-size: 0.88rem;
+          letter-spacing: 0.5px;
+        }
+
+        .history-pack-meta {
+          color: rgba(255, 255, 255, 0.45);
+          font-size: 0.78rem;
+        }
+
+        .history-card-wrapper {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transform: scale(0.6);
+          width: 230px;
+          height: 330px;
+          margin: -66px -46px;
+        }
+
+        .history-modal-footer {
+          padding: 1rem 1.5rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .history-close-btn {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 8px;
+          color: #fff;
+          padding: 8px 20px;
+          font: 500 0.85rem var(--font-kanit), sans-serif;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .history-close-btn:hover {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .history-clear-btn {
+          background: rgba(220, 38, 38, 0.12);
+          border: 1px solid rgba(220, 38, 38, 0.22);
+          border-radius: 8px;
+          color: #f87171;
+          padding: 8px 20px;
+          font: 500 0.85rem var(--font-kanit), sans-serif;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin-right: auto;
+        }
+
+        .history-clear-btn:hover {
+          background: rgba(220, 38, 38, 0.22);
+          border-color: rgba(220, 38, 38, 0.32);
+          color: #ff8787;
+        }
+
+        .confirm-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(5, 3, 8, 0.95);
+          z-index: 4000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(10px);
+          animation: fade-in 0.2s ease-out;
+        }
+
+        .confirm-modal-content {
+          width: 90%;
+          max-width: 400px;
+          background: rgba(25, 20, 35, 0.95);
+          border: 1px solid rgba(220, 38, 38, 0.3);
+          border-radius: 16px;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 15px 40px rgba(220, 38, 38, 0.15);
+          backdrop-filter: blur(20px);
+          overflow: hidden;
+          animation: scale-up 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .confirm-modal-header {
+          padding: 1.25rem 1.25rem 0.5rem;
+        }
+
+        .confirm-modal-header h3 {
+          margin: 0;
+          color: #f87171;
+          font: 600 1.05rem var(--font-kanit), sans-serif;
+        }
+
+        .confirm-modal-body {
+          padding: 0.5rem 1.25rem 1.25rem;
+          color: rgba(255, 255, 255, 0.8);
+          font: 300 0.9rem var(--font-kanit), sans-serif;
+          line-height: 1.5;
+        }
+
+        .confirm-modal-warn {
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 0.8rem;
+          margin-top: 0.4rem;
+        }
+
+        .confirm-modal-footer {
+          padding: 1rem 1.25rem;
+          background: rgba(0, 0, 0, 0.25);
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.75rem;
+        }
+
+        .confirm-btn {
+          border-radius: 6px;
+          padding: 6px 16px;
+          font: 500 0.82rem var(--font-kanit), sans-serif;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .confirm-cancel-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .confirm-cancel-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+
+        .confirm-ok-btn {
+          background: rgba(220, 38, 38, 0.8);
+          border: 1px solid rgba(220, 38, 38, 0.9);
+          color: #fff;
+          box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .confirm-ok-btn:hover {
+          background: rgba(220, 38, 38, 0.95);
+          box-shadow: 0 4px 15px rgba(220, 38, 38, 0.45);
+        }
+
+        @keyframes scale-up {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        .pack-selector-container {
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 9999px;
+          padding: 3px;
+          gap: 2px;
+          backdrop-filter: blur(12px);
+          pointer-events: auto;
+        }
+
+        .pack-selector-btn {
+          background: transparent;
+          border: none;
+          border-radius: 9999px;
+          color: rgba(255, 255, 255, 0.5);
+          padding: 6px 16px;
+          font: 500 0.85rem var(--font-kanit), sans-serif;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .pack-selector-btn:hover:not(:disabled) {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .pack-selector-btn.active {
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #fff;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .pack-selector-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
         }
 
 

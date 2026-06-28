@@ -157,13 +157,13 @@ export const useGacha = (season: "season1" | "season2") => {
     return filtered[Math.floor(Math.random() * filtered.length)];
   }, [gachaPool]);
 
-  // Open 1 pack = 5 unique cards
-  const openPack = useCallback((): { pack: CardType[]; isGod: boolean } => {
-    const isGod = isGodPackRoll();
+  // Open pack with dynamic number of cards (default 5)
+  const openPack = useCallback((count: number = 5): { pack: CardType[]; isGod: boolean } => {
+    const isGod = count === 1 ? false : isGodPackRoll();
     const pack: CardType[] = [];
     const selectedIds = new Set<string>();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < count; i++) {
       let rarity: Rarity;
       if (isGod) {
         rarity = getHighRarity();

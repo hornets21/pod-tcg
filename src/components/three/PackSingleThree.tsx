@@ -10,6 +10,7 @@ interface PackSingleThreeProps {
   season: string;
   onClick: () => void;
   isClicked: boolean;
+  packSize?: number;
 }
 
 const AnimatedMaterial = animated.meshStandardMaterial as ComponentType<{
@@ -23,6 +24,7 @@ export function PackSingleThree({
   season,
   onClick,
   isClicked,
+  packSize = 5,
 }: PackSingleThreeProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const [mounted, setMounted] = useState(false);
@@ -35,13 +37,15 @@ export function PackSingleThree({
     return () => clearTimeout(timer);
   }, []);
 
-  const isS2 = season === "season2";
+  const isS2 = season === "season2" && packSize !== 1;
   const heroScale = 1.35;
-  const packW = (isS2 ? 2.0 : 1.6) * heroScale;
-  const packH = (isS2 ? 2.0 : 2.4) * heroScale;
+  const packW = (packSize === 1 ? 1.7 : isS2 ? 2.0 : 1.6) * heroScale;
+  const packH = (packSize === 1 ? 2.4 : isS2 ? 2.0 : 2.4) * heroScale;
   const thickness = 0.04;
   const frontTexture = useTexture(
-    isS2 ? "/pack_tcg_op_2.png" : "/pack_tcg_op_1.png",
+    packSize === 1
+      ? "/pack_tcg_op_2_one_per_pack.webp"
+      : (season === "season2" ? "/pack_tcg_op_2.png" : "/pack_tcg_op_1.png"),
   );
 
   // Match cut: move the pack slightly toward the camera before the tear scene.
