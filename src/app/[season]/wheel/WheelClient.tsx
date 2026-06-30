@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useGacha } from "../../../hooks/useGacha";
 import { useAudio, AUDIO_URLS } from "../../../hooks/useAudio";
@@ -76,7 +76,12 @@ function WheelClientContent() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { gachaPool, isLoaded, isOwned, addToCollection } = useGacha(season);
-  const { playSFX } = useAudio();
+  const { playSFX, isMuted } = useAudio();
+  const isMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -215,8 +220,10 @@ function WheelClientContent() {
         sector < selectedCards.length
       ) {
         lastSector = sector;
-        tickAudio.currentTime = 0;
-        tickAudio.play().catch(() => {});
+        if (!isMutedRef.current) {
+          tickAudio.currentTime = 0;
+          tickAudio.play().catch(() => {});
+        }
       }
 
       animId = requestAnimationFrame(tick);

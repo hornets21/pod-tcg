@@ -55,7 +55,12 @@ export default function OpeningClient() {
   const params = useParams();
   const season = params.season === "season2" ? "season2" : "season1";
   const { openPack, isLoaded, addToCollection, gachaPool } = useGacha(season);
-  const { startBGM, stopBGM, playSFX } = useAudio();
+  const { startBGM, stopBGM, playSFX, isMuted } = useAudio();
+  const isMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   const [isOpening, setIsOpening] = useState(false);
   const [packCards, setPackCards] = useState<CardType[]>([]);
@@ -172,8 +177,10 @@ export default function OpeningClient() {
       const sector = Math.floor(((currentAngle + 270) % 360 + 360) % 360 / segmentAngle);
       if (sector !== lastSector && sector >= 0 && sector < freeWheelCards.length) {
         lastSector = sector;
-        tickAudio.currentTime = 0;
-        tickAudio.play().catch(() => {});
+        if (!isMutedRef.current) {
+          tickAudio.currentTime = 0;
+          tickAudio.play().catch(() => {});
+        }
       }
 
       animId = requestAnimationFrame(tick);

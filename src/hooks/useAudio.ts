@@ -24,6 +24,12 @@ let globalBGM: HTMLAudioElement | null = null;
 
 export function useAudio() {
   const { isMuted } = useAudioContext();
+  const isMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
   const sfxRefs = useRef<Set<HTMLAudioElement>>(new Set());
   const isMounted = useRef(true);
 
@@ -52,7 +58,7 @@ export function useAudio() {
 
   const playSFX = useCallback((url: string, volume = 0.15) => {
     if (typeof window === "undefined" || !url) return;
-    if (isMuted) return;
+    if (isMutedRef.current) return;
     
     try {
       const audio = new Audio(url);
@@ -73,14 +79,18 @@ export function useAudio() {
     } catch (err) {
       console.warn("SFX Creation Error:", err);
     }
-  }, [isMuted]);
+  }, []);
 
   const startBGM = useCallback((url: string, volume = 0.02) => {
     if (typeof window === "undefined" || !url) return;
-    if (isMuted) return;
 
-    if (globalBGM && globalBGM.src === url && !globalBGM.paused) {
+    if (globalBGM && globalBGM.src === url) {
       globalBGM.volume = volume;
+      if (!isMutedRef.current && globalBGM.paused) {
+        globalBGM.play().catch((err) => console.warn("BGM Play Error:", err));
+      } else if (isMutedRef.current && !globalBGM.paused) {
+        globalBGM.pause();
+      }
       return;
     }
 
@@ -95,16 +105,18 @@ export function useAudio() {
       audio.loop = true;
       globalBGM = audio;
       
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("BGM Play Error:", err);
-        });
+      if (!isMutedRef.current) {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("BGM Play Error:", err);
+          });
+        }
       }
     } catch (err) {
       console.warn("BGM Creation Error:", err);
     }
-  }, [isMuted]);
+  }, []);
 
   const stopBGM = useCallback(() => {
     if (globalBGM) {
@@ -135,5 +147,5 @@ export function useAudio() {
     };
   }, [stopAllSFX]);
 
-  return { playSFX, stopAllSFX, startBGM, stopBGM };
+  return { playSFX, stopAllSFX, startBGM, stopBGM, isMuted };
 }
