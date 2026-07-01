@@ -21,15 +21,24 @@ import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 const getRarityColor = (rarity: string) => {
   switch (rarity) {
-    case "LEG": return "#dc2626";
-    case "SEC": return "#4f46e5";
-    case "UR": return "#ea580c";
-    case "SSR": return "#ca8a04";
-    case "SR": return "#9333ea";
-    case "R": return "#2563eb";
-    case "C": return "#4b5563";
-    case "EVENT": return "#db2777";
-    default: return "#334155";
+    case "LEG":
+      return "#dc2626";
+    case "SEC":
+      return "#4f46e5";
+    case "UR":
+      return "#ea580c";
+    case "SSR":
+      return "#ca8a04";
+    case "SR":
+      return "#9333ea";
+    case "R":
+      return "#2563eb";
+    case "C":
+      return "#4b5563";
+    case "EVENT":
+      return "#db2777";
+    default:
+      return "#334155";
   }
 };
 
@@ -41,7 +50,7 @@ const WHEEL_COLORS = [
   "#7c3aed", // Violet Purple
   "#dc2626", // Crimson Red
   "#0891b2", // Cyan Teal
-  "#9333ea"  // Bright Purple
+  "#9333ea", // Bright Purple
 ];
 
 interface HistoryPack {
@@ -71,11 +80,11 @@ export default function OpeningClient() {
   const [packSize, setPackSize] = useState<number>(5);
   const [singleSaltCount, setSingleSaltCount] = useLocalStorage<number>(
     `pod_single_salt_count_${season}`,
-    0
+    0,
   );
   const [historyPacks, setHistoryPacks] = useLocalStorage<HistoryPack[]>(
     `pod_opening_history_packs_${season}`,
-    []
+    [],
   );
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -86,8 +95,11 @@ export default function OpeningClient() {
   const [isSpinningFreeWheel, setIsSpinningFreeWheel] = useState(false);
   const [freeWheelRotation, setFreeWheelRotation] = useState(0);
   const [freeWheelStartRotation, setFreeWheelStartRotation] = useState(0);
-  const [freeWheelWinnerIndex, setFreeWheelWinnerIndex] = useState<number | null>(null);
-  const [freeWheelWinnerCard, setFreeWheelWinnerCard] = useState<CardType | null>(null);
+  const [freeWheelWinnerIndex, setFreeWheelWinnerIndex] = useState<
+    number | null
+  >(null);
+  const [freeWheelWinnerCard, setFreeWheelWinnerCard] =
+    useState<CardType | null>(null);
   const [showWinnerFreeWheel, setShowWinnerFreeWheel] = useState(false);
 
   const CardComponent = season === "season2" ? FullArtCard : Card;
@@ -104,19 +116,19 @@ export default function OpeningClient() {
     });
 
     return {
-      background: `conic-gradient(from 90deg, ${gradientParts.join(", ")})`
+      background: `conic-gradient(from 90deg, ${gradientParts.join(", ")})`,
     };
   }, [freeWheelCards]);
 
   const prepareFreeWheel = useCallback(() => {
-    const srPlusCards = gachaPool.filter(c => 
-      ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity)
+    const srPlusCards = gachaPool.filter((c) =>
+      ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity),
     );
     if (srPlusCards.length === 0) return;
 
     const shuffled = [...srPlusCards].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, Math.min(8, shuffled.length));
-    
+
     setFreeWheelCards(selected);
     setIsSpinningFreeWheel(false);
     setFreeWheelRotation(0);
@@ -138,14 +150,14 @@ export default function OpeningClient() {
 
     const segmentAngle = 360 / freeWheelCards.length;
     const targetSectorCenter = randIdx * segmentAngle + segmentAngle / 2;
-    
-    const targetAngleMod = ((targetSectorCenter - 270) % 360 + 360) % 360;
+
+    const targetAngleMod = (((targetSectorCenter - 270) % 360) + 360) % 360;
     const currentRotationMod = freeWheelRotation % 360;
     let diff = targetAngleMod - currentRotationMod;
     if (diff <= 0) diff += 360;
-    
+
     const nextRotation = freeWheelRotation + diff + 360 * 5;
-    
+
     setFreeWheelStartRotation(freeWheelRotation);
     setFreeWheelRotation(nextRotation);
     playSFX(AUDIO_URLS.CARD_REVEAL_NORMAL, 0.12);
@@ -153,7 +165,12 @@ export default function OpeningClient() {
 
   // Ticking sound simulation matching CSS transition speed (easeOutQuart)
   useEffect(() => {
-    if (!isSpinningFreeWheel || freeWheelWinnerIndex === null || freeWheelCards.length === 0) return;
+    if (
+      !isSpinningFreeWheel ||
+      freeWheelWinnerIndex === null ||
+      freeWheelCards.length === 0
+    )
+      return;
 
     const duration = 5000;
     const startTime = performance.now();
@@ -174,8 +191,14 @@ export default function OpeningClient() {
       const ease = 1 - Math.pow(1 - progress, 4); // easeOutQuart
       const currentAngle = startAngle + (endAngle - startAngle) * ease;
 
-      const sector = Math.floor(((currentAngle + 270) % 360 + 360) % 360 / segmentAngle);
-      if (sector !== lastSector && sector >= 0 && sector < freeWheelCards.length) {
+      const sector = Math.floor(
+        ((((currentAngle + 270) % 360) + 360) % 360) / segmentAngle,
+      );
+      if (
+        sector !== lastSector &&
+        sector >= 0 &&
+        sector < freeWheelCards.length
+      ) {
         lastSector = sector;
         if (!isMutedRef.current) {
           tickAudio.currentTime = 0;
@@ -191,7 +214,13 @@ export default function OpeningClient() {
       cancelAnimationFrame(animId);
       tickAudio.pause();
     };
-  }, [isSpinningFreeWheel, freeWheelRotation, freeWheelStartRotation, freeWheelCards.length, freeWheelWinnerIndex]);
+  }, [
+    isSpinningFreeWheel,
+    freeWheelRotation,
+    freeWheelStartRotation,
+    freeWheelCards.length,
+    freeWheelWinnerIndex,
+  ]);
 
   const handleFreeWheelTransitionEnd = useCallback(() => {
     setIsSpinningFreeWheel(false);
@@ -230,8 +259,8 @@ export default function OpeningClient() {
     let earnedFreeSpin = false;
 
     if (openedCards.length === 5) {
-      const allC = openedCards.every(c => c.rarity === "C");
-      const allR = openedCards.every(c => c.rarity === "R");
+      const allC = openedCards.every((c) => c.rarity === "C");
+      const allR = openedCards.every((c) => c.rarity === "R");
       earnedFreeSpin = allC || allR;
     } else if (openedCards.length === 1) {
       const card = openedCards[0];
@@ -265,7 +294,13 @@ export default function OpeningClient() {
       stopBGM();
     }, 600);
     timersRef.current.push(timer);
-  }, [clearAllTimers, stopBGM, prepareFreeWheel, singleSaltCount, setSingleSaltCount]);
+  }, [
+    clearAllTimers,
+    stopBGM,
+    prepareFreeWheel,
+    singleSaltCount,
+    setSingleSaltCount,
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -300,7 +335,11 @@ export default function OpeningClient() {
   const handleRipComplete = useCallback(() => {
     packCards.forEach((card) => addToCollection(card));
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const timeStr = now.toLocaleTimeString("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
     const newPackEntry: HistoryPack = {
       id: Math.random().toString(36).substring(2, 11),
       timestamp: timeStr,
@@ -324,7 +363,6 @@ export default function OpeningClient() {
     <main
       className={`opening-page ${isGodPackEffectActive ? "god-pack-effect" : ""} ${packClicked ? "is-zooming-pack" : ""}`}
     >
-
       <div className="vault-frame" aria-hidden="true">
         <span className="vault-corner vault-corner-top-left" />
         <span className="vault-corner vault-corner-top-right" />
@@ -338,16 +376,22 @@ export default function OpeningClient() {
             <span className="live-dot" />
             POD CARD VAULT · {season === "season2" ? "SEASON 02" : "SEASON 01"}
           </div>
-          <h1>เลือกชะตา<br />จากในซอง</h1>
+          <h1>
+            เลือกชะตา
+            <br />
+            จากในซอง
+          </h1>
           <p>
             {packSize === 5 ? (
               <>
-                การ์ด 5 ใบไม่ซ้ำ ลุ้นใบหายากและ<br className="desktop-break" />
+                การ์ด 5 ใบไม่ซ้ำ ลุ้นใบหายากและ
+                <br className="desktop-break" />
                 God Pack ในทุกการเปิด
               </>
             ) : (
               <>
-                การ์ด 1 ใบ ลุ้นใบหายากและ<br className="desktop-break" />
+                การ์ด 1 ใบ ลุ้นใบหายากและ
+                <br className="desktop-break" />
                 ในทุกการเปิด
               </>
             )}
@@ -429,8 +473,6 @@ export default function OpeningClient() {
         </Suspense>
       </ThreeScene>
 
-
-
       <PackRipOverlay3D
         key="rip-overlay"
         isOpen={isOpening}
@@ -453,7 +495,8 @@ export default function OpeningClient() {
                 <h2>ยินดีด้วย! คุณเกลือจัดจนระบบเห็นใจ</h2>
                 <p className="free-wheel-desc">
                   เนื่องจากคุณเปิดซองได้ระดับ C ทั้งหมด หรือ R ทั้งหมด <br />
-                  รับสิทธิ์หมุนวงล้อพิเศษ สุ่มการ์ดระดับ <strong>SR ขึ้นไป</strong> ฟรี 1 ใบ!
+                  รับสิทธิ์หมุนวงล้อพิเศษ สุ่มการ์ดระดับ{" "}
+                  <strong>SR ขึ้นไป</strong> ฟรี 1 ใบ!
                 </p>
 
                 <div className="free-wheel-spin-area">
@@ -462,18 +505,20 @@ export default function OpeningClient() {
                     className="free-wheel-plate"
                     style={{
                       ...freeConicGradientStyle,
-                      transform: `rotate(${-freeWheelRotation}deg)`
+                      transform: `rotate(${-freeWheelRotation}deg)`,
                     }}
                     onTransitionEnd={handleFreeWheelTransitionEnd}
                   >
                     {freeWheelCards.map((card, idx) => {
-                      const angle = idx * (360 / freeWheelCards.length) + (360 / freeWheelCards.length) / 2;
+                      const angle =
+                        idx * (360 / freeWheelCards.length) +
+                        360 / freeWheelCards.length / 2;
                       return (
                         <div
                           key={`${card.role_id}-sector-${idx}`}
                           className="free-sector-text"
                           style={{
-                            transform: `rotate(${angle}deg) translateZ(1px)`
+                            transform: `rotate(${angle}deg) translateZ(1px)`,
                           }}
                         >
                           {card.name}
@@ -495,15 +540,27 @@ export default function OpeningClient() {
             ) : (
               <div className="free-wheel-winner-reveal">
                 <div className="free-wheel-winner-sparkle" />
-                <div className="winner-label-badge">ยินดีด้วย! คุณได้รับการ์ด</div>
+                <div className="winner-label-badge">
+                  ยินดีด้วย! คุณได้รับการ์ด
+                </div>
                 <h3>{freeWheelWinnerCard?.name}</h3>
-                <div className="winner-rarity-badge" style={{ backgroundColor: getRarityColor(freeWheelWinnerCard?.rarity || "") }}>
+                <div
+                  className="winner-rarity-badge"
+                  style={{
+                    backgroundColor: getRarityColor(
+                      freeWheelWinnerCard?.rarity || "",
+                    ),
+                  }}
+                >
                   {freeWheelWinnerCard?.rarity}
                 </div>
 
                 <div className="winner-card-container">
                   {freeWheelWinnerCard && (
-                    <CardComponent card={freeWheelWinnerCard} isRevealed={true} />
+                    <CardComponent
+                      card={freeWheelWinnerCard}
+                      isRevealed={true}
+                    />
                   )}
                 </div>
 
@@ -519,11 +576,22 @@ export default function OpeningClient() {
         </div>
       )}
       {isHistoryOpen && (
-        <div className="history-modal-overlay" onClick={() => setIsHistoryOpen(false)}>
-          <div className="history-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="history-modal-overlay"
+          onClick={() => setIsHistoryOpen(false)}
+        >
+          <div
+            className="history-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <header className="history-modal-header">
               <h2>ประวัติการเปิดการ์ด (ล่าสุด 20 ครั้ง)</h2>
-              <button className="history-close-x" onClick={() => setIsHistoryOpen(false)}>×</button>
+              <button
+                className="history-close-x"
+                onClick={() => setIsHistoryOpen(false)}
+              >
+                ×
+              </button>
             </header>
 
             <div className="history-modal-body">
@@ -537,14 +605,19 @@ export default function OpeningClient() {
                   {historyPacks.map((packEntry, packIdx) => (
                     <div key={packEntry.id} className="history-pack-row">
                       <div className="history-pack-label">
-                        <span className="history-pack-index">การเปิดครั้งที่ {historyPacks.length - packIdx}</span>
+                        <span className="history-pack-index">
+                          การเปิดครั้งที่ {historyPacks.length - packIdx}
+                        </span>
                         <span className="history-pack-meta">
                           {packEntry.packSize} ใบ · {packEntry.timestamp}
                         </span>
                       </div>
                       <div className="history-grid">
                         {packEntry.cards.map((card, cardIdx) => (
-                          <div key={`${card.role_id}-history-${packEntry.id}-${cardIdx}`} className="history-card-wrapper">
+                          <div
+                            key={`${card.role_id}-history-${packEntry.id}-${cardIdx}`}
+                            className="history-card-wrapper"
+                          >
                             <CardComponent card={card} isRevealed={true} />
                           </div>
                         ))}
@@ -557,11 +630,17 @@ export default function OpeningClient() {
 
             <footer className="history-modal-footer">
               {historyPacks.length > 0 && (
-                <button className="history-clear-btn" onClick={handleClearHistory}>
+                <button
+                  className="history-clear-btn"
+                  onClick={handleClearHistory}
+                >
                   ล้างประวัติ
                 </button>
               )}
-              <button className="history-close-btn" onClick={() => setIsHistoryOpen(false)}>
+              <button
+                className="history-close-btn"
+                onClick={() => setIsHistoryOpen(false)}
+              >
                 ปิดหน้าต่าง
               </button>
             </footer>
@@ -570,14 +649,22 @@ export default function OpeningClient() {
       )}
 
       {showClearConfirm && (
-        <div className="confirm-modal-overlay" onClick={() => setShowClearConfirm(false)}>
-          <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="confirm-modal-overlay"
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            className="confirm-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <header className="confirm-modal-header">
               <h3>ยืนยันการทำรายการ</h3>
             </header>
             <div className="confirm-modal-body">
               <p>คุณต้องการล้างประวัติการเปิดการ์ดทั้งหมดใช่หรือไม่?</p>
-              <p className="confirm-modal-warn">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+              <p className="confirm-modal-warn">
+                การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              </p>
             </div>
             <footer className="confirm-modal-footer">
               <button
@@ -605,14 +692,21 @@ export default function OpeningClient() {
         .opening-page {
           width: 100%;
           min-height: 100vh;
-          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
+          background: linear-gradient(
+            145deg,
+            #07060a 0%,
+            #0e0c16 52%,
+            #040306 100%
+          );
         }
 
         .opening-loader {
           display: grid;
           place-items: center;
           color: rgba(255, 255, 255, 0.72);
-          font: 400 1rem var(--font-kanit), sans-serif;
+          font:
+            400 1rem var(--font-kanit),
+            sans-serif;
         }
 
         .opening-page {
@@ -625,7 +719,11 @@ export default function OpeningClient() {
           isolation: isolate;
           min-height: calc(100svh - 60px);
           background:
-            radial-gradient(circle at 50% 44%, rgba(0, 210, 255, 0.1), transparent 26%),
+            radial-gradient(
+              circle at 50% 44%,
+              rgba(0, 210, 255, 0.1),
+              transparent 26%
+            ),
             linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
         }
 
@@ -636,7 +734,11 @@ export default function OpeningClient() {
           z-index: 1;
           pointer-events: none;
           background:
-            linear-gradient(90deg, rgba(0, 210, 255, 0.035) 1px, transparent 1px),
+            linear-gradient(
+              90deg,
+              rgba(0, 210, 255, 0.035) 1px,
+              transparent 1px
+            ),
             linear-gradient(rgba(0, 210, 255, 0.025) 1px, transparent 1px);
           background-size: 72px 72px;
           mask-image: radial-gradient(circle at center, black, transparent 82%);
@@ -661,8 +763,12 @@ export default function OpeningClient() {
           transform: translateX(-50%);
         }
 
-        .vault-frame::before { top: -1px; }
-        .vault-frame::after { bottom: -1px; }
+        .vault-frame::before {
+          top: -1px;
+        }
+        .vault-frame::after {
+          bottom: -1px;
+        }
 
         .vault-corner {
           position: absolute;
@@ -671,10 +777,30 @@ export default function OpeningClient() {
           border-color: rgba(0, 210, 255, 0.7);
         }
 
-        .vault-corner-top-left { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
-        .vault-corner-top-right { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
-        .vault-corner-bottom-left { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
-        .vault-corner-bottom-right { right: -1px; bottom: -1px; border-right: 2px solid; border-bottom: 2px solid; }
+        .vault-corner-top-left {
+          top: -1px;
+          left: -1px;
+          border-top: 2px solid;
+          border-left: 2px solid;
+        }
+        .vault-corner-top-right {
+          top: -1px;
+          right: -1px;
+          border-top: 2px solid;
+          border-right: 2px solid;
+        }
+        .vault-corner-bottom-left {
+          bottom: -1px;
+          left: -1px;
+          border-bottom: 2px solid;
+          border-left: 2px solid;
+        }
+        .vault-corner-bottom-right {
+          right: -1px;
+          bottom: -1px;
+          border-right: 2px solid;
+          border-bottom: 2px solid;
+        }
 
         .opening-interface {
           position: absolute;
@@ -699,7 +825,9 @@ export default function OpeningClient() {
           gap: 0.65rem;
           margin-bottom: 1.25rem;
           color: rgba(255, 255, 255, 0.62);
-          font: 600 clamp(0.68rem, 0.6rem + 0.2vw, 0.78rem) var(--font-chakra), sans-serif;
+          font:
+            600 clamp(0.68rem, 0.6rem + 0.2vw, 0.78rem) var(--font-chakra),
+            sans-serif;
           letter-spacing: 0.15em;
         }
 
@@ -715,7 +843,9 @@ export default function OpeningClient() {
         h1 {
           margin: 0;
           color: #fff;
-          font: 700 clamp(2.6rem, 4.5vw, 5.25rem) / 0.92 var(--font-chakra), sans-serif;
+          font:
+            700 clamp(2.6rem, 4.5vw, 5.25rem) / 0.92 var(--font-chakra),
+            sans-serif;
           letter-spacing: -0.055em;
           text-wrap: balance;
         }
@@ -723,7 +853,10 @@ export default function OpeningClient() {
         .opening-copy p {
           margin-top: 1.5rem;
           color: rgba(255, 255, 255, 0.64);
-          font: 300 clamp(0.92rem, 0.84rem + 0.25vw, 1.05rem) / 1.7 var(--font-kanit), sans-serif;
+          font:
+            300 clamp(0.92rem, 0.84rem + 0.25vw, 1.05rem) / 1.7
+              var(--font-kanit),
+            sans-serif;
         }
 
         .opening-meta {
@@ -733,24 +866,36 @@ export default function OpeningClient() {
           display: flex;
           align-items: center;
           gap: 1.25rem;
-          animation: interface-enter 700ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation: interface-enter 700ms 100ms cubic-bezier(0.22, 1, 0.36, 1)
+            both;
         }
 
-        .meta-item { display: grid; gap: 0.2rem; }
+        .meta-item {
+          display: grid;
+          gap: 0.2rem;
+        }
 
         .meta-value {
           color: #fff;
-          font: 600 1.35rem var(--font-chakra), sans-serif;
+          font:
+            600 1.35rem var(--font-chakra),
+            sans-serif;
           letter-spacing: -0.03em;
         }
 
         .meta-label {
           color: rgba(255, 255, 255, 0.46);
-          font: 400 0.7rem var(--font-kanit), sans-serif;
+          font:
+            400 0.7rem var(--font-kanit),
+            sans-serif;
           letter-spacing: 0.04em;
         }
 
-        .meta-divider { width: 1px; height: 2.25rem; background: rgba(255, 255, 255, 0.12); }
+        .meta-divider {
+          width: 1px;
+          height: 2.25rem;
+          background: rgba(255, 255, 255, 0.12);
+        }
 
         .opening-action {
           position: absolute;
@@ -760,12 +905,15 @@ export default function OpeningClient() {
           flex-direction: column;
           align-items: flex-end;
           gap: 0.75rem;
-          animation: interface-enter 700ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation: interface-enter 700ms 180ms cubic-bezier(0.22, 1, 0.36, 1)
+            both;
         }
 
         .action-hint {
           color: rgba(255, 255, 255, 0.5);
-          font: 300 0.8rem var(--font-kanit), sans-serif;
+          font:
+            300 0.8rem var(--font-kanit),
+            sans-serif;
         }
 
         .salt-pity-container {
@@ -778,7 +926,9 @@ export default function OpeningClient() {
 
         .salt-pity-text {
           color: rgba(255, 255, 255, 0.55);
-          font: 400 0.72rem var(--font-kanit), sans-serif;
+          font:
+            400 0.72rem var(--font-kanit),
+            sans-serif;
           letter-spacing: 0.02em;
         }
 
@@ -805,7 +955,9 @@ export default function OpeningClient() {
           border-radius: 9999px;
           color: rgba(255, 255, 255, 0.6);
           padding: 8px 20px;
-          font: 500 0.8rem var(--font-kanit), sans-serif;
+          font:
+            500 0.8rem var(--font-kanit),
+            sans-serif;
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
           backdrop-filter: blur(12px);
@@ -858,7 +1010,9 @@ export default function OpeningClient() {
         .history-modal-header h2 {
           margin: 0;
           color: #fff;
-          font: 600 1.1rem var(--font-kanit), sans-serif;
+          font:
+            600 1.1rem var(--font-kanit),
+            sans-serif;
         }
 
         .history-close-x {
@@ -968,7 +1122,9 @@ export default function OpeningClient() {
           border-radius: 8px;
           color: #fff;
           padding: 8px 20px;
-          font: 500 0.85rem var(--font-kanit), sans-serif;
+          font:
+            500 0.85rem var(--font-kanit),
+            sans-serif;
           cursor: pointer;
           transition: all 0.2s;
         }
@@ -984,7 +1140,9 @@ export default function OpeningClient() {
           border-radius: 8px;
           color: #f87171;
           padding: 8px 20px;
-          font: 500 0.85rem var(--font-kanit), sans-serif;
+          font:
+            500 0.85rem var(--font-kanit),
+            sans-serif;
           cursor: pointer;
           transition: all 0.2s;
           margin-right: auto;
@@ -1029,13 +1187,17 @@ export default function OpeningClient() {
         .confirm-modal-header h3 {
           margin: 0;
           color: #f87171;
-          font: 600 1.05rem var(--font-kanit), sans-serif;
+          font:
+            600 1.05rem var(--font-kanit),
+            sans-serif;
         }
 
         .confirm-modal-body {
           padding: 0.5rem 1.25rem 1.25rem;
           color: rgba(255, 255, 255, 0.8);
-          font: 300 0.9rem var(--font-kanit), sans-serif;
+          font:
+            300 0.9rem var(--font-kanit),
+            sans-serif;
           line-height: 1.5;
         }
 
@@ -1057,7 +1219,9 @@ export default function OpeningClient() {
         .confirm-btn {
           border-radius: 6px;
           padding: 6px 16px;
-          font: 500 0.82rem var(--font-kanit), sans-serif;
+          font:
+            500 0.82rem var(--font-kanit),
+            sans-serif;
           cursor: pointer;
           transition: all 0.2s;
         }
@@ -1086,8 +1250,14 @@ export default function OpeningClient() {
         }
 
         @keyframes scale-up {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .pack-selector-container {
@@ -1108,7 +1278,9 @@ export default function OpeningClient() {
           border-radius: 9999px;
           color: rgba(255, 255, 255, 0.5);
           padding: 6px 16px;
-          font: 500 0.85rem var(--font-kanit), sans-serif;
+          font:
+            500 0.85rem var(--font-kanit),
+            sans-serif;
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
@@ -1130,15 +1302,21 @@ export default function OpeningClient() {
           opacity: 0.5;
         }
 
-
-
         @keyframes interface-enter {
-          from { opacity: 0; transform: translateY(calc(-54% + 16px)); }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+            transform: translateY(calc(-54% + 16px));
+          }
+          to {
+            opacity: 1;
+          }
         }
 
         @keyframes signal-pulse {
-          50% { opacity: 0.45; transform: scale(0.75); }
+          50% {
+            opacity: 0.45;
+            transform: scale(0.75);
+          }
         }
 
         @media (max-width: 1100px) {
@@ -1149,10 +1327,19 @@ export default function OpeningClient() {
             max-width: calc(100% - 4rem);
           }
 
-          h1 { font-size: clamp(2.25rem, 9vw, 3.75rem); line-height: 0.95; }
-          .opening-copy p { display: none; }
-          .opening-kicker { margin-bottom: 0.8rem; }
-          .opening-meta { display: none; }
+          h1 {
+            font-size: clamp(2.25rem, 9vw, 3.75rem);
+            line-height: 0.95;
+          }
+          .opening-copy p {
+            display: none;
+          }
+          .opening-kicker {
+            margin-bottom: 0.8rem;
+          }
+          .opening-meta {
+            display: none;
+          }
 
           .opening-action {
             right: 2rem;
@@ -1161,21 +1348,36 @@ export default function OpeningClient() {
             justify-content: center;
           }
 
-
-
           @keyframes interface-enter {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+              opacity: 0;
+              transform: translateY(16px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
         }
 
         @media (max-width: 520px) {
-          .opening-page { min-height: calc(100svh - 60px); }
-          .vault-frame { inset: 0.75rem; }
-          .opening-copy { top: 1.6rem; left: 1.5rem; max-width: calc(100% - 3rem); }
-          .opening-kicker { font-size: 0.61rem; }
-          h1 { font-size: clamp(2rem, 11vw, 2.8rem); }
-
+          .opening-page {
+            min-height: calc(100svh - 60px);
+          }
+          .vault-frame {
+            inset: 0.75rem;
+          }
+          .opening-copy {
+            top: 1.6rem;
+            left: 1.5rem;
+            max-width: calc(100% - 3rem);
+          }
+          .opening-kicker {
+            font-size: 0.61rem;
+          }
+          h1 {
+            font-size: clamp(2rem, 11vw, 2.8rem);
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1189,7 +1391,9 @@ export default function OpeningClient() {
 
         /* ─── 3D Portal Transition & Zooming styles ─── */
         :global(.three-scene-container) {
-          transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), filter 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+          transition:
+            transform 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+            filter 0.35s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .opening-page.is-zooming-pack :global(.three-scene-container) {
           transform: scale(1.1);
@@ -1199,28 +1403,36 @@ export default function OpeningClient() {
         .opening-copy,
         .opening-meta,
         .opening-action {
-          transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+          transition:
+            transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
+            opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .opening-page.is-zooming-pack .opening-copy {
           transform: translateY(-54%) scale(0.82) translateX(-30px);
           opacity: 0;
           pointer-events: none;
-          transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.45s ease-out;
+          transition:
+            transform 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+            opacity 0.45s ease-out;
         }
 
         .opening-page.is-zooming-pack .opening-meta {
           transform: scale(0.82) translateY(-20px);
           opacity: 0;
           pointer-events: none;
-          transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.45s ease-out;
+          transition:
+            transform 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+            opacity 0.45s ease-out;
         }
 
         .opening-page.is-zooming-pack .opening-action {
           transform: scale(0.82) translateY(20px);
           opacity: 0;
           pointer-events: none;
-          transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.45s ease-out;
+          transition:
+            transform 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+            opacity 0.45s ease-out;
         }
 
         /* ─── Free Wheel Modal Styles ─── */
@@ -1240,9 +1452,15 @@ export default function OpeningClient() {
           position: relative;
           width: 92%;
           max-width: 460px;
-          background: linear-gradient(180deg, rgba(20, 18, 30, 0.95) 0%, rgba(10, 8, 16, 0.98) 100%);
+          background: linear-gradient(
+            180deg,
+            rgba(20, 18, 30, 0.95) 0%,
+            rgba(10, 8, 16, 0.98) 100%
+          );
           border: 1.5px solid rgba(0, 210, 255, 0.3);
-          box-shadow: 0 0 40px rgba(0, 210, 255, 0.15), 0 20px 50px rgba(0, 0, 0, 0.5);
+          box-shadow:
+            0 0 40px rgba(0, 210, 255, 0.15),
+            0 20px 50px rgba(0, 0, 0, 0.5);
           border-radius: 20px;
           padding: 2.2rem;
           text-align: center;
@@ -1251,12 +1469,22 @@ export default function OpeningClient() {
           animation: free-scale-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         @keyframes free-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes free-scale-up {
-          from { opacity: 0; transform: scale(0.9); }
-          to { opacity: 1; transform: scale(1); }
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
         .free-wheel-spin-area {
           position: relative;
@@ -1264,7 +1492,9 @@ export default function OpeningClient() {
           height: 290px;
           margin: 1.8rem auto;
           border-radius: 50%;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 210, 255, 0.15);
+          box-shadow:
+            0 10px 30px rgba(0, 0, 0, 0.6),
+            0 0 20px rgba(0, 210, 255, 0.15);
         }
         .free-wheel-pointer {
           position: absolute;
@@ -1284,7 +1514,9 @@ export default function OpeningClient() {
           height: 100%;
           border-radius: 50%;
           border: 6px solid #1e293b;
-          box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(0, 210, 255, 0.5);
+          box-shadow:
+            inset 0 0 20px rgba(0, 0, 0, 0.8),
+            0 0 0 2px rgba(0, 210, 255, 0.5);
           position: relative;
           overflow: hidden;
           transition: transform 5s cubic-bezier(0.1, 0.8, 0.1, 1);
@@ -1298,9 +1530,16 @@ export default function OpeningClient() {
           width: 46px;
           height: 46px;
           border-radius: 50%;
-          background: radial-gradient(circle, #00d2ff 0%, #008cb3 60%, #0f172a 100%);
+          background: radial-gradient(
+            circle,
+            #00d2ff 0%,
+            #008cb3 60%,
+            #0f172a 100%
+          );
           border: 3px solid #00d2ff;
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 210, 255, 0.6);
+          box-shadow:
+            0 4px 10px rgba(0, 0, 0, 0.5),
+            0 0 10px rgba(0, 210, 255, 0.6);
         }
         .free-sector-text {
           position: absolute;
@@ -1317,7 +1556,9 @@ export default function OpeningClient() {
           text-overflow: ellipsis;
           overflow: hidden;
           transform-origin: 0 50%;
-          text-shadow: 0 1px 3px #000, 0 0 2px #000;
+          text-shadow:
+            0 1px 3px #000,
+            0 0 2px #000;
           pointer-events: none;
         }
         .free-wheel-banner {
@@ -1412,8 +1653,13 @@ export default function OpeningClient() {
           animation: winner-card-float 3s ease-in-out infinite;
         }
         @keyframes winner-card-float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
         }
         .free-close-btn {
           width: 100%;

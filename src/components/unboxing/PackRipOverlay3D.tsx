@@ -612,10 +612,10 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
         }
 
         .pack-rip-3d-overlay {
-          --reveal-primary: #ffd34e;
-          --reveal-secondary: #ff356f;
-          --reveal-primary-rgb: 255, 211, 78;
-          --reveal-secondary-rgb: 255, 53, 111;
+          --reveal-primary: #ff356f;
+          --reveal-secondary: #7c3aed;
+          --reveal-primary-rgb: 255, 53, 111;
+          --reveal-secondary-rgb: 124, 58, 237;
           isolation: isolate;
           overflow: hidden;
           animation: overlayFadeIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
@@ -708,10 +708,10 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
         }
 
         .pack-rip-3d-overlay.is-god-pack {
-          --reveal-primary: #ffd54a;
-          --reveal-secondary: #ff4d00;
-          --reveal-primary-rgb: 255, 213, 74;
-          --reveal-secondary-rgb: 255, 77, 0;
+          --reveal-primary: #ff356f;
+          --reveal-secondary: #7c3aed;
+          --reveal-primary-rgb: 255, 53, 111;
+          --reveal-secondary-rgb: 124, 58, 237;
         }
 
         .sr-only {
@@ -764,7 +764,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
         }
 
         .close-hint:focus-visible {
-          outline: 3px solid #ffd54a;
+          outline: 3px solid #ff356f;
           outline-offset: 4px;
         }
 
@@ -833,11 +833,11 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           opacity: 0.22;
         }
         .god-stage .aurora-2 {
-          background: radial-gradient(circle, #ea580c, transparent 70%);
+          background: radial-gradient(circle, #be123c, transparent 70%);
           opacity: 0.2;
         }
         .god-stage .aurora-3 {
-          background: radial-gradient(circle, #eab308, transparent 70%);
+          background: radial-gradient(circle, #7c3aed, transparent 70%);
           opacity: 0.24;
         }
         .god-stage .aurora-4 {
@@ -916,8 +916,8 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
         }
 
         .god-stage .ambient-particle {
-          background: rgba(255, 180, 0, 0.28);
-          box-shadow: 0 0 8px rgba(255, 140, 0, 0.5);
+          background: rgba(255, 53, 111, 0.26);
+          box-shadow: 0 0 8px rgba(124, 58, 237, 0.45);
         }
 
         @keyframes float-particle {
@@ -959,8 +959,8 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           background: radial-gradient(
             circle at center,
             transparent 25%,
-            rgba(8, 2, 0, 0.35) 60%,
-            rgba(8, 2, 0, 0.9) 100%
+            rgba(12, 2, 18, 0.35) 60%,
+            rgba(12, 2, 18, 0.9) 100%
           );
         }
 
@@ -1006,17 +1006,17 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
         }
 
         .god-stage .stream-card {
-          border-color: rgba(255, 213, 74, 0.85);
+          border-color: rgba(255, 53, 111, 0.85);
           background:
             linear-gradient(
               135deg,
-              rgba(255, 140, 0, 0.16),
+              rgba(124, 58, 237, 0.16),
               rgba(255, 60, 0, 0.22)
             ),
             url("https://img.lucky-pod.fun/back-card.png") center / cover
               no-repeat;
           box-shadow:
-            0 0 10px rgba(255, 120, 0, 0.32),
+            0 0 10px rgba(124, 58, 237, 0.32),
             0 0 18px rgba(255, 60, 0, 0.16);
         }
 
@@ -1209,7 +1209,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
             transparent 0 42px,
             rgba(196, 44, 255, 0.3) 43px 45px,
             transparent 46px 88px,
-            rgba(186, 255, 39, 0.22) 89px 91px
+            rgba(44, 196, 255, 0.22) 89px 91px
           );
           mask-image: radial-gradient(
             circle,
@@ -1231,7 +1231,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           opacity: 0;
           background: radial-gradient(
             circle at center,
-            rgba(190, 255, 45, 0.26),
+            rgba(44, 196, 255, 0.26),
             rgba(196, 44, 255, 0.2) 22%,
             transparent 44%
           );
@@ -1271,7 +1271,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           opacity: 0;
           background: radial-gradient(
             circle at center,
-            rgba(225, 255, 180, 0.38),
+            rgba(44, 196, 255, 0.38),
             rgba(204, 49, 255, 0.18) 28%,
             transparent 58%
           );
@@ -1353,9 +1353,9 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           pointer-events: none;
           background: repeating-conic-gradient(
             from 0deg,
-            rgba(255, 215, 0, 0.09) 0deg 2deg,
+            rgba(255, 53, 111, 0.12) 0deg 2deg,
             transparent 2deg 6deg,
-            rgba(255, 60, 0, 0.12) 6deg 8deg,
+            rgba(124, 58, 237, 0.14) 6deg 8deg,
             transparent 8deg 14deg
           );
           mask-image: radial-gradient(circle, transparent 25%, black 75%);
@@ -1378,7 +1378,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           pointer-events: none;
           box-shadow:
             inset 0 0 100px rgba(0, 0, 0, 0.95),
-            inset 0 0 40px rgba(255, 60, 0, 0.35);
+            inset 0 0 40px rgba(124, 58, 237, 0.35);
           border: clamp(4px, 1.2vh, 10px) solid #000;
           animation: vignette-pulse 0.18s ease infinite alternate;
         }
@@ -1388,13 +1388,13 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
             border-color: #000;
             box-shadow:
               inset 0 0 100px rgba(0, 0, 0, 0.95),
-              inset 0 0 40px rgba(255, 60, 0, 0.3);
+              inset 0 0 40px rgba(124, 58, 237, 0.3);
           }
           100% {
-            border-color: #ff3c00;
+            border-color: #7c3aed;
             box-shadow:
               inset 0 0 120px rgba(0, 0, 0, 0.98),
-              inset 0 0 60px rgba(255, 140, 0, 0.5);
+              inset 0 0 60px rgba(255, 53, 111, 0.5);
           }
         }
 
@@ -1411,7 +1411,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           height: 140px;
           background: #fff;
           box-shadow:
-            0 0 20px #ffd700,
+            0 0 20px rgba(124, 58, 237, 0.95),
             0 0 6px #fff;
           opacity: 0;
           will-change: transform, opacity;
@@ -1494,8 +1494,8 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
         }
 
         .ring-2 {
-          border-color: #ffd700;
-          filter: drop-shadow(0 0 16px #ff8c00);
+          border-color: #7c3aed;
+          filter: drop-shadow(0 0 16px rgba(124, 58, 237, 0.85));
           width: 140px;
           height: 140px;
           animation: shonen-ring-expand-2 1.1s cubic-bezier(0.1, 0.8, 0.3, 1)
@@ -1604,7 +1604,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           background: linear-gradient(
             180deg,
             #ffffff 10%,
-            #ffd700 45%,
+            #7c3aed 45%,
             #ff3c00 80%,
             #000000 100%
           );
@@ -1655,8 +1655,8 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
           pointer-events: none;
           background: #ffffff;
           box-shadow:
-            inset 0 0 120px #ff3c00,
-            0 0 100px #ffd700;
+            inset 0 0 120px rgba(124, 58, 237, 0.55),
+            0 0 100px rgba(255, 53, 111, 0.45);
           animation: shonen-flash-out 0.85s cubic-bezier(0.1, 0.8, 0.3, 1) both;
         }
 

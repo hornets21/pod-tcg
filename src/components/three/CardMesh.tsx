@@ -61,7 +61,13 @@ export function CardMesh({
   const { size, viewport } = useThree();
 
   const cardPixelWidth =
-    size.width <= 480 ? 145 : size.width <= 768 ? 160 : size.width <= 992 ? 200 : 230;
+    size.width <= 480
+      ? 145
+      : size.width <= 768
+        ? 160
+        : size.width <= 992
+          ? 200
+          : 230;
   const gapPixels = size.width <= 768 ? 10 : 18;
   const availableWidth = size.width * 0.9;
   const naturalRowWidth = total * cardPixelWidth + (total - 1) * gapPixels;
