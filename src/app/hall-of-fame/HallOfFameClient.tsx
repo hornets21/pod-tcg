@@ -61,12 +61,18 @@ export default function HallOfFameClient() {
     { label: "UR", value: "UR" },
     { label: "SSR", value: "SSR" },
     { label: "R", value: "R" },
+    { label: "C", value: "C" },
     { label: "EVENT", value: "EVENT" },
   ];
 
   return (
     <div className="main-wrapper">
-      <ThreeScene cameraPosition={[0, 0, 7]} fogColor="#07060a" showDefaultLighting={false} showAtmosphere={true}>
+      <ThreeScene
+        cameraPosition={[0, 0, 7]}
+        fogColor="#07060a"
+        showDefaultLighting={false}
+        showAtmosphere={true}
+      >
         {null}
       </ThreeScene>
 
@@ -122,7 +128,12 @@ export default function HallOfFameClient() {
           width: 100%;
           min-height: 100vh;
           overflow: hidden;
-          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
+          background: linear-gradient(
+            145deg,
+            #07060a 0%,
+            #0e0c16 52%,
+            #040306 100%
+          );
         }
       `}</style>
     </div>
