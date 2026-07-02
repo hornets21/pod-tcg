@@ -401,4 +401,20 @@ export const CARDS_DELETE: Card[] = [
     image: "https://img.lucky-pod.fun/op2/op-2-พี่ว่าน-v2.webp",
     ability: "สะสมเพื่อซัมม่อน ลูกหาบ Exodia",
   },
+  {
+    role_id: "1345767926900457503",
+    name: "เฟมบอย",
+    isGacha: "Y",
+    rarity: "C",
+    image: "https://img.lucky-pod.fun/op2/op-2-เฟมบอย.png",
+    ability: "",
+  },
+  {
+    role_id: "1338746660007841813",
+    name: "เกย์แปดริ้ว",
+    isGacha: "Y",
+    rarity: "C",
+    image: "https://img.lucky-pod.fun/op2/op-2-เกย์แปดริ้ว.png",
+    ability: "69 บาท",
+  },
 ];

@@ -17,14 +17,6 @@ export const CARDS_SEASON2: Card[] = [
     ability: "",
   },
   {
-    role_id: "1345767926900457503",
-    name: "เฟมบอย",
-    isGacha: "Y",
-    rarity: "C",
-    image: "https://img.lucky-pod.fun/op2/op-2-เฟมบอย.png",
-    ability: "",
-  },
-  {
     role_id: "1343582404224221195",
     name: "ลูกค้าร้านคาราโอเกะ",
     isGacha: "Y",
@@ -47,14 +39,6 @@ export const CARDS_SEASON2: Card[] = [
     rarity: "SR",
     image: "https://img.lucky-pod.fun/op2/op-2-คนฉะ.png",
     ability: "ยืนยันตัวตน หรือ 799",
-  },
-  {
-    role_id: "1338746660007841813",
-    name: "เกย์แปดริ้ว",
-    isGacha: "Y",
-    rarity: "C",
-    image: "https://img.lucky-pod.fun/op2/op-2-เกย์แปดริ้ว.png",
-    ability: "69 บาท",
   },
   {
     role_id: "1336570753528631326",
