@@ -1259,4 +1259,12 @@ export const CARDS_SEASON2: Card[] = [
     image: "https://img.lucky-pod.fun/op2/op-2-สาวกแห่งองค์พระผู้เป็นว่าน.webp",
     ability: "",
   },
+  {
+    role_id: "EVENT001",
+    name: "ห้ามจ๊อดตลอดแนว",
+    isGacha: "Y",
+    rarity: "EVENT",
+    image: "https://img.lucky-pod.fun/event/event-ห้ามจ๊อดตลอดแนว-v1.webp",
+    ability: "",
+  },
 ];
