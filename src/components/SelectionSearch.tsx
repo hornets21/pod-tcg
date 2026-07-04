@@ -132,11 +132,12 @@ export function SelectionSearch({
         .searchable-select-container {
           position: relative;
           width: 100%;
-          z-index: 100;
+          z-index: 1;
         }
 
         .searchable-select-trigger {
           width: 100%;
+          min-width: 0;
           min-height: 44px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 10px;
@@ -152,6 +153,7 @@ export function SelectionSearch({
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          overflow: hidden;
         }
 
         .searchable-select-trigger:hover {
@@ -171,12 +173,18 @@ export function SelectionSearch({
         .searchable-select-trigger-content {
           display: flex;
           align-items: center;
+          flex: 1 1 0;
+          width: 0;
           gap: 0.5rem;
           min-width: 0;
           overflow: hidden;
         }
 
         .searchable-select-selected-name {
+          flex: 1 1 0;
+          width: 0;
+          min-width: 0;
+          max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -214,7 +222,7 @@ export function SelectionSearch({
           border-radius: 12px;
           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.65);
           overflow: hidden;
-          z-index: 200;
+          z-index: 3;
           animation: selectFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           transform-origin: top center;
         }
@@ -308,6 +316,7 @@ export function SelectionSearch({
         .searchable-select-option {
           width: 100%;
           text-align: left;
+          min-width: 0;
           border: none;
           background: transparent;
           padding: 0.65rem 0.8rem;
@@ -343,12 +352,17 @@ export function SelectionSearch({
         .searchable-select-option-left {
           display: flex;
           align-items: center;
+          flex: 1 1 0;
+          width: 0;
           gap: 0.5rem;
           min-width: 0;
           overflow: hidden;
         }
 
         .searchable-select-option-name {
+          flex: 1 1 0;
+          width: 0;
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

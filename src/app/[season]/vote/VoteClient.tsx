@@ -1295,6 +1295,8 @@ export default function VoteClient() {
         }
 
         .vote-score-row {
+          position: relative;
+          z-index: 2;
           display: grid;
           grid-template-columns: 64px minmax(80px, 1fr) 64px;
           align-items: center;
