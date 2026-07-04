@@ -1262,7 +1262,7 @@ export const CARDS_SEASON2: Card[] = [
   {
     role_id: "EVENT001",
     name: "ห้ามจ๊อดตลอดแนว",
-    isGacha: "Y",
+    isGacha: "N",
     rarity: "EVENT",
     image: "https://img.lucky-pod.fun/event/event-ห้ามจ๊อดตลอดแนว-v1.webp",
     ability: "",
