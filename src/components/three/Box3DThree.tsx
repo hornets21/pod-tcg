@@ -5,12 +5,14 @@ import { useFrame } from "@react-three/fiber";
 import { useSpring, animated } from "@react-spring/three";
 import { useTexture, Text } from "@react-three/drei";
 import * as THREE from "three";
+import { BOX_LID_OPEN_DELAY_MS, BOX_SINK_DELAY_MS } from "../unboxing/unboxingTiming";
 
 interface Box3DThreeProps {
   isOpen: boolean;
   onClick: () => void;
   season: string;
   shouldAnimate?: boolean;
+  onOpenSettled?: () => void;
 }
 
 const BOX_W = 1.8;
@@ -83,7 +85,12 @@ function BoxFace({
   );
 }
 
-export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
+export function Box3DThree({
+  isOpen,
+  onClick,
+  season,
+  onOpenSettled,
+}: Box3DThreeProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const shakeRef = useRef<THREE.Group>(null!);
   const lidRef = useRef<THREE.Group>(null!);
@@ -92,8 +99,17 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
   const [hovered, setHovered] = useState(false);
   const [animState, setAnimState] = useState<"closed" | "lift" | "lidOpen" | "sink">("closed");
   const lidOpenTimeRef = useRef<number | null>(null);
+  const animStateRef = useRef(animState);
+  const openSettledNotifiedRef = useRef(false);
 
   const frontTexture = useTexture("/front-box.png");
+
+  useEffect(() => {
+    animStateRef.current = animState;
+    if (animState !== "sink") {
+      openSettledNotifiedRef.current = false;
+    }
+  }, [animState]);
 
   // Premium clean white color for the box body
   const boxColor = "#ffffff";
@@ -107,10 +123,10 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
       const t1 = setTimeout(() => {
         setAnimState("lidOpen");
         lidOpenTimeRef.current = performance.now();
-      }, 450);
+      }, BOX_LID_OPEN_DELAY_MS);
       const t2 = setTimeout(() => {
         setAnimState("sink");
-      }, 850);
+      }, BOX_SINK_DELAY_MS);
       return () => {
         clearTimeout(t0);
         clearTimeout(t1);
@@ -133,6 +149,16 @@ export function Box3DThree({ isOpen, onClick, season }: Box3DThreeProps) {
     rotY: animState === "closed" ? (hovered ? HOVER_BOX_ROT_Y : CLOSED_BOX_ROT_Y) : CLOSED_BOX_ROT_Y + Math.PI * 2,
     lidAngle: animState === "lidOpen" || animState === "sink" ? -2.4 : 0,
     opacity: animState === "sink" ? 0 : 1,
+    onRest: () => {
+      if (
+        isOpen &&
+        animStateRef.current === "sink" &&
+        !openSettledNotifiedRef.current
+      ) {
+        openSettledNotifiedRef.current = true;
+        onOpenSettled?.();
+      }
+    },
     config: (key) => {
       if (key === "rotY") return { tension: 120, friction: 14 }; // fast spin on click
       if (key === "lidAngle") return { tension: 180, friction: 12 }; // snappy lid snap open

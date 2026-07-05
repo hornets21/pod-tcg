@@ -1,0 +1,20 @@
+export const BOX_LID_OPEN_DELAY_MS = 450;
+export const BOX_SINK_DELAY_MS = 850;
+
+export const OVERLAY_ZOOM_OUT_DELAY_MS = 200;
+export const OVERLAY_UNMOUNT_DELAY_MS = 600;
+export const RESET_FADE_OUT_DELAY_MS = 600;
+
+export const BOOSTER_PACK_ENTRY_DELAY_MS = 100;
+export const BOOSTER_PACK_ENTRY_STAGGER_MS = 120;
+
+export const STREAM_CARD_COUNT = 10;
+export const STREAM_CARD_STAGGER_MS = 190;
+export const STREAM_CARD_TRAVEL_TIME_MS = 1400;
+export const STREAM_SETTLE_HOLD_MS = 700;
+export const STREAM_START_DELAY_MS = 220;
+export const STREAM_CLEANUP_DELAY_MS = 400;
+
+export const CARD_REVEAL_FIRST_DELAY_MS = 900;
+export const CARD_REVEAL_INTERVAL_MS = 850;
+export const CARD_REVEAL_COMPLETE_DELAY_MS = 420;

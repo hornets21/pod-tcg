@@ -10,6 +10,7 @@ interface SelectionSearchProps {
   placeholder: string;
   ariaLabel: string;
   side: "left" | "right";
+  disabled?: boolean;
 }
 
 export function SelectionSearch({
@@ -19,6 +20,7 @@ export function SelectionSearch({
   placeholder,
   ariaLabel,
   side,
+  disabled = false,
 }: SelectionSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -38,6 +40,16 @@ export function SelectionSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (disabled) {
+      const timer = window.setTimeout(() => {
+        setIsOpen(false);
+        setSearch("");
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [disabled]);
+
   const selectedOption = options.find((opt) => opt.role_id === value);
 
   const filteredOptions = useMemo(() => {
@@ -56,11 +68,13 @@ export function SelectionSearch({
         type="button"
         className={`searchable-select-trigger ${side}`}
         onClick={() => {
+          if (disabled) return;
           setIsOpen(!isOpen);
           setSearch("");
         }}
         aria-label={ariaLabel}
         aria-expanded={isOpen}
+        disabled={disabled}
       >
         <span className="searchable-select-trigger-content">
           {selectedOption ? (
@@ -79,24 +93,27 @@ export function SelectionSearch({
         <div className={`searchable-select-dropdown ${side}`}>
           <div className="searchable-select-search-box">
             <span className="searchable-select-search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="ค้นหาชื่อการ์ดหรือระดับความหายาก..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              autoFocus
-            />
-          </div>
-          <ul className="searchable-select-options">
+              <input
+                type="text"
+                placeholder="ค้นหาชื่อการ์ดหรือระดับความหายาก..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+                disabled={disabled}
+              />
+            </div>
+            <ul className="searchable-select-options">
             <li>
               <button
                 type="button"
                 className={`searchable-select-option ${!value ? "selected" : ""}`}
                 onClick={() => {
+                  if (disabled) return;
                   onChange("");
                   setIsOpen(false);
                 }}
+                disabled={disabled}
               >
                 <span className="searchable-select-option-text">{placeholder}</span>
                 {!value && <span className="searchable-select-check">✓</span>}
@@ -109,9 +126,11 @@ export function SelectionSearch({
                     type="button"
                     className={`searchable-select-option ${value === opt.role_id ? "selected" : ""}`}
                     onClick={() => {
+                      if (disabled) return;
                       onChange(opt.role_id);
                       setIsOpen(false);
                     }}
+                    disabled={disabled}
                   >
                     <span className="searchable-select-option-left">
                       <span className={`rarity-badge ${opt.rarity}`}>{opt.rarity}</span>
@@ -154,6 +173,11 @@ export function SelectionSearch({
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           overflow: hidden;
+        }
+
+        .searchable-select-trigger:disabled {
+          cursor: not-allowed;
+          opacity: 0.72;
         }
 
         .searchable-select-trigger:hover {
@@ -330,6 +354,11 @@ export function SelectionSearch({
           align-items: center;
           justify-content: space-between;
           gap: 0.5rem;
+        }
+
+        .searchable-select-option:disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
         }
 
         .searchable-select-option:hover {

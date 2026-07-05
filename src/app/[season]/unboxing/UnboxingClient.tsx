@@ -9,6 +9,12 @@ import { ThreeScene } from "../../../components/three/ThreeScene";
 import { Box3DThree } from "../../../components/three/Box3DThree";
 import { BoosterPackThree } from "../../../components/three/BoosterPackThree";
 import { PackRipOverlay3D } from "../../../components/unboxing/PackRipOverlay3D";
+import {
+  BOX_LID_OPEN_DELAY_MS,
+  OVERLAY_UNMOUNT_DELAY_MS,
+  OVERLAY_ZOOM_OUT_DELAY_MS,
+  RESET_FADE_OUT_DELAY_MS,
+} from "../../../components/unboxing/unboxingTiming";
 import { SummaryModal } from "../../../components/unboxing/SummaryModal";
 import { Card as CardType } from "../../../data/types";
 
@@ -47,6 +53,8 @@ export default function UnboxingClient() {
   const [packsReady, setPacksReady] = useState(false);
 
   const timersRef = useRef<NodeJS.Timeout[]>([]);
+  const isBoxOpeningRef = useRef(false);
+  const activePackIndexRef = useRef<number | null>(null);
 
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -85,6 +93,7 @@ export default function UnboxingClient() {
 
   // --- Actions ---
   const handleBoxClick = useCallback(() => {
+    isBoxOpeningRef.current = true;
     setIsBoxOpen(true);
     // Play shonen whoosh/aura flare at the start of spin
     playSFX(AUDIO_URLS.HEAVENLY, 0.15);
@@ -92,14 +101,8 @@ export default function UnboxingClient() {
     // Play box pop-open impact sound when the lid snaps open (450ms)
     const tLid = setTimeout(() => {
       playSFX(AUDIO_URLS.BOX_OPEN, 0.2);
-    }, 450);
+    }, BOX_LID_OPEN_DELAY_MS);
     timersRef.current.push(tLid);
-
-    // Once box fades out (1300ms), eject booster packs
-    const tPacks = setTimeout(() => {
-      setPacksReady(true);
-    }, 1300);
-    timersRef.current.push(tPacks);
   }, [playSFX, setIsBoxOpen]);
 
   const handlePackClick = useCallback(
@@ -116,11 +119,7 @@ export default function UnboxingClient() {
         setGodPackIndices((prev) => (prev.includes(index) ? prev : [...prev, index]));
         setIsGodPackEffectActive(true);
       }
-
-      const timer = setTimeout(() => {
-        setSelectedPackIndex(index);
-      }, 1150);
-      timersRef.current.push(timer);
+      activePackIndexRef.current = index;
     },
     [openedPacks, openPack, setGodPackIndices, setIsGodPackEffectActive, playSFX, setPackContents, startBGM, tempSelectedPackIndex, selectedPackIndex],
   );
@@ -179,20 +178,23 @@ export default function UnboxingClient() {
   }, [selectedPackIndex, packContents, addToCollection, setOpenedPacksArr, setOpenedPackOrder]);
 
   const closeRipOverlay = useCallback(() => {
+    activePackIndexRef.current = null;
     // Start zoom-out in background after 200ms once overlay is partially transparent
     const zoomOutTimer = setTimeout(() => {
       setTempSelectedPackIndex(null);
-    }, 200);
+    }, OVERLAY_ZOOM_OUT_DELAY_MS);
     timersRef.current.push(zoomOutTimer);
 
     // Unmount overlay after it completes its 400ms fade-out (200ms + 400ms = 600ms)
     const timer = setTimeout(() => {
       setSelectedPackIndex(null);
-    }, 600);
+    }, OVERLAY_UNMOUNT_DELAY_MS);
     timersRef.current.push(timer);
   }, []);
 
   const handleReset = useCallback(() => {
+    isBoxOpeningRef.current = false;
+    activePackIndexRef.current = null;
     setIsFadingOut(true);
     stopAllSFX();
     const t = setTimeout(() => {
@@ -210,7 +212,7 @@ export default function UnboxingClient() {
       setPacksReady(false);
       clearAllTimers();
       isInitiallyOpenRef.current = false;
-    }, 600);
+    }, RESET_FADE_OUT_DELAY_MS);
     timersRef.current.push(t);
   }, [
     setIsBoxOpen, setOpenedPacksArr, setPackContents, setOpenedPackOrder,
@@ -240,6 +242,11 @@ export default function UnboxingClient() {
               onClick={handleBoxClick}
               season={season}
               shouldAnimate={mounted}
+              onOpenSettled={() => {
+                if (isBoxOpeningRef.current) {
+                  setPacksReady(true);
+                }
+              }}
             />
           </Suspense>
         )}
@@ -259,6 +266,11 @@ export default function UnboxingClient() {
                 isReceding={tempSelectedPackIndex !== null && tempSelectedPackIndex !== i}
                 onClick={() => handlePackClick(i)}
                 shouldAnimate={mounted}
+                onZoomSettled={() => {
+                  if (activePackIndexRef.current === i) {
+                    setSelectedPackIndex(i);
+                  }
+                }}
               />
             ))}
           </Suspense>

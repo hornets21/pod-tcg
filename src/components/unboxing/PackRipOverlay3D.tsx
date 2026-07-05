@@ -9,6 +9,14 @@ import { TearingPackThree } from "../three/TearingPackThree";
 import { MuteButton } from "./MuteButton";
 import { Card as CardType } from "../../data/types";
 import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
+import {
+  STREAM_CARD_COUNT,
+  STREAM_CARD_STAGGER_MS,
+  STREAM_CARD_TRAVEL_TIME_MS,
+  STREAM_CLEANUP_DELAY_MS,
+  STREAM_SETTLE_HOLD_MS,
+  STREAM_START_DELAY_MS,
+} from "./unboxingTiming";
 import * as THREE from "three";
 
 interface PackRipOverlay3DProps {
@@ -31,14 +39,11 @@ type CinematicMode = "idle" | "suspense" | "reveal";
 
 // Silhouette stream: 10 cards dash across the backdrop; the final 5 settle
 // into a row. The extra pass-through cards build suspense before the reveal.
-const STREAM_CARD_COUNT = 10;
-const STREAM_CARD_STAGGER = 190;
-const STREAM_CARD_TRAVEL_TIME = 1400;
 // How long the final 5 silhouettes hold their row before the real cards
 // fly in. A longer hold makes the player anticipate the reveal.
-const STREAM_SETTLE_HOLD = 700;
+const STREAM_SETTLE_HOLD = STREAM_SETTLE_HOLD_MS;
 const STREAM_DURATION =
-  (STREAM_CARD_COUNT - 1) * STREAM_CARD_STAGGER + STREAM_CARD_TRAVEL_TIME;
+  (STREAM_CARD_COUNT - 1) * STREAM_CARD_STAGGER_MS + STREAM_CARD_TRAVEL_TIME_MS;
 // Five final cards land at these x offsets (left→right) so they read as a
 // tidy silhouette row behind the real cards.
 const FINAL_STREAM_OFFSETS = [
@@ -237,7 +242,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
       setShowStream(true);
       setCinematicMode("suspense");
       setPhase("stream");
-    }, 220);
+    }, STREAM_START_DELAY_MS);
 
     // …after the stream settles, the real cards fly into the row and start
     // their sequential flip reveal.
@@ -250,9 +255,9 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
       // using the .card-stream.settling transition while the 3D cards mount.
       const cleanupStreamTimer = setTimeout(() => {
         setShowStream(false);
-      }, 400);
+      }, STREAM_CLEANUP_DELAY_MS);
       timersRef.current.push(cleanupStreamTimer);
-    }, 220 + streamDuration);
+    }, STREAM_START_DELAY_MS + streamDuration);
 
     timersRef.current.push(streamTimer, cardsTimer);
   }, [onRipComplete]);
@@ -415,7 +420,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
                     style={
                       {
                         "--stream-y": "50%",
-                        "--stream-delay": `${index * STREAM_CARD_STAGGER}ms`,
+                        "--stream-delay": `${index * STREAM_CARD_STAGGER_MS}ms`,
                         "--stream-tilt": `${(index % 3) * 1.5 - 1.5}deg`,
                         "--stream-mid-tilt": `${((index % 3) * 1.5 - 1.5) * -0.25}deg`,
                         "--stream-end-tilt": `${((index % 3) * 1.5 - 1.5) * -1}deg`,

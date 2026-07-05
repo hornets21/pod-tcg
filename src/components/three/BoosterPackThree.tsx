@@ -5,6 +5,10 @@ import { useFrame } from "@react-three/fiber";
 import { useSpring, animated } from "@react-spring/three";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import {
+  BOOSTER_PACK_ENTRY_DELAY_MS,
+  BOOSTER_PACK_ENTRY_STAGGER_MS,
+} from "../unboxing/unboxingTiming";
 
 interface BoosterPackThreeProps {
   index: number;
@@ -16,6 +20,7 @@ interface BoosterPackThreeProps {
   isReceding?: boolean;
   onClick: () => void;
   shouldAnimate?: boolean;
+  onZoomSettled?: () => void;
 }
 
 // Arc layout for 6 packs in a fan
@@ -41,9 +46,11 @@ export function BoosterPackThree({
   isReceding = false,
   onClick,
   shouldAnimate = true,
+  onZoomSettled,
 }: BoosterPackThreeProps) {
   const meshRef = useRef<THREE.Group>(null!);
   const [mounted, setMounted] = useState(!shouldAnimate);
+  const zoomSettledNotifiedRef = useRef(false);
 
   const isS2 = season === "season2";
   const multiPackScale = 0.85;
@@ -56,10 +63,19 @@ export function BoosterPackThree({
 
   useEffect(() => {
     if (shouldAnimate) {
-      const t = setTimeout(() => setMounted(true), index * 120 + 100);
+      const t = setTimeout(
+        () => setMounted(true),
+        index * BOOSTER_PACK_ENTRY_STAGGER_MS + BOOSTER_PACK_ENTRY_DELAY_MS,
+      );
       return () => clearTimeout(t);
     }
   }, [index, shouldAnimate]);
+
+  useEffect(() => {
+    if (!isZooming) {
+      zoomSettledNotifiedRef.current = false;
+    }
+  }, [isZooming]);
 
   const targetPos = getPackPosition(index, 6);
  
@@ -75,10 +91,16 @@ export function BoosterPackThree({
     rotX: 0,
     rotY: 0,
     rotZ: 0,
+    onRest: () => {
+      if (isZooming && !zoomSettledNotifiedRef.current) {
+        zoomSettledNotifiedRef.current = true;
+        onZoomSettled?.();
+      }
+    },
     config: {
       tension: isZooming ? 50 : isReceding ? 40 : 45, // Much slower, highly gradual cinematic drift
       friction: isZooming ? 16 : isReceding ? 20 : 18,
-      delay: isZooming ? 0 : mounted ? 0 : index * 120,
+      delay: isZooming ? 0 : mounted ? 0 : index * BOOSTER_PACK_ENTRY_STAGGER_MS,
     },
   });
  

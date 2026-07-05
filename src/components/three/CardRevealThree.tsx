@@ -4,6 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Card as CardType, Rarity } from "../../data/types";
 import { CardMesh } from "./CardMesh";
 import { useAudio, AUDIO_URLS } from "../../hooks/useAudio";
+import {
+  CARD_REVEAL_COMPLETE_DELAY_MS,
+  CARD_REVEAL_FIRST_DELAY_MS,
+  CARD_REVEAL_INTERVAL_MS,
+} from "../unboxing/unboxingTiming";
 
 interface CardRevealThreeProps {
   cards: CardType[];
@@ -23,8 +28,6 @@ const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
 // First card flips 900ms after CardRevealThree mounts; each next card flips
 // 850ms later. Matches the pre-story-mode flow so the player gets a clear
 // sequential reveal of all five pulled cards.
-const FIRST_REVEAL_TIME = 900;
-const CARD_REVEAL_INTERVAL = 850;
 const HIGH_RARITY_TIERS = new Set(["LEG", "SEC", "UR", "SSR"]);
 
 export function CardRevealThree({
@@ -73,7 +76,7 @@ export function CardRevealThree({
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     cards.forEach((card, index) => {
-      const delay = FIRST_REVEAL_TIME + index * CARD_REVEAL_INTERVAL;
+      const delay = CARD_REVEAL_FIRST_DELAY_MS + index * CARD_REVEAL_INTERVAL_MS;
       const timer = setTimeout(() => {
         setRevealedStates((prev) => {
           const next = [...prev];
@@ -95,7 +98,7 @@ export function CardRevealThree({
         if (index === cards.length - 1) {
           // Give the last card's flip a moment to settle before signaling
           // completion so the parent doesn't yank the camera mid-flip.
-          const completionTimer = setTimeout(() => onComplete?.(), 420);
+          const completionTimer = setTimeout(() => onComplete?.(), CARD_REVEAL_COMPLETE_DELAY_MS);
           timers.push(completionTimer);
         }
       }, delay);

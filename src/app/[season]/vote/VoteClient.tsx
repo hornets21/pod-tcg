@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  startTransition,
 } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/Card";
@@ -77,6 +78,27 @@ function getUniqueRandomWheelCards(): CardType[] {
     }
   });
   return Array.from(uniqueMap.values()).sort(() => Math.random() - 0.5);
+}
+
+function preloadCardImages(cards: CardType[]) {
+  if (typeof window === "undefined") return Promise.resolve();
+
+  const uniqueSources = Array.from(
+    new Set(cards.map((card) => card.image).filter(Boolean)),
+  );
+
+  return Promise.all(
+    uniqueSources.map(
+      (src) =>
+        new Promise<void>((resolve) => {
+          const image = new window.Image();
+          image.decoding = "async";
+          image.onload = () => resolve();
+          image.onerror = () => resolve();
+          image.src = src;
+        }),
+    ),
+  ).then(() => undefined);
 }
 
 function VoteBackgroundThree({
@@ -169,6 +191,7 @@ export default function VoteClient() {
 
   // Presentation Slider States
   const [slideIndex, setSlideIndex] = useState(0);
+  const [isRefreshingMatch, setIsRefreshingMatch] = useState(false);
 
   // Guest Collection hook
   const [, setCollection] = useLocalStorage<string[]>(
@@ -252,48 +275,57 @@ export default function VoteClient() {
   );
 
   const saveRecentRound = useCallback(() => {
-    if (!leftCard || !rightCard) return;
+    if (!leftCard || !rightCard || isRefreshingMatch) return;
 
     // Pick two new competitor cards
     const picked = pickTwoCards(playableCards);
+    const nextWheelCards = getUniqueRandomWheelCards();
 
     // Stop the current timer
     stopTimer();
     setTimerStatus("idle");
     setSlideIndex(0);
+    setIsRefreshingMatch(true);
 
-    setStoredState((current) => {
-      const nextRecent = [
-        {
-          leftName: leftCard.name,
-          rightName: rightCard.name,
-          leftScore: current.leftScore,
-          rightScore: current.rightScore,
-        },
-        ...current.recent,
-      ].slice(0, 20);
+    void preloadCardImages([
+      ...(picked ? [picked.left, picked.right] : []),
+      ...nextWheelCards,
+    ]).finally(() => {
+      startTransition(() => {
+        setStoredState((current) => {
+          const nextRecent = [
+            {
+              leftName: leftCard.name,
+              rightName: rightCard.name,
+              leftScore: current.leftScore,
+              rightScore: current.rightScore,
+            },
+            ...current.recent,
+          ].slice(0, 20);
 
-      if (!picked) {
-        return {
-          ...current,
-          recent: nextRecent,
-        };
-      }
+          if (!picked) {
+            return {
+              ...current,
+              recent: nextRecent,
+            };
+          }
 
-      return {
-        ...current,
-        leftId: picked.left.role_id,
-        rightId: picked.right.role_id,
-        leftScore: 0,
-        rightScore: 0,
-        seconds: current.duration,
-        recent: nextRecent,
-      };
+          return {
+            ...current,
+            leftId: picked.left.role_id,
+            rightId: picked.right.role_id,
+            leftScore: 0,
+            rightScore: 0,
+            seconds: current.duration,
+            recent: nextRecent,
+          };
+        });
+
+        setWheelCards(nextWheelCards);
+        setIsRefreshingMatch(false);
+      });
     });
-
-    // Refresh wheel cards
-    setWheelCards(getUniqueRandomWheelCards());
-  }, [leftCard, rightCard, playableCards, stopTimer, setStoredState]);
+  }, [isRefreshingMatch, leftCard, rightCard, playableCards, stopTimer, setStoredState]);
 
   const clearRecentHistory = useCallback(() => {
     setStoredState((current) => ({
@@ -303,21 +335,30 @@ export default function VoteClient() {
   }, [setStoredState]);
 
   const randomizeMatch = useCallback(() => {
+    if (isRefreshingMatch) return;
     const picked = pickTwoCards(playableCards);
     if (!picked) return;
+    const nextWheelCards = getUniqueRandomWheelCards();
     stopTimer();
     setTimerStatus("idle");
     setSlideIndex(0); // Reset slider to first card when pairing changes
-    setStoredState((current) => ({
-      ...current,
-      leftId: picked.left.role_id,
-      rightId: picked.right.role_id,
-      leftScore: 0,
-      rightScore: 0,
-      seconds: current.duration,
-    }));
-    setWheelCards(getUniqueRandomWheelCards());
-  }, [playableCards, setStoredState, stopTimer]);
+    setIsRefreshingMatch(true);
+
+    void preloadCardImages([picked.left, picked.right, ...nextWheelCards]).finally(() => {
+      startTransition(() => {
+        setStoredState((current) => ({
+          ...current,
+          leftId: picked.left.role_id,
+          rightId: picked.right.role_id,
+          leftScore: 0,
+          rightScore: 0,
+          seconds: current.duration,
+        }));
+        setWheelCards(nextWheelCards);
+        setIsRefreshingMatch(false);
+      });
+    });
+  }, [isRefreshingMatch, playableCards, setStoredState, stopTimer]);
 
   const startTimer = useCallback(() => {
     if (
@@ -480,13 +521,14 @@ export default function VoteClient() {
                   className="vote-controls active"
                   aria-label="ตัวควบคุมรอบโหวต"
                 >
-                  <button
-                    type="button"
-                    className="vote-primary"
-                    onClick={randomizeMatch}
-                  >
-                    สุ่มคู่แข่ง
-                  </button>
+                    <button
+                      type="button"
+                      className="vote-primary"
+                      onClick={randomizeMatch}
+                      disabled={isRefreshingMatch}
+                    >
+                      สุ่มคู่แข่ง
+                    </button>
 
                   <label>
                     เวลา (วินาที)
@@ -531,7 +573,7 @@ export default function VoteClient() {
                     <button
                       type="button"
                       onClick={saveRecentRound}
-                      disabled={!leftCard || !rightCard}
+                      disabled={!leftCard || !rightCard || isRefreshingMatch}
                     >
                       บันทึกรอบ
                     </button>
@@ -573,6 +615,7 @@ export default function VoteClient() {
                               : "เลือกการ์ดฝั่งขวา"
                           }
                           side={side}
+                          disabled={timerStatus === "running"}
                         />
 
                         <div
