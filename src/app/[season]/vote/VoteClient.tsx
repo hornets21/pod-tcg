@@ -527,8 +527,16 @@ export default function VoteClient() {
                       onClick={randomizeMatch}
                       disabled={isRefreshingMatch}
                     >
-                      สุ่มคู่แข่ง
+                      {isRefreshingMatch ? (
+                        <span className="btn-loading-wrapper">
+                          <span className="spinner"></span>
+                          กำลังสุ่ม...
+                        </span>
+                      ) : (
+                        "สุ่มคู่แข่ง"
+                      )}
                     </button>
+
 
                   <label>
                     เวลา (วินาที)
@@ -656,6 +664,13 @@ export default function VoteClient() {
                           ) : (
                             <div className="vote-card-placeholder">
                               รอเลือกการ์ด
+                            </div>
+                          )}
+
+                          {isRefreshingMatch && (
+                            <div className="card-stage-loading-overlay">
+                              <div className="card-loader-spinner"></div>
+                              <span>กำลังโหลดการ์ด...</span>
                             </div>
                           )}
                         </div>
@@ -1150,6 +1165,74 @@ export default function VoteClient() {
           position: relative;
           perspective: 1200px;
           transform-style: preserve-3d;
+        }
+
+        .btn-loading-wrapper {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          justify-content: center;
+        }
+
+        .btn-loading-wrapper .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          border-top: 2px solid #fff;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        .card-stage-loading-overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 18px;
+          z-index: 15;
+          color: #fff;
+          font-family: var(--font-kanit), sans-serif;
+          font-size: 0.95rem;
+          gap: 1rem;
+          animation: fadeIn 0.25s ease-out forwards;
+        }
+
+        .card-loader-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(255, 255, 255, 0.1);
+          border-top: 3px solid #00d2ff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        }
+
+        .vote-page.sacrifice-theme .card-loader-spinner {
+          border-top-color: #ff3c00;
+          box-shadow: 0 0 15px rgba(255, 60, 0, 0.3);
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
 
         .vote-lane.left .vote-card-stage {

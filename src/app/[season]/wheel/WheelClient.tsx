@@ -664,7 +664,7 @@ function WheelClientContent() {
 
         .neon-text {
           color: #38bdf8;
-          text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+          text-shadow: 0 0 4px rgba(56, 189, 248, 0.25);
         }
 
         .wheel-control-panel {
@@ -704,7 +704,7 @@ function WheelClientContent() {
         .preset-btn:hover {
           background: var(--accent);
           color: #07060a;
-          box-shadow: 0 0 12px var(--accent-glow);
+          box-shadow: 0 2px 8px rgba(0, 210, 255, 0.15);
         }
 
         .rarity-select-group {
@@ -819,7 +819,7 @@ function WheelClientContent() {
           margin: 0;
           font-weight: 600;
           color: #38bdf8;
-          text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+          text-shadow: 0 0 3px rgba(56, 189, 248, 0.15);
         }
 
         .btn-back {
@@ -1028,7 +1028,7 @@ function WheelClientContent() {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.6), 0 0 12px var(--accent-glow);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.6), 0 0 4px rgba(0, 210, 255, 0.15);
           z-index: 5;
           pointer-events: none;
         }
@@ -1046,7 +1046,7 @@ function WheelClientContent() {
           padding: 0.9rem 2.8rem;
           border-radius: 50px;
           cursor: pointer;
-          box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
+          box-shadow: 0 4px 12px rgba(0, 210, 255, 0.12);
           transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
@@ -1055,7 +1055,7 @@ function WheelClientContent() {
           border-color: #fff;
           color: #07060a;
           transform: scale(1.06);
-          box-shadow: 0 0 35px rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
         }
 
         .spin-trigger-btn:active:not(:disabled) {
@@ -1086,7 +1086,7 @@ function WheelClientContent() {
         .winner-modal {
           background: linear-gradient(185deg, #111827 0%, #030712 100%);
           border: 1.5px solid rgba(0, 210, 255, 0.25);
-          box-shadow: 0 0 45px rgba(0, 210, 255, 0.15), 0 10px 30px rgba(0, 0, 0, 0.6);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
           padding: 2.2rem;
           border-radius: 16px;
           display: flex;
@@ -1101,7 +1101,7 @@ function WheelClientContent() {
         .winner-title {
           font-size: 1.4rem;
           color: #fbbf24;
-          text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+          text-shadow: 0 0 5px rgba(251, 191, 36, 0.2);
           margin-bottom: 1.2rem;
           font-weight: 700;
         }
@@ -1192,7 +1192,7 @@ function WheelClientContent() {
           background: rgba(255, 255, 255, 0.08);
           border-color: rgba(0, 210, 255, 0.3);
           color: white;
-          box-shadow: 0 0 12px rgba(0, 210, 255, 0.1);
+          box-shadow: 0 2px 6px rgba(0, 210, 255, 0.05);
           transform: translateY(-1px);
         }
 

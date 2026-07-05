@@ -305,12 +305,12 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           height: 600px;
           background: radial-gradient(
             circle,
-            rgba(255, 255, 255, 0.2) 0%,
+            rgba(255, 255, 255, 0.08) 0%,
             transparent 70%
           );
           z-index: 1;
           animation: pulse-glow 3s infinite;
-          opacity: 0.6;
+          opacity: 0.2;
           pointer-events: none;
         }
 
