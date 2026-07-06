@@ -7,6 +7,7 @@ import { useAudio, AUDIO_URLS } from "../../../hooks/useAudio";
 import { FullArtCard } from "../../../components/FullArtCard";
 import { Card } from "../../../components/Card";
 import { Card as CardType } from "../../../data/types";
+import { ThreeScene } from "../../../components/three/ThreeScene";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -107,6 +108,21 @@ function WheelClientContent() {
   const [winnerCard, setWinnerCard] = useState<CardType | null>(null);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [spinHistory, setSpinHistory] = useState<CardType[]>([]);
+
+  useEffect(() => {
+    // Reset selection and states when season changes to prevent cross-season data leakage
+    const timer = setTimeout(() => {
+      setSelectedIds([]);
+      setPhase("select");
+      setIsSpinning(false);
+      setWinnerIndex(null);
+      setWinnerCard(null);
+      setShowWinnerModal(false);
+      setSpinHistory([]);
+      setSelectedRarity(null);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [season]);
 
   // Filter cards by selected rarity
   const filteredSelectionCards = useMemo(() => {
@@ -275,33 +291,21 @@ function WheelClientContent() {
     if (selectedCards.length === 0) return {};
     const segmentAngle = 360 / selectedCards.length;
 
-    const getRarityColor = (rarity: string) => {
-      switch (rarity) {
-        case "LEG":
-          return "#dc2626";
-        case "SEC":
-          return "#4f46e5";
-        case "UR":
-          return "#ea580c";
-        case "SSR":
-          return "#ca8a04";
-        case "SR":
-          return "#9333ea";
-        case "R":
-          return "#2563eb";
-        case "C":
-          return "#4b5563";
-        case "EVENT":
-          return "#db2777";
-        default:
-          return "#334155";
-      }
-    };
+    const WHEEL_COLORS = [
+      "#1e1b4b", // Deep blue-indigo
+      "#311042", // Deep purple-magenta
+      "#082f49", // Deep sky-teal
+      "#111827", // Slate dark
+      "#14532d", // Forest green
+      "#451a03", // Warm chocolate/amber
+    ];
 
     const gradientParts = selectedCards.map((card, idx) => {
       const start = idx * segmentAngle;
       const end = (idx + 1) * segmentAngle;
-      return `${getRarityColor(card.rarity)} ${start}deg ${end}deg`;
+      // Use alternating colors from a static palette to ensure adjacent segments are distinct
+      const color = WHEEL_COLORS[idx % WHEEL_COLORS.length];
+      return `${color} ${start}deg ${end}deg`;
     });
 
     return {
@@ -358,9 +362,13 @@ function WheelClientContent() {
   const segmentAngle = 360 / selectedCards.length;
 
   return (
-    <div className="wheel-wrapper">
-      {phase === "select" ? (
-        <section className="select-view active">
+    <div className="main-wrapper wheel-wrapper">
+      <ThreeScene cameraPosition={[0, 0, 7]} fogColor="#07060a" showDefaultLighting={false} showAtmosphere={true}>
+        {null}
+      </ThreeScene>
+      <main>
+        {phase === "select" ? (
+          <section className="select-view active">
           <div className="collection-header">
             <h2>
               สร้างวงล้อสุ่มการ์ด (
@@ -408,8 +416,8 @@ function WheelClientContent() {
               </div>
             </div>
 
-            <div className="rarity-select-group">
-              <label htmlFor="rarity-select" className="control-label">
+            <div className="quick-select-container">
+              <label htmlFor="rarity-select">
                 เลือกระดับการ์ดเพื่อแสดงรายการ:
               </label>
               <select
@@ -435,7 +443,7 @@ function WheelClientContent() {
           ) : filteredSelectionCards.length === 0 ? (
             <div className="empty-lot-msg">ไม่มีการ์ด gacha สำหรับระดับนี้</div>
           ) : (
-            <div className="cards-grid selection-mode season2-grid">
+            <div className={`cards-grid selection-mode ${season === "season2" ? "season2-grid" : ""}`}>
               {filteredSelectionCards.map((card) => {
                 const isSelected = selectedIds.includes(card.role_id);
                 const owned = isOwned(card);
@@ -471,7 +479,8 @@ function WheelClientContent() {
           </div>
 
           <div className="spin-layout">
-            <div className="wheel-cards-sidebar">
+            {/* Left Sidebar: Cards in Wheel */}
+            <div className="wheel-cards-sidebar left-sidebar">
               <h3>การ์ดในวงล้อ ({selectedCards.length} ใบ)</h3>
               <div className="sidebar-list">
                 {selectedCards.map((card, idx) => (
@@ -491,38 +500,9 @@ function WheelClientContent() {
                   </div>
                 ))}
               </div>
-
-              {spinHistory.length > 0 && (
-                <div className="history-section" style={{ marginTop: "2rem" }}>
-                  <h3>ประวัติที่สุ่มได้ ({spinHistory.length} ใบ)</h3>
-                  <div className="sidebar-list">
-                    {spinHistory.map((card, idx) => (
-                      <div
-                        key={`history-${card.role_id}-${idx}`}
-                        className="sidebar-card-item history-item"
-                        style={{ opacity: 0.65 }}
-                      >
-                        <span
-                          className="rarity-badge"
-                          style={{
-                            backgroundColor: getRarityBadgeColor(card.rarity),
-                          }}
-                        >
-                          {card.rarity}
-                        </span>
-                        <span
-                          className="card-name"
-                          style={{ textDecoration: "line-through" }}
-                        >
-                          {card.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
+            {/* Center: Spin Area Container */}
             <div className="spin-area-container">
               {/* Clean 2D Wheel Spinner */}
               <div className="wheel-container-3d">
@@ -569,15 +549,51 @@ function WheelClientContent() {
                 <button
                   className="spin-trigger-btn"
                   onClick={handleStartSpin}
-                  disabled={isSpinning}
+                  disabled={isSpinning || selectedCards.length < 2}
                 >
                   {isSpinning ? "กำลังหมุน..." : "กดเพื่อหมุน!"}
                 </button>
               </div>
             </div>
+
+            {/* Right Sidebar: Spin History */}
+            <div className="wheel-cards-sidebar right-sidebar">
+              <h3>ประวัติที่สุ่มได้ ({spinHistory.length} ใบ)</h3>
+              <div className="sidebar-list">
+                {spinHistory.length > 0 ? (
+                  spinHistory.map((card, idx) => (
+                    <div
+                      key={`history-${card.role_id}-${idx}`}
+                      className="sidebar-card-item history-item"
+                      style={{ opacity: 0.65 }}
+                    >
+                      <span
+                        className="rarity-badge"
+                        style={{
+                          backgroundColor: getRarityBadgeColor(card.rarity),
+                        }}
+                      >
+                        {card.rarity}
+                      </span>
+                      <span
+                        className="card-name"
+                        style={{ textDecoration: "line-through" }}
+                      >
+                        {card.name}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-history-msg">
+                    ยังไม่มีประวัติการสุ่ม
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}
+      </main>
 
       {winnerCard && showWinnerModal && (
         <div className="winner-overlay">
@@ -650,16 +666,15 @@ function WheelClientContent() {
           position: relative;
           width: 100%;
           min-height: 100vh;
-          background: linear-gradient(145deg, #07060a 0%, #0e0c16 52%, #040306 100%);
+          background: transparent;
           font-family: var(--font-kanit);
           color: white;
         }
 
         .select-view {
-          padding: 2rem;
-          padding-top: 6rem;
-          max-width: 1200px;
-          margin: 0 auto;
+          padding: 0;
+          padding-top: 4rem;
+          width: 100%;
         }
 
         .neon-text {
@@ -672,11 +687,14 @@ function WheelClientContent() {
           align-items: center;
           justify-content: space-between;
           gap: 1.5rem;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          padding: 1rem 1.5rem;
-          border-radius: 12px;
+          background: var(--glass);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 1rem 2rem;
+          border-radius: 50px;
           margin-bottom: 2rem;
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
 
         .presets-group {
@@ -691,27 +709,23 @@ function WheelClientContent() {
         }
 
         .preset-btn {
-          background: rgba(0, 210, 255, 0.08);
+          background: rgba(0, 210, 255, 0.06);
           color: var(--accent);
           border: 1px solid rgba(0, 210, 255, 0.2);
-          padding: 0.4rem 1rem;
-          border-radius: 6px;
+          padding: 0.45rem 1.2rem;
+          border-radius: 20px;
+          font-family: "Kanit", sans-serif;
           font-size: 0.85rem;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .preset-btn:hover {
           background: var(--accent);
           color: #07060a;
-          box-shadow: 0 2px 8px rgba(0, 210, 255, 0.15);
-        }
-
-        .rarity-select-group {
-          display: flex;
-          align-items: center;
-          gap: 0.8rem;
-          flex: 0 0 350px;
+          box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+          transform: translateY(-1px);
         }
 
         .control-label {
@@ -772,11 +786,12 @@ function WheelClientContent() {
             padding: 0.5rem 0.25rem;
           }
 
-          .rarity-select-group {
+          .quick-select-container {
             flex-direction: column;
             align-items: flex-start;
             gap: 0.6rem;
             flex: 1 1 auto;
+            border-radius: 15px;
           }
 
           #rarity-select {
@@ -796,59 +811,72 @@ function WheelClientContent() {
 
         /* SPIN VIEW LAYOUT */
         .spin-view {
-          height: 100vh;
+          padding: 0;
+          padding-top: 4rem;
+          width: 100%;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
         }
 
         .spin-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 1rem 2rem;
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 1.5rem 0;
+          background: transparent;
+          border-bottom: none;
           z-index: 10;
-          margin-top: 55px;
+          margin-top: 0;
         }
 
         .spin-header h2 {
-          font-size: 1.3rem;
+          font-size: 1.8rem;
           margin: 0;
           font-weight: 600;
-          color: #38bdf8;
-          text-shadow: 0 0 3px rgba(56, 189, 248, 0.15);
+          color: #fff;
+          text-shadow: 0 0 12px var(--accent-glow);
+          letter-spacing: 0.05em;
         }
 
         .btn-back {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.03);
           color: #cbd5e1;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 0.5rem 1.2rem;
-          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 0.5rem 1.4rem;
+          border-radius: 30px;
+          font-family: "Kanit", sans-serif;
           font-size: 0.9rem;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.2;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
 
-        .btn-back:hover {
-          background: rgba(255, 255, 255, 0.12);
+        .btn-back:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: var(--accent);
           color: white;
+          box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+          transform: translateX(-3px);
         }
 
         .spin-layout {
           display: flex;
           flex: 1;
           position: relative;
-          height: calc(100vh - 110px);
+          min-height: calc(100vh - 200px);
+          gap: 2rem;
         }
 
         .wheel-cards-sidebar {
           width: 300px;
-          background: rgba(7, 6, 10, 0.8);
-          border-right: 1px solid rgba(255, 255, 255, 0.05);
+          height: 580px;
+          background: rgba(7, 6, 10, 0.6);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
           padding: 1.5rem;
           display: flex;
           flex-direction: column;
@@ -916,6 +944,29 @@ function WheelClientContent() {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+        }
+
+        .empty-history-msg {
+          text-align: center;
+          color: #64748b;
+          font-size: 0.85rem;
+          padding: 2.5rem 1rem;
+          border: 1.5px dashed rgba(255, 255, 255, 0.06);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.01);
+        }
+
+        @media (max-width: 1200px) {
+          .spin-layout {
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: auto;
+          }
+
+          .wheel-cards-sidebar {
+            width: 100%;
+            height: 250px;
+          }
         }
 
         .spin-area-container {
@@ -1084,11 +1135,16 @@ function WheelClientContent() {
         }
 
         .winner-modal {
-          background: linear-gradient(185deg, #111827 0%, #030712 100%);
-          border: 1.5px solid rgba(0, 210, 255, 0.25);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-          padding: 2.2rem;
-          border-radius: 16px;
+          background: rgba(17, 24, 39, 0.85);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border: 1px solid rgba(0, 210, 255, 0.3);
+          box-shadow: 
+            0 24px 64px rgba(0, 0, 0, 0.85),
+            0 0 35px rgba(0, 210, 255, 0.2),
+            inset 0 0 20px rgba(0, 210, 255, 0.05);
+          padding: 2.5rem;
+          border-radius: 24px;
           display: flex;
           flex-direction: column;
           align-items: center;
