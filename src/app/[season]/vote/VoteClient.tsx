@@ -32,6 +32,7 @@ interface VoteState {
     leftScore: number;
     rightScore: number;
   }>;
+  wheelCardIds?: string[];
 }
 
 type TimerStatus = "idle" | "running" | "paused" | "ended";
@@ -45,6 +46,7 @@ const initialVoteState: VoteState = {
   seconds: DEFAULT_DURATION,
   duration: DEFAULT_DURATION,
   recent: [],
+  wheelCardIds: [],
 };
 
 function pickTwoCards(cards: CardType[]) {
@@ -203,9 +205,31 @@ export default function VoteClient() {
     () => gachaPool.filter((card) => card.isGacha === "Y"),
     [gachaPool],
   );
-  const [wheelCards, setWheelCards] = useState<CardType[]>(() =>
-    getUniqueRandomWheelCards(),
-  );
+
+  const wheelCards = useMemo(() => {
+    if (!storedState.wheelCardIds || storedState.wheelCardIds.length === 0) {
+      return [];
+    }
+    return storedState.wheelCardIds
+      .map((id) => CARDS_DELETE.find((c) => c.role_id === id))
+      .filter((c): c is CardType => !!c);
+  }, [storedState.wheelCardIds]);
+
+  useEffect(() => {
+    if (isVoteLoaded && (!storedState.wheelCardIds || storedState.wheelCardIds.length === 0)) {
+      const randomCards = getUniqueRandomWheelCards();
+      const t = setTimeout(() => {
+        setStoredState((current) => {
+          if (current.wheelCardIds && current.wheelCardIds.length > 0) return current;
+          return {
+            ...current,
+            wheelCardIds: randomCards.map((c) => c.role_id),
+          };
+        });
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [isVoteLoaded, storedState.wheelCardIds, setStoredState]);
 
   const leftCard =
     playableCards.find((card) => card.role_id === storedState.leftId) || null;
@@ -307,6 +331,7 @@ export default function VoteClient() {
             return {
               ...current,
               recent: nextRecent,
+              wheelCardIds: nextWheelCards.map((c) => c.role_id),
             };
           }
 
@@ -318,10 +343,10 @@ export default function VoteClient() {
             rightScore: 0,
             seconds: current.duration,
             recent: nextRecent,
+            wheelCardIds: nextWheelCards.map((c) => c.role_id),
           };
         });
 
-        setWheelCards(nextWheelCards);
         setIsRefreshingMatch(false);
       });
     });
@@ -353,8 +378,8 @@ export default function VoteClient() {
           leftScore: 0,
           rightScore: 0,
           seconds: current.duration,
+          wheelCardIds: nextWheelCards.map((c) => c.role_id),
         }));
-        setWheelCards(nextWheelCards);
         setIsRefreshingMatch(false);
       });
     });
@@ -474,6 +499,7 @@ export default function VoteClient() {
   const clearBoard = useCallback(() => {
     stopTimer();
     setTimerStatus("idle");
+    const nextWheelCards = getUniqueRandomWheelCards();
     setStoredState({
       ...initialVoteState,
       leftId: null,
@@ -481,6 +507,7 @@ export default function VoteClient() {
       duration: storedState.duration,
       seconds: storedState.duration,
       recent: storedState.recent,
+      wheelCardIds: nextWheelCards.map((c) => c.role_id),
     });
   }, [setStoredState, stopTimer, storedState.duration, storedState.recent]);
 

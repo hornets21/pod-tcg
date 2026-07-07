@@ -8,6 +8,7 @@ import { FullArtCard } from "../../../components/FullArtCard";
 import { Card } from "../../../components/Card";
 import { Card as CardType } from "../../../data/types";
 import { ThreeScene } from "../../../components/three/ThreeScene";
+import { useLocalStorage } from "../../../hooks/useLocalStorage";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -85,7 +86,10 @@ function WheelClientContent() {
   }, [isMuted]);
 
   // Selection state
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds, isSelectedIdsLoaded] = useLocalStorage<string[]>(
+    `pod-tcg-wheel-selected-${season}`,
+    []
+  );
   const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
 
   // Fallback load safety in case localStorage hydration hangs
@@ -107,21 +111,27 @@ function WheelClientContent() {
   const [startRotation, setStartRotation] = useState(0);
   const [winnerCard, setWinnerCard] = useState<CardType | null>(null);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
-  const [spinHistory, setSpinHistory] = useState<CardType[]>([]);
+  const [spinHistory, setSpinHistory, isSpinHistoryLoaded] = useLocalStorage<CardType[]>(
+    `pod-tcg-wheel-history-${season}`,
+    []
+  );
+
+  const prevSeasonRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Reset selection and states when season changes to prevent cross-season data leakage
-    const timer = setTimeout(() => {
-      setSelectedIds([]);
-      setPhase("select");
-      setIsSpinning(false);
-      setWinnerIndex(null);
-      setWinnerCard(null);
-      setShowWinnerModal(false);
-      setSpinHistory([]);
-      setSelectedRarity(null);
-    }, 0);
-    return () => clearTimeout(timer);
+    if (prevSeasonRef.current !== null && prevSeasonRef.current !== season) {
+      const timer = setTimeout(() => {
+        setPhase("select");
+        setIsSpinning(false);
+        setWinnerIndex(null);
+        setWinnerCard(null);
+        setShowWinnerModal(false);
+        setSelectedRarity(null);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    prevSeasonRef.current = season;
   }, [season]);
 
   // Filter cards by selected rarity
@@ -148,7 +158,7 @@ function WheelClientContent() {
       }
       return [...prev, id];
     });
-  }, []);
+  }, [setSelectedIds]);
 
   // Presets
   const handleSelectPreset = (
@@ -313,7 +323,7 @@ function WheelClientContent() {
     };
   }, [selectedCards]);
 
-  if (!isLoaded && !forceLoad) {
+  if ((!isLoaded || !isSelectedIdsLoaded || !isSpinHistoryLoaded) && !forceLoad) {
     return (
       <div className="loading-screen">
         กำลังโหลดระบบวงล้อสุ่ม...

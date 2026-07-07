@@ -1315,4 +1315,12 @@ export const CARDS_SEASON2: Card[] = [
     image: "https://img.lucky-pod.fun/op2/op-2-แบงหนวดเอ๋อ.webp",
     ability: "สะสมครบเพื่อปลดล็อค ซาจี๊ Family",
   },
+  {
+    role_id: "1524068835492102154",
+    name: "Member ห้องกีฬา",
+    isGacha: "Y",
+    rarity: "SSR",
+    image: "https://img.lucky-pod.fun/op2/op-2-memberห้องกีฬา.webp",
+    ability: "สามารถเข้าห้องกีฬาได้",
+  },
 ];
