@@ -147,7 +147,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
     isGod !== undefined
       ? isGod
       : cards.length === 5 &&
-        cards.every((c) => ["SSR", "UR", "SEC", "LEG"].includes(c.rarity));
+        cards.every((c) => ["SSR", "UR", "SEC", "PASS", "LEG"].includes(c.rarity));
 
   // Escape key
   useEffect(() => {

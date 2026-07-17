@@ -433,6 +433,7 @@ export function SelectionSearch({
 
         .rarity-badge.LEG { color: #ffd700; background: rgba(255, 215, 0, 0.15); border: 1px solid rgba(255, 215, 0, 0.35); text-shadow: 0 0 4px rgba(255, 215, 0, 0.2); }
         .rarity-badge.SEC { color: #ff5e00; background: rgba(255, 94, 0, 0.15); border: 1px solid rgba(255, 94, 0, 0.35); text-shadow: 0 0 4px rgba(255, 94, 0, 0.2); }
+        .rarity-badge.PASS { color: #e5e7eb; background: rgba(17, 24, 39, 0.82); border: 1px solid rgba(71, 85, 105, 0.5); text-shadow: 0 0 4px rgba(0, 0, 0, 0.45); }
         .rarity-badge.UR { color: #ff007f; background: rgba(255, 0, 127, 0.15); border: 1px solid rgba(255, 0, 127, 0.35); text-shadow: 0 0 4px rgba(255, 0, 127, 0.2); }
         .rarity-badge.SSR { color: #9c27b0; background: rgba(156, 39, 176, 0.15); border: 1px solid rgba(156, 39, 176, 0.35); text-shadow: 0 0 4px rgba(156, 39, 176, 0.2); }
         .rarity-badge.SR { color: #3f51b5; background: rgba(63, 81, 181, 0.15); border: 1px solid rgba(63, 81, 181, 0.35); }

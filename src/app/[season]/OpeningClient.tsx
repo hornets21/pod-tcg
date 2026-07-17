@@ -25,6 +25,8 @@ const getRarityColor = (rarity: string) => {
       return "#dc2626";
     case "SEC":
       return "#4f46e5";
+    case "PASS":
+      return "#4f46e5";
     case "UR":
       return "#ea580c";
     case "SSR":
@@ -122,7 +124,7 @@ export default function OpeningClient() {
 
   const prepareFreeWheel = useCallback(() => {
     const srPlusCards = gachaPool.filter((c) =>
-      ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity),
+      ["SR", "SSR", "UR", "SEC", "PASS", "LEG"].includes(c.rarity),
     );
     if (srPlusCards.length === 0) return;
 
@@ -231,7 +233,7 @@ export default function OpeningClient() {
 
       addToCollection(card);
 
-      if (["LEG", "SEC", "UR"].includes(card.rarity)) {
+      if (["LEG", "SEC", "PASS", "UR"].includes(card.rarity)) {
         playSFX(AUDIO_URLS.HEAVENLY, 0.25);
       } else {
         playSFX(AUDIO_URLS.CARD_REVEAL_GOLD, 0.18);

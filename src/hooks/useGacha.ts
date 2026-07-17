@@ -11,11 +11,12 @@ import { useAuth } from "./useAuth";
 const RATE: Record<Rarity, number> = {
   LEG: 0.1,
   SEC: 0.4,
+  PASS: 0.4,
   UR: 1.0,
   SSR: 6.5,
   SR: 12.0,
   R: 30.0,
-  C: 50.0,
+  C: 49.6,
   EVENT: 0,
 };
 
@@ -29,6 +30,7 @@ export const RARITY_SUSPENSE_MS: Record<Rarity, number> = {
   SSR: 500,
   UR: 900,
   SEC: 1400,
+  PASS: 1400,
   LEG: 2000,
   EVENT: 0,
 };
@@ -54,12 +56,13 @@ const rollRarity = (): Rarity => {
   return "C";
 };
 
-// Roll God Pack Rarity (SR+ only, heavier weight for SSR/UR/SEC/LEG)
+// Roll God Pack Rarity (SR+ only, heavier weight for SSR/UR/SEC/PASS/LEG)
 const getHighRarity = (): Rarity => {
   const rand = Math.random() * 100;
   if (rand < 5) return "LEG";
   if (rand < 15) return "SEC";
-  if (rand < 45) return "UR";
+  if (rand < 25) return "PASS";
+  if (rand < 55) return "UR";
   return "SSR";
 };
 

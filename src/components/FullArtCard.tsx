@@ -35,6 +35,12 @@ const getRarityClasses = (rarity: string) => {
         glow: "rarity-glow-SEC",
         overlay: "bg-gradient-to-tr from-indigo-500/20 via-white/10 to-blue-400/20 animate-shine-fullart",
       };
+    case "PASS":
+      return {
+        borderColor: "#111827",
+        glow: "rarity-glow-PASS",
+        overlay: "bg-gradient-to-tr from-black/35 via-slate-900/20 to-red-900/20 animate-shine-fullart",
+      };
     case "LEG":
       return {
         borderColor: "#991b1b",

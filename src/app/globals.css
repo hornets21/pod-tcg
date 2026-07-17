@@ -1223,6 +1223,31 @@ section.active {
     animation: shine 1.8s infinite;
 }
 
+.card.pass .card-front {
+    background: linear-gradient(135deg, #050505, #111827, #1f2937, #050505);
+    background-size: 300% 300%;
+    animation: moveGradient 3.5s ease infinite alternate;
+    box-shadow:
+        0 0 0 2px rgba(17, 24, 39, 0.9),
+        0 0 20px rgba(17, 24, 39, 0.55),
+        0 0 40px rgba(127, 29, 29, 0.22);
+}
+
+.card.pass .card-content {
+    background: rgba(255, 255, 255, 0.93);
+}
+
+.card.pass .card-gloss {
+    background: linear-gradient(
+        110deg,
+        rgba(255, 255, 255, 0) 30%,
+        rgba(148, 163, 184, 0.2) 45%,
+        rgba(255, 255, 255, 0) 50%
+    );
+    background-size: 200% 200%;
+    animation: shine 1.8s infinite;
+}
+
 /* UR - Ultra Rare: violet → indigo */
 .card.ur .card-front {
     background: linear-gradient(135deg, #6a11cb, #a855f7, #ec4899, #6a11cb);
@@ -1723,6 +1748,18 @@ section.active {
     mix-blend-mode: color-dodge;
 }
 
+.pass .card-holo {
+    background: linear-gradient(
+        calc(var(--mx, 0.5) * 360deg),
+        rgba(255, 255, 255, 0) 20%,
+        rgba(15, 23, 42, 0.35) 40%,
+        rgba(255, 255, 255, 0.22) 50%,
+        rgba(127, 29, 29, 0.22) 60%,
+        rgba(255, 255, 255, 0) 80%
+    );
+    mix-blend-mode: color-dodge;
+}
+
 /* UR - Sleek Silver-Rainbow Sweep */
 .ur .card-holo {
     background: linear-gradient(
@@ -2134,6 +2171,9 @@ section.active {
 }
 .rarity-tag.sec {
     background: linear-gradient(135deg, #7b00d4, #e91e8c);
+}
+.rarity-tag.pass {
+    background: linear-gradient(135deg, #111827, #374151);
 }
 .rarity-tag.leg {
     background: linear-gradient(135deg, #ff0000, #ff8800, #ffee00, #00ff88);
@@ -2750,6 +2790,9 @@ section.active {
 .rarity-border-SEC {
     border-color: #6366f1 !important;
 }
+.rarity-border-PASS {
+    border-color: #111827 !important;
+}
 .rarity-border-LEG {
     border-color: #991b1b !important;
 }
@@ -2809,6 +2852,11 @@ section.active {
 .rarity-glow-SEC {
     box-shadow:
         0 0 15px rgba(99, 102, 241, 0.25),
+        0 18px 45px rgba(0, 0, 0, 0.5);
+}
+.rarity-glow-PASS {
+    box-shadow:
+        0 0 15px rgba(17, 24, 39, 0.38),
         0 18px 45px rgba(0, 0, 0, 0.5);
 }
 .rarity-glow-LEG {

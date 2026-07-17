@@ -20,7 +20,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
   const { playSFX } = useAudio();
 
   const SPECIAL_ROLE_ID = "1513261078321172833";
-  const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
+  const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "PASS", "LEG"];
 
   // Pre-calculate fake rarities for the special card
   const [fakeRarities] = useState<Rarity[]>(() =>
@@ -49,7 +49,7 @@ export const CardReveal: React.FC<CardRevealProps> = ({ cards, season }) => {
           });
 
           // Play SFX based on rarity or special role_id
-          const isHighRarity = ["LEG", "SEC", "UR", "SSR"].includes(
+          const isHighRarity = ["LEG", "SEC", "PASS", "UR", "SSR"].includes(
             card.rarity,
           );
           const isSpecialCard = card.role_id === SPECIAL_ROLE_ID;

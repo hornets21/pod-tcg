@@ -24,11 +24,11 @@ interface CardRevealThreeProps {
 }
 
 const SPECIAL_ROLE_ID = "1513261078321172833";
-const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "LEG"];
+const ALL_RARITIES: Rarity[] = ["C", "R", "SR", "SSR", "UR", "SEC", "PASS", "LEG"];
 // First card flips 900ms after CardRevealThree mounts; each next card flips
 // 850ms later. Matches the pre-story-mode flow so the player gets a clear
 // sequential reveal of all five pulled cards.
-const HIGH_RARITY_TIERS = new Set(["LEG", "SEC", "UR", "SSR"]);
+const HIGH_RARITY_TIERS = new Set(["LEG", "SEC", "PASS", "UR", "SSR"]);
 
 export function CardRevealThree({
   cards,

@@ -9,12 +9,13 @@ import { ThreeScene } from "../../components/three/ThreeScene";
 const RARITY_ORDER: Record<string, number> = {
   LEG: 0,
   SEC: 1,
-  UR: 2,
-  SSR: 3,
-  SR: 4,
-  R: 5,
-  C: 6,
-  EVENT: 7,
+  PASS: 2,
+  UR: 3,
+  SSR: 4,
+  SR: 5,
+  R: 6,
+  C: 7,
+  EVENT: 8,
 };
 
 export default function HallOfFameClient() {
@@ -58,6 +59,7 @@ export default function HallOfFameClient() {
     { label: "ทั้งหมด", value: "ALL" },
     { label: "LEG", value: "LEG" },
     { label: "SEC", value: "SEC" },
+    { label: "PASS", value: "PASS" },
     { label: "UR", value: "UR" },
     { label: "SSR", value: "SSR" },
     { label: "R", value: "R" },

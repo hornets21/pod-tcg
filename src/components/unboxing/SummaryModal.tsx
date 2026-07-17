@@ -24,7 +24,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 }) => {
   const hasHighRarity = useMemo(() => {
     return Object.values(packContents).some((pack) =>
-      pack.some((c) => ["LEG", "SEC", "UR"].includes(c.rarity))
+      pack.some((c) => ["LEG", "SEC", "PASS", "UR"].includes(c.rarity))
     );
   }, [packContents]);
 
@@ -62,7 +62,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                 </div>
                 <div className="cards-grid">
                   {cards.map((card, idx) => {
-                    const isHighRarity = ["LEG", "SEC", "UR", "SSR"].includes(card.rarity);
+                    const isHighRarity = ["LEG", "SEC", "PASS", "UR", "SSR"].includes(card.rarity);
                     return (
                       <div 
                         key={`${card.role_id}-${idx}`} 

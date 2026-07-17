@@ -100,6 +100,7 @@ export default function CollectionClient() {
     { label: "R", value: "R" },
     { label: "C", value: "C" },
     { label: "EVENT", value: "EVENT" },
+    { label: "PASS", value: "PASS" },
   ];
 
   return (
@@ -131,7 +132,7 @@ export default function CollectionClient() {
             </div>
 
             <div className="rarity-completion-bar">
-               {["LEG", "SEC", "UR", "SSR", "SR", "R", "C", "EVENT"].map((r) => {
+               {["LEG", "SEC", "PASS", "UR", "SSR", "SR", "R", "C", "EVENT"].map((r) => {
                  const stat = rarityStats[r] || { owned: 0, total: 0 };
                  const percent = stat.total > 0 ? (stat.owned / stat.total) * 100 : 0;
                  return (
@@ -231,7 +232,7 @@ export default function CollectionClient() {
 
         .pill-rarity { font-weight: bold; font-size: 0.8rem; }
         .pill-count { font-size: 0.75rem; opacity: 0.7; }
-        
+
         .pill-progress {
           height: 4px;
           background: rgba(255,255,255,0.1);
@@ -242,6 +243,7 @@ export default function CollectionClient() {
 
         .leg .progress-fill { background: linear-gradient(90deg, #ff0000, #ff8800); }
         .sec .progress-fill { background: linear-gradient(90deg, #7b00d4, #e91e8c); }
+        .pass .progress-fill { background: linear-gradient(90deg, #111827, #374151); }
         .ur .progress-fill { background: linear-gradient(90deg, #6a11cb, #a855f7); }
         .ssr .progress-fill { background: #ffd700; }
         .sr .progress-fill { background: #2196f3; }

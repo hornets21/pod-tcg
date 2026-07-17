@@ -172,7 +172,7 @@ function WheelClientContent() {
 
     if (type === "srPlus") {
       const highRarityCards = gachaPool.filter((c) =>
-        ["SR", "SSR", "UR", "SEC", "LEG"].includes(c.rarity),
+      ["SR", "SSR", "UR", "SEC", "PASS", "LEG"].includes(c.rarity),
       );
       const selected = highRarityCards.slice(0, 16).map((c) => c.role_id);
       setSelectedIds(selected);
@@ -283,7 +283,7 @@ function WheelClientContent() {
       // Remove the won card from the wheel selection
       setSelectedIds((prev) => prev.filter((id) => id !== card.role_id));
 
-      if (["LEG", "SEC", "UR"].includes(card.rarity)) {
+      if (["LEG", "SEC", "PASS", "UR"].includes(card.rarity)) {
         playSFX(AUDIO_URLS.HEAVENLY, 0.25);
       } else {
         playSFX(AUDIO_URLS.CARD_REVEAL_GOLD, 0.18);
@@ -343,7 +343,7 @@ function WheelClientContent() {
     );
   }
 
-  const rarityFilters = ["LEG", "SEC", "UR", "SSR", "SR", "R", "C", "EVENT"];
+  const rarityFilters = ["LEG", "SEC", "PASS", "UR", "SSR", "SR", "R", "C", "EVENT"];
   const CardComponent = season === "season2" ? FullArtCard : Card;
 
   const getRarityBadgeColor = (rarity: string) => {
@@ -352,6 +352,8 @@ function WheelClientContent() {
         return "#dc2626";
       case "SEC":
         return "#4f46e5";
+      case "PASS":
+        return "#111827";
       case "UR":
         return "#ea580c";
       case "SSR":
