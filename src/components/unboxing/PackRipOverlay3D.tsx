@@ -1002,7 +1002,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
               rgba(190, 255, 42, 0.12),
               rgba(198, 44, 255, 0.18)
             ),
-            url("https://img.lucky-pod.fun/back-card.png") center / cover
+            url("/back-card-tcg-hogpod-op2.webp") center / cover
               no-repeat;
           box-shadow:
             0 0 8px rgba(193, 43, 255, 0.24),
@@ -1018,7 +1018,7 @@ export const PackRipOverlay3D: React.FC<PackRipOverlay3DProps> = ({
               rgba(124, 58, 237, 0.16),
               rgba(255, 60, 0, 0.22)
             ),
-            url("https://img.lucky-pod.fun/back-card.png") center / cover
+            url("/back-card-tcg-hogpod-op2.webp") center / cover
               no-repeat;
           box-shadow:
             0 0 10px rgba(124, 58, 237, 0.32),

@@ -10,7 +10,7 @@ interface Box3DProps {
 }
 
 export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAnimate = true }) => {
-  const boxImg = "https://img.lucky-pod.fun/front-box.png";
+  const boxImg = "/box-hog-pod-lecagy.webp";
 
   return (
     <div
@@ -23,7 +23,7 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAni
           <div className="lid-inner">
             <div className="lid-top-bar"></div>
             <div className="lid-content">
-              <span className="box-logo-small">POD TCG</span>
+              <span className="box-logo-small">HOG POD</span>
             </div>
           </div>
         </div>
@@ -44,14 +44,14 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAni
         <div className="box-face left">
           <div className="side-design">
             <div className="halftone-pattern"></div>
-            <span className="vertical-text">POD TCG</span>
+            <span className="vertical-text">HOG POD</span>
           </div>
         </div>
 
         <div className="box-face right">
           <div className="side-design">
             <div className="halftone-pattern"></div>
-            <span className="vertical-text">POD TCG</span>
+            <span className="vertical-text">HOG POD</span>
           </div>
         </div>
 
@@ -189,8 +189,10 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAni
           transform: translateZ(-55px) rotateX(90deg);
           transform-origin: top;
           z-index: 10;
-          background: white;
+          background: #CD9B4D;
           transition: transform 1s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+          border: 2px solid #5a4a1f;
+          box-shadow: inset 0 0 0 4px #CD9B4D, inset 0 0 0 5px #5a4a1f;
         }
 
         .opened .lid {
@@ -201,11 +203,13 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAni
         .side-design {
           width: 100%;
           height: 100%;
-          background: white;
+          background: #CD9B4D;
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
+          border: 2px solid #5a4a1f;
+          box-shadow: inset 0 0 0 4px #CD9B4D, inset 0 0 0 5px #5a4a1f;
         }
 
         .halftone-pattern {
@@ -240,7 +244,7 @@ export const Box3D: React.FC<Box3DProps> = ({ isOpen, onClick, season, shouldAni
           display: flex;
           align-items: center;
           justify-content: center;
-          background: white;
+          background: #CD9B4D;
         }
         .box-logo-small {
           color: #cbd5e1;

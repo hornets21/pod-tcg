@@ -12,6 +12,7 @@ import {
   PolicyDialog,
   CardDetailDialog,
 } from "../../components/Modals";
+import { SortingHatModal } from "../../components/SortingHatModal";
 
 const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const params = useParams();
@@ -25,6 +26,8 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
     setShowPolicy,
     showLogout,
     setShowLogout,
+    showHouseSort,
+    setShowHouseSort,
     selectedDetailCard,
     setSelectedDetailCard,
   } = useModal();
@@ -93,6 +96,11 @@ const SeasonLayoutContent: React.FC<{ children: React.ReactNode }> = ({ children
         card={selectedDetailCard}
         season={season}
         onClose={() => setSelectedDetailCard(null)}
+      />
+
+      <SortingHatModal
+        isOpen={showHouseSort}
+        onClose={() => setShowHouseSort(false)}
       />
 
       {/* --- SCROLL TO TOP --- */}

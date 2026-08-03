@@ -52,14 +52,12 @@ export function BoosterPackThree({
   const [mounted, setMounted] = useState(!shouldAnimate);
   const zoomSettledNotifiedRef = useRef(false);
 
-  const isS2 = season === "season2";
+  void season;
   const multiPackScale = 0.85;
-  const packW = (isS2 ? 2.0 : 1.6) * multiPackScale;
-  const packH = (isS2 ? 2.0 : 2.4) * multiPackScale;
+  const packW = 1.6 * multiPackScale;
+  const packH = 2.4 * multiPackScale;
   const thickness = 0.03;
-  const frontTexture = useTexture(
-    isS2 ? "/pack_tcg_op_2.png" : "/pack_tcg_op_1.png",
-  );
+  const frontTexture = useTexture("/front-5-packs-hog-pod.webp");
 
   useEffect(() => {
     if (shouldAnimate) {

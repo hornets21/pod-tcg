@@ -27,7 +27,7 @@ export default function Home() {
         fontFamily: "var(--font-kanit)",
       }}
     >
-      กำลังโหลดข้อมูลจำลอง TCG...
+      กำลังเรียกหมวกคัดสรร...
     </div>
   );
 }

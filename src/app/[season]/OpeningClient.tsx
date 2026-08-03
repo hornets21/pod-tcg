@@ -376,7 +376,7 @@ export default function OpeningClient() {
         <div className="opening-copy">
           <div className="opening-kicker">
             <span className="live-dot" />
-            POD CARD VAULT · {season === "season2" ? "SEASON 02" : "SEASON 01"}
+            POD WARTS VAULT · {season === "season2" ? "SEASON 02" : "SEASON 01"}
           </div>
           <h1>
             เลือกชะตา

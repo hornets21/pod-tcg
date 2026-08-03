@@ -1,10 +1,11 @@
 "use client";
 
-"use client";
-
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "../hooks/useAuth";
+import { useHouseContext } from "./HouseContext";
+import { useModal } from "./ModalContext";
+import { getHouse } from "../data/houses";
 
 type NavSection = HeaderProps["currentSection"];
 
@@ -47,6 +48,8 @@ export const Header: React.FC<HeaderProps> = ({
   onLogoutClick,
 }) => {
   const { user, getAvatarUrl } = useAuth();
+  const { current: currentHouse } = useHouseContext();
+  const { setShowHouseSort } = useModal();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -167,6 +170,37 @@ const navLinks = [
                 <span className="brand-subtitle">CARD VAULT</span>
               </span>
             </Link>
+
+            <button
+              type="button"
+              className="house-badge"
+              onClick={() => setShowHouseSort(true)}
+              aria-label="คัดสรรบ้าน"
+              title="คัดสรรบ้าน"
+            >
+              {(() => {
+                const h = getHouse(currentHouse);
+                if (!h) {
+                  return (
+                    <>
+                      <span className="house-badge-dot unsorted">✦</span>
+                      <span className="house-badge-text">ยังไม่ถูกคัดสรร</span>
+                    </>
+                  );
+                }
+                return (
+                  <>
+                    <span
+                      className="house-badge-dot"
+                      style={{ background: h.colors.accent, boxShadow: `0 0 8px ${h.colors.accentGlow}` }}
+                    >
+                      {h.emoji}
+                    </span>
+                    <span className="house-badge-text">{h.name}</span>
+                  </>
+                );
+              })()}
+            </button>
 
             <nav className="nav-links desktop-only" aria-label="เมนูหลัก">
               {navLinks.map((link) => (

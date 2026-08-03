@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Kanit, Chakra_Petch, Prompt } from "next/font/google";
 import "./globals.css";
+import { HouseProvider } from "../components/HouseContext";
 
 const kanit = Kanit({
   subsets: ["thai", "latin"],
@@ -24,8 +25,8 @@ const prompt = Prompt({
 });
 
 export const metadata: Metadata = {
-  title: "POD TCG Simulator",
-  description: "POD TCG Pack Opening Simulator - A client-side TCG card pack opening simulator with Discord OAuth, rarity systems, and lot management.",
+  title: "HOGPOD LEGACY TCG",
+  description: "HOGPOD LEGACY TCG — A Hogwarts Legacy parody TCG pack opening simulator with Sorting Hat house assignment, rarity systems, and lot management.",
   icons: {
     icon: "/pack_tcg_op_1.ico",
   },
@@ -45,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="th" className={`${kanit.variable} ${chakraPetch.variable} ${prompt.variable}`}>
       <body>
-        {children}
+        <HouseProvider>{children}</HouseProvider>
       </body>
     </html>
   );

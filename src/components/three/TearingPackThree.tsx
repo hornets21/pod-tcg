@@ -37,16 +37,16 @@ export function TearingPackThree({
   const startTimeRef = useRef<number | null>(null);
   const callbacksFiredRef = useRef({ start: false, threshold: false, complete: false });
 
-  const isS2 = season === "season2" && packSize !== 1;
+  void season;
   const heroScale = 1.35;
-  const packW = (packSize === 1 ? 1.7 : isS2 ? 2.0 : 1.6) * heroScale;
-  const packH = (packSize === 1 ? 2.4 : isS2 ? 2.0 : 2.4) * heroScale;
+  const packW = (packSize === 1 ? 1.7 : 1.6) * heroScale;
+  const packH = 2.4 * heroScale;
   const thickness = 0.04;
 
   const texture = useTexture(
     packSize === 1
-      ? "/pack_tcg_op_2_one_per_pack.webp"
-      : (season === "season2" ? "/pack_tcg_op_2.png" : "/pack_tcg_op_1.png")
+      ? "/front-1-pack-hog-pod.webp"
+      : "/front-5-packs-hog-pod.webp",
   );
 
   // Clone textures so we can set offset/repeat without mutating the cached one

@@ -11,6 +11,8 @@
     --accent: #00d2ff;
     --accent-glow: rgba(0, 210, 255, 0.15);
     --glass: rgba(255, 255, 255, 0.05);
+    --house-tint1: rgba(255, 60, 0, 0.07);
+    --house-tint2: rgba(0, 210, 255, 0.08);
     --motion-instant: 120ms;
     --motion-fast: 180ms;
     --motion-state: 220ms;
@@ -74,12 +76,12 @@ body::before {
     background:
         radial-gradient(
             circle at 85% 15%,
-            rgba(255, 60, 0, 0.07) 0%,
+            var(--house-tint1) 0%,
             transparent 45%
         ),
         radial-gradient(
             circle at 15% 85%,
-            rgba(0, 210, 255, 0.08) 0%,
+            var(--house-tint2) 0%,
             transparent 40%
         );
     pointer-events: none;
@@ -1112,7 +1114,7 @@ section.active {
 }
 
 .card-back {
-    background: url("https://img.lucky-pod.fun/back-card.png") no-repeat center
+    background: url("/back-card-tcg-hogpod-op2.webp") no-repeat center
         center;
     background-size: cover;
     display: flex;
@@ -3801,4 +3803,396 @@ section.active {
 }
 .modal-content.rarity-event-modal .detail-ability-box {
     border-color: rgba(233, 30, 99, 0.15) !important;
+}
+
+/* --- HOUSE BADGE (header) --- */
+.house-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font-kanit), sans-serif;
+    font-size: 0.78rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all var(--motion-fast) var(--ease-out-quart);
+    backdrop-filter: blur(8px);
+}
+
+.house-badge:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+    box-shadow: 0 0 14px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+.house-badge-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.house-badge-dot.unsorted {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--accent);
+    font-size: 0.7rem;
+}
+
+.house-badge-text {
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .house-badge-text {
+        display: none;
+    }
+    .house-badge {
+        padding: 0.35rem 0.5rem;
+    }
+}
+
+/* --- SORTING HAT MODAL --- */
+.sorting-hat-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    background:
+        radial-gradient(circle at 50% 40%, rgba(60, 38, 18, 0.32), transparent 60%),
+        rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.25s ease;
+    overflow: hidden;
+}
+
+.sorting-hat-dust {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 220, 150, 0.9), rgba(255, 200, 120, 0));
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+    will-change: transform, opacity;
+}
+
+.sorting-hat-dust.d1 { left: 18%; bottom: -10px; animation: sorting-hat-drift 7s linear infinite 0s; }
+.sorting-hat-dust.d2 { left: 32%; bottom: -10px; animation: sorting-hat-drift 9s linear infinite 1.4s; }
+.sorting-hat-dust.d3 { left: 58%; bottom: -10px; animation: sorting-hat-drift 8s linear infinite 2.1s; }
+.sorting-hat-dust.d4 { left: 72%; bottom: -10px; animation: sorting-hat-drift 10s linear infinite 3.3s; }
+.sorting-hat-dust.d5 { left: 45%; bottom: -10px; animation: sorting-hat-drift 11s linear infinite 4.8s; }
+.sorting-hat-dust.d6 { left: 82%; bottom: -10px; animation: sorting-hat-drift 12s linear infinite 0.7s; }
+
+@keyframes sorting-hat-drift {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    15% { opacity: 0.85; }
+    80% { opacity: 0.55; }
+    100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
+}
+
+.sorting-hat-box {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 380px;
+    padding: 2.5rem 2rem 2rem;
+    border-radius: 12px;
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(120, 85, 40, 0.18), transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(80, 55, 25, 0.22), transparent 60%),
+        linear-gradient(135deg, #e8d4a0 0%, #d4b87a 45%, #b89860 100%);
+    border: 2px solid #6b4423;
+    box-shadow:
+        0 0 60px rgba(255, 170, 80, 0.18),
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        inset 0 0 40px rgba(90, 60, 20, 0.12),
+        inset 0 0 0 1px rgba(107, 68, 35, 0.4);
+    animation: dialogPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sorting-hat-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(255, 190, 100, 0.22), transparent 55%);
+    animation: sorting-hat-flicker 4.2s ease-in-out infinite;
+    mix-blend-mode: screen;
+}
+
+.sorting-hat-box::after {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 8px;
+    pointer-events: none;
+    border: 1px solid rgba(107, 68, 35, 0.5);
+    box-shadow: inset 0 0 0 4px rgba(232, 212, 160, 0.08);
+}
+
+@keyframes sorting-hat-flicker {
+    0%, 100% { opacity: 0.85; }
+    18% { opacity: 0.62; }
+    22% { opacity: 0.95; }
+    40% { opacity: 0.72; }
+    55% { opacity: 0.9; }
+    78% { opacity: 0.68; }
+    82% { opacity: 0.92; }
+}
+
+.sorting-hat-icon {
+    margin-bottom: 1rem;
+    line-height: 1;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sorting-hat-icon-img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    display: block;
+}
+
+.sorting-hat-title {
+    font-family: var(--font-chakra), sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4a2d12;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 0 rgba(255, 230, 180, 0.5);
+}
+
+.sorting-hat-subtitle {
+    font-size: 0.85rem;
+    color: rgba(74, 45, 18, 0.75);
+    margin-bottom: 1.4rem;
+    line-height: 1.5;
+    min-height: 1.3em;
+    font-weight: 500;
+}
+
+.sorting-hat-mascot {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1.4rem;
+    border-radius: 50%;
+    border: 2px solid #6b4423;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(107, 68, 35, 0.08);
+}
+
+.sorting-hat-mascot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sorting-hat-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.sorting-hat-btn {
+    font-family: var(--font-kanit), sans-serif;
+    font-size: 0.92rem;
+    padding: 0.65rem 1.6rem;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    transition: all var(--motion-fast) var(--ease-out-quart);
+    font-weight: 600;
+}
+
+.sorting-hat-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sorting-hat-btn.primary {
+    background: linear-gradient(to right, #6b4423, #4a2d12);
+    color: #f4e4be;
+    box-shadow: 0 4px 15px rgba(74, 45, 18, 0.4), inset 0 1px 0 rgba(255, 220, 160, 0.25);
+    border: 1px solid #3a1f0a;
+}
+
+.sorting-hat-btn.primary:not(:disabled):hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+}
+
+.sorting-hat-btn.ghost {
+    background: rgba(107, 68, 35, 0.12);
+    color: #4a2d12;
+    border: 1px solid rgba(107, 68, 35, 0.5);
+}
+
+.sorting-hat-btn.ghost:hover {
+    background: rgba(107, 68, 35, 0.22);
+    border-color: #6b4423;
+    transform: translateY(-1px);
+}
+
+.sorting-hat-btn:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.sorting-hat-box .modal-close {
+    background: rgba(107, 68, 35, 0.12);
+    border: 1px solid rgba(107, 68, 35, 0.4);
+    color: #4a2d12;
+}
+
+.sorting-hat-box .modal-close:hover {
+    background: rgba(107, 68, 35, 0.25);
+    border-color: #6b4423;
+    color: #2a1607;
+}
+
+/* --- Sorting Hat Wheel --- */
+.sorting-hat-stage {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sorting-hat-wheel-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sorting-hat-pointer {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 22px solid #4a2d12;
+    filter: drop-shadow(0 2px 4px rgba(40, 25, 10, 0.6));
+}
+
+.sorting-hat-wheel {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 4px solid #6b4423;
+    box-shadow:
+        0 6px 20px rgba(40, 25, 10, 0.45),
+        inset 0 0 0 2px rgba(232, 212, 160, 0.4),
+        inset 0 0 24px rgba(70, 45, 20, 0.2);
+    will-change: transform;
+}
+
+.sorting-hat-wheel-mascot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    margin: -24px 0 0 -24px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f4e4be;
+    border: 2px solid #6b4423;
+    box-shadow: 0 2px 6px rgba(40, 25, 10, 0.4);
+}
+
+.sorting-hat-wheel-mascot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sorting-hat-wheel-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    margin: -11px 0 0 -11px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f4e4be, #6b4423);
+    border: 2px solid #4a2d12;
+    box-shadow: 0 1px 4px rgba(40, 25, 10, 0.5);
+    z-index: 2;
+}
+
+.sorting-hat-icon.is-sorting {
+    animation: sorting-hat-nod 1.6s ease-in-out infinite;
+}
+
+@keyframes sorting-hat-nod {
+    0% { transform: rotate(0deg) translateY(0); }
+    14% { transform: rotate(-4deg) translateY(-2px); }
+    28% { transform: rotate(5deg) translateY(0); }
+    44% { transform: rotate(-3deg) translateY(-3px); }
+    58% { transform: rotate(4deg) translateY(0); }
+    72% { transform: rotate(-2deg) translateY(-1px); }
+    100% { transform: rotate(0deg) translateY(0); }
+}
+
+/* --- Result reveal --- */
+.sorting-hat-result-mascot {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    object-fit: contain;
+    animation: sorting-hat-pop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+}
+
+@keyframes sorting-hat-pop {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- Idle orb placeholder --- */
+.sorting-hat-orb {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%);
+    animation: sorting-hat-orb-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes sorting-hat-orb-breathe {
+    0%, 100% { transform: scale(0.96); filter: brightness(1); }
+    50% { transform: scale(1.04); filter: brightness(1.15); }
 }

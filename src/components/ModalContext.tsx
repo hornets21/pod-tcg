@@ -10,6 +10,8 @@ interface ModalContextType {
   setShowPolicy: (show: boolean) => void;
   showLogout: boolean;
   setShowLogout: (show: boolean) => void;
+  showHouseSort: boolean;
+  setShowHouseSort: (show: boolean) => void;
 }
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [selectedDetailCard, setSelectedDetailCard] = useState<CardType | null>(null);
   const [showPolicy, setShowPolicy] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [showHouseSort, setShowHouseSort] = useState(false);
 
   return (
     <ModalContext.Provider
@@ -28,6 +31,8 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setShowPolicy,
         showLogout,
         setShowLogout,
+        showHouseSort,
+        setShowHouseSort,
       }}
     >
       {children}

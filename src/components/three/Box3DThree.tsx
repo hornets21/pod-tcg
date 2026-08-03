@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, ComponentType } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useSpring, animated } from "@react-spring/three";
-import { useTexture, Text } from "@react-three/drei";
+import { useTexture, Text, Edges } from "@react-three/drei";
 import * as THREE from "three";
 import { BOX_LID_OPEN_DELAY_MS, BOX_SINK_DELAY_MS } from "../unboxing/unboxingTiming";
 
@@ -33,6 +33,36 @@ const AnimatedText = animated(Text) as unknown as ComponentType<{
   [key: string]: unknown;
 }>;
 
+// Decorative double-line gold border frame for box panels
+const EDGE_COLOR = "#5a4a1f";
+
+function SideFrame({
+  position,
+  rotation,
+  size,
+  color = EDGE_COLOR,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  size: [number, number];
+  color?: string;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh>
+        <planeGeometry args={size} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        <Edges color={color} />
+      </mesh>
+      <mesh>
+        <planeGeometry args={[size[0] - 0.12, size[1] - 0.12]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        <Edges color={color} />
+      </mesh>
+    </group>
+  );
+}
+
 function BoxFace({
   position,
   rotation,
@@ -44,6 +74,7 @@ function BoxFace({
   opacity = 1,
   roughness = 0.3,
   metalness = 0.1,
+  side = THREE.DoubleSide,
 }: {
   position: [number, number, number];
   rotation: [number, number, number];
@@ -55,6 +86,7 @@ function BoxFace({
   opacity?: unknown;
   roughness?: number;
   metalness?: number;
+  side?: THREE.Side;
 }) {
   return (
     <mesh position={position} rotation={rotation}>
@@ -63,7 +95,7 @@ function BoxFace({
         <AnimatedBasicMaterial
           map={texture}
           color={color}
-          side={THREE.DoubleSide}
+          side={side}
           toneMapped={false}
           transparent
           opacity={opacity}
@@ -76,7 +108,7 @@ function BoxFace({
           emissiveIntensity={emissive ? 0.15 : 0}
           roughness={roughness}
           metalness={metalness}
-          side={THREE.DoubleSide}
+          side={side}
           transparent
           opacity={opacity}
         />
@@ -102,7 +134,7 @@ export function Box3DThree({
   const animStateRef = useRef(animState);
   const openSettledNotifiedRef = useRef(false);
 
-  const frontTexture = useTexture("/front-box.png");
+  const frontTexture = useTexture("/box-hog-pod-lecagy.webp");
 
   useEffect(() => {
     animStateRef.current = animState;
@@ -113,6 +145,8 @@ export function Box3DThree({
 
   // Premium clean white color for the box body
   const boxColor = "#ffffff";
+  // Gold color for the side faces to match the box artwork
+  const sideColor = "#CD9B4D";
 
   // Track the multi-stage animation sequence when isOpen becomes true
   useEffect(() => {
@@ -273,10 +307,28 @@ export function Box3DThree({
           position={[BOX_W / 2, 0, 0]}
           rotation={[0, Math.PI / 2, 0]}
           size={[BOX_D, BOX_H]}
-          color={boxColor}
+          color={sideColor}
           opacity={opacity}
           roughness={0.25}
           metalness={0.2}
+          unlit
+          side={THREE.FrontSide}
+        />
+        {/* Right face decorative gold border */}
+        <SideFrame
+          position={[BOX_W / 2 + 0.003, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          size={[BOX_D, BOX_H]}
+        />
+        {/* Right interior wall (white) */}
+        <BoxFace
+          position={[BOX_W / 2 - 0.015, 0, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
+          size={[BOX_D, BOX_H]}
+          color={boxColor}
+          opacity={opacity}
+          roughness={0.3}
+          metalness={0.1}
           unlit
         />
         {/* Right face text */}
@@ -291,7 +343,7 @@ export function Box3DThree({
           transparent
           opacity={opacity}
         >
-          POD TALK
+          HOG POD
         </AnimatedText>
 
         {/* Left face */}
@@ -299,10 +351,28 @@ export function Box3DThree({
           position={[-BOX_W / 2, 0, 0]}
           rotation={[0, -Math.PI / 2, 0]}
           size={[BOX_D, BOX_H]}
-          color={boxColor}
+          color={sideColor}
           opacity={opacity}
           roughness={0.25}
           metalness={0.2}
+          unlit
+          side={THREE.FrontSide}
+        />
+        {/* Left face decorative gold border */}
+        <SideFrame
+          position={[-BOX_W / 2 - 0.003, 0, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
+          size={[BOX_D, BOX_H]}
+        />
+        {/* Left interior wall (white) */}
+        <BoxFace
+          position={[-BOX_W / 2 + 0.015, 0, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          size={[BOX_D, BOX_H]}
+          color={boxColor}
+          opacity={opacity}
+          roughness={0.3}
+          metalness={0.1}
           unlit
         />
         {/* Left face text */}
@@ -317,7 +387,7 @@ export function Box3DThree({
           transparent
           opacity={opacity}
         >
-          POD TALK
+          HOG POD
         </AnimatedText>
 
         {/* Bottom face */}
@@ -343,10 +413,28 @@ export function Box3DThree({
             position={[0, 0, BOX_D / 2]}
             rotation={[Math.PI / 2, 0, 0]}
             size={[BOX_W, BOX_D]}
-            color={boxColor}
+            color={sideColor}
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
+            side={THREE.FrontSide}
+          />
+          {/* Lid top decorative gold border */}
+          <SideFrame
+            position={[0, 0.003, BOX_D / 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+            size={[BOX_W, BOX_D]}
+          />
+          {/* Lid top interior (white) */}
+          <BoxFace
+            position={[0, -0.015, BOX_D / 2]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            size={[BOX_W, BOX_D]}
+            color={boxColor}
+            opacity={opacity}
+            roughness={0.3}
+            metalness={0.1}
             unlit
           />
           {/* Lid front panel (flap) */}
@@ -354,10 +442,28 @@ export function Box3DThree({
             position={[0, -0.2, BOX_D + 0.005]}
             rotation={[0, 0, 0]}
             size={[BOX_W, 0.4]}
-            color={boxColor}
+            color={sideColor}
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
+            side={THREE.FrontSide}
+          />
+          {/* Lid front decorative gold border */}
+          <SideFrame
+            position={[0, -0.2, BOX_D + 0.008]}
+            rotation={[0, 0, 0]}
+            size={[BOX_W, 0.4]}
+          />
+          {/* Lid front interior (white) */}
+          <BoxFace
+            position={[0, -0.2, BOX_D + 0.005 - 0.015]}
+            rotation={[0, Math.PI, 0]}
+            size={[BOX_W, 0.4]}
+            color={boxColor}
+            opacity={opacity}
+            roughness={0.3}
+            metalness={0.1}
             unlit
           />
           {/* Lid left panel (flap) */}
@@ -365,10 +471,28 @@ export function Box3DThree({
             position={[-BOX_W / 2 - 0.005, -0.2, BOX_D / 2]}
             rotation={[0, -Math.PI / 2, 0]}
             size={[BOX_D, 0.4]}
-            color={boxColor}
+            color={sideColor}
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
+            side={THREE.FrontSide}
+          />
+          {/* Lid left decorative gold border */}
+          <SideFrame
+            position={[-BOX_W / 2 - 0.008, -0.2, BOX_D / 2]}
+            rotation={[0, -Math.PI / 2, 0]}
+            size={[BOX_D, 0.4]}
+          />
+          {/* Lid left interior (white) */}
+          <BoxFace
+            position={[-BOX_W / 2 - 0.005 + 0.015, -0.2, BOX_D / 2]}
+            rotation={[0, Math.PI / 2, 0]}
+            size={[BOX_D, 0.4]}
+            color={boxColor}
+            opacity={opacity}
+            roughness={0.3}
+            metalness={0.1}
             unlit
           />
           {/* Lid right panel (flap) */}
@@ -376,10 +500,28 @@ export function Box3DThree({
             position={[BOX_W / 2 + 0.005, -0.2, BOX_D / 2]}
             rotation={[0, Math.PI / 2, 0]}
             size={[BOX_D, 0.4]}
-            color={boxColor}
+            color={sideColor}
             opacity={opacity}
             roughness={0.25}
             metalness={0.2}
+            unlit
+            side={THREE.FrontSide}
+          />
+          {/* Lid right decorative gold border */}
+          <SideFrame
+            position={[BOX_W / 2 + 0.008, -0.2, BOX_D / 2]}
+            rotation={[0, Math.PI / 2, 0]}
+            size={[BOX_D, 0.4]}
+          />
+          {/* Lid right interior (white) */}
+          <BoxFace
+            position={[BOX_W / 2 + 0.005 - 0.015, -0.2, BOX_D / 2]}
+            rotation={[0, -Math.PI / 2, 0]}
+            size={[BOX_D, 0.4]}
+            color={boxColor}
+            opacity={opacity}
+            roughness={0.3}
+            metalness={0.1}
             unlit
           />
         </animated.group>
